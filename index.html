@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Big Job Hunter Pro - Turn the Corporate Wilderness into Your High-Score Hunting Ground</title>
+    <meta name="description" content="Gamify your job search at BigJobHunter.Pro. A retro-arcade job tracker styled after 90s hunting classics. Log applications in 15 seconds, earn points, maintain streaks, and climb the leaderboards.">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Scanline overlay for CRT effect -->
+    <div class="scanlines"></div>
+
+    <!-- Hero Section -->
+    <header class="hero">
+        <div class="hero-content">
+            <div class="logo-container">
+                <h1 class="pixel-title">
+                    <span class="title-line">BIG JOB</span>
+                    <span class="title-line">HUNTER PRO</span>
+                </h1>
+                <div class="insert-coin">[ INSERT MOTIVATION ]</div>
+            </div>
+            <p class="tagline">TURN JOB HUNTING INTO A HIGH-SCORE RUN</p>
+            <p class="subtitle">A retro-arcade job tracker styled after 90s hunting classics</p>
+
+            <div class="cta-container">
+                <button class="arcade-button primary" onclick="showComingSoon()">
+                    <span class="button-glow">START HUNTING</span>
+                </button>
+            </div>
+
+            <div class="feature-pills">
+                <span class="pill">15-SECOND LOGGING</span>
+                <span class="pill">EARN POINTS</span>
+                <span class="pill">DAILY STREAKS</span>
+                <span class="pill">LEADERBOARDS</span>
+            </div>
+        </div>
+
+        <div class="hero-image">
+            <img src="imgs/Title.png" alt="Big Job Hunter Pro - Arcade hunting game interface" class="screenshot">
+        </div>
+    </header>
+
+    <!-- Features Section -->
+    <section class="features">
+        <h2 class="section-title pixel-header">// FEATURES //</h2>
+
+        <div class="feature-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🎯</div>
+                <h3>Quick Capture</h3>
+                <p>Log job applications in 15 seconds. No spreadsheet hassle. Just fast, arcade-style action.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3>Score Points</h3>
+                <p>Earn points for every action: +1 for applications, +5 for interviews, +50 for offers. Even rejections count.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🔥</div>
+                <h3>Keep The Fire Lit</h3>
+                <p>Maintain daily streaks to build momentum. Track your consistency and watch your streak grow.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🏆</div>
+                <h3>Hunting Party</h3>
+                <p>Compete with friends on social leaderboards. Form cohorts and turn job hunting into friendly rivalry.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>Hunt Funnel</h3>
+                <p>Visualize your pipeline as an arcade level path. Track targets through the Corporate Wilderness.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🎖️</div>
+                <h3>Trophy Room</h3>
+                <p>Unlock achievements and badges. Celebrate milestones, consistency, and resilience.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Screenshots Section -->
+    <section class="screenshots">
+        <h2 class="section-title pixel-header">// THE LODGE & THE ARMORY //</h2>
+
+        <div class="screenshot-showcase">
+            <div class="screenshot-item">
+                <img src="imgs/dashboard.png" alt="The Lodge - Dashboard with leaderboards and stats" class="screenshot">
+                <div class="screenshot-label">
+                    <span class="label-title">THE LODGE</span>
+                    <span class="label-desc">Your motivational command center</span>
+                </div>
+            </div>
+
+            <div class="screenshot-item">
+                <img src="imgs/Jts.png" alt="The Armory - Application tracker interface" class="screenshot">
+                <div class="screenshot-label">
+                    <span class="label-title">THE ARMORY</span>
+                    <span class="label-desc">Track targets and manage your hunt</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- The Pitch Section -->
+    <section class="pitch">
+        <div class="pitch-content">
+            <h2 class="pixel-header">WELCOME TO THE CORPORATE WILDERNESS</h2>
+            <p class="pitch-text">
+                Big Job Hunter Pro turns job hunting into an arcade-style progression loop that rewards
+                <strong>effort and consistency</strong>, not just outcomes.
+            </p>
+            <p class="pitch-text">
+                Hunt opportunities. Log actions fast. Rack up points for real milestones. Keep streaks alive.
+                Compete with friends on leaderboards—all wrapped in a nostalgic <strong>90s hunting-arcade aesthetic</strong>
+                that feels like a playable experience rather than a spreadsheet.
+            </p>
+            <div class="stats-row">
+                <div class="stat">
+                    <div class="stat-number" data-target="15">0</div>
+                    <div class="stat-label">SECONDS TO LOG</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number" data-target="50">0</div>
+                    <div class="stat-label">POINTS PER OFFER</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number" data-target="100">0</div>
+                    <div class="stat-label">% MOTIVATION</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="cta-box">
+            <h2 class="pixel-header">READY TO START YOUR HUNT?</h2>
+            <p>Join the hunting party and turn your job search into a high-score run.</p>
+            <button class="arcade-button primary large" onclick="showComingSoon()">
+                <span class="button-glow">LOCK & LOAD</span>
+            </button>
+            <div class="coming-soon-badge">COMING SOON</div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-logo">
+                <span class="pixel-text">BIG JOB HUNTER PRO</span>
+            </div>
+            <div class="footer-tagline">
+                Turn the Corporate Wilderness into your high-score hunting ground.
+            </div>
+            <div class="footer-links">
+                <a href="https://christianadleta.com" target="_blank" rel="noopener">Built by ChristianAdleta.com</a>
+            </div>
+            <div class="footer-meta">
+                <span>v0.1</span>
+                <span>•</span>
+                <span>bigjobhunter.pro</span>
+                <span>•</span>
+                <span>&copy; 2026</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Coming Soon Modal -->
+    <div id="comingSoonModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header pixel-header">// LOADING... //</div>
+            <div class="modal-body">
+                <div class="loading-bar">
+                    <div class="loading-fill"></div>
+                </div>
+                <p>Target acquisition system initializing...</p>
+                <p class="modal-message">Big Job Hunter Pro is currently in development. Stay tuned for the hunt!</p>
+            </div>
+            <button class="arcade-button" onclick="closeModal()">
+                <span>ROGER THAT</span>
+            </button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,651 @@
+/* ================================================
+   BIG JOB HUNTER PRO - STYLES
+   90s Arcade Hunting Aesthetic
+   ================================================ */
+
+/* Import pixel font from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;600;700&display=swap');
+
+/* ================================================
+   ROOT VARIABLES - Color Palette
+   ================================================ */
+:root {
+    --forest-green: #2E4600;
+    --blaze-orange: #FF6700;
+    --crt-amber: #FFB000;
+    --terminal-green: #00FF00;
+    --charcoal: #1a1a1a;
+    --dark-charcoal: #0d0d0d;
+    --light-text: #e0e0e0;
+
+    /* Shadows and glows */
+    --orange-glow: 0 0 20px rgba(255, 103, 0, 0.5);
+    --amber-glow: 0 0 15px rgba(255, 176, 0, 0.6);
+    --green-glow: 0 0 10px rgba(0, 255, 0, 0.4);
+}
+
+/* ================================================
+   RESET & BASE STYLES
+   ================================================ */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: linear-gradient(180deg, var(--dark-charcoal) 0%, var(--charcoal) 50%, var(--forest-green) 100%);
+    color: var(--light-text);
+    line-height: 1.6;
+    overflow-x: hidden;
+    position: relative;
+    min-height: 100vh;
+}
+
+/* ================================================
+   CRT SCANLINE EFFECT
+   ================================================ */
+.scanlines {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 9999;
+    background: repeating-linear-gradient(
+        0deg,
+        rgba(0, 0, 0, 0.15) 0px,
+        transparent 1px,
+        transparent 2px,
+        rgba(0, 0, 0, 0.15) 3px
+    );
+    opacity: 0.3;
+    animation: scanline-flicker 0.1s infinite;
+}
+
+@keyframes scanline-flicker {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 0.25; }
+}
+
+/* ================================================
+   TYPOGRAPHY
+   ================================================ */
+.pixel-title,
+.pixel-header,
+.pixel-text {
+    font-family: 'Press Start 2P', monospace;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.pixel-title {
+    font-size: clamp(2rem, 6vw, 4rem);
+    color: var(--blaze-orange);
+    text-shadow:
+        0 0 10px var(--blaze-orange),
+        0 0 20px var(--blaze-orange),
+        3px 3px 0px rgba(0,0,0,0.8);
+    line-height: 1.2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    animation: title-glow 2s ease-in-out infinite;
+}
+
+.title-line {
+    display: block;
+}
+
+@keyframes title-glow {
+    0%, 100% { filter: brightness(1); }
+    50% { filter: brightness(1.2); }
+}
+
+.pixel-header {
+    font-size: clamp(1.2rem, 3vw, 2rem);
+    color: var(--crt-amber);
+    text-shadow: 0 0 10px var(--crt-amber);
+    margin-bottom: 1.5rem;
+}
+
+/* ================================================
+   HERO SECTION
+   ================================================ */
+.hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    text-align: center;
+    position: relative;
+}
+
+.hero-content {
+    max-width: 900px;
+    z-index: 2;
+    margin-bottom: 3rem;
+}
+
+.logo-container {
+    margin-bottom: 2rem;
+}
+
+.insert-coin {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.7rem;
+    color: var(--terminal-green);
+    text-shadow: var(--green-glow);
+    margin-top: 1rem;
+    animation: blink 1.5s infinite;
+}
+
+@keyframes blink {
+    0%, 49% { opacity: 1; }
+    50%, 100% { opacity: 0.3; }
+}
+
+.tagline {
+    font-size: clamp(1rem, 2vw, 1.3rem);
+    font-weight: 700;
+    color: var(--light-text);
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.subtitle {
+    font-size: clamp(0.9rem, 1.5vw, 1.1rem);
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 2rem;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* ================================================
+   BUTTONS
+   ================================================ */
+.arcade-button {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.8rem;
+    padding: 1rem 2rem;
+    background: var(--forest-green);
+    color: var(--light-text);
+    border: 4px solid var(--blaze-orange);
+    cursor: pointer;
+    text-transform: uppercase;
+    position: relative;
+    transition: all 0.2s;
+    box-shadow:
+        0 4px 0 rgba(0,0,0,0.5),
+        inset 0 0 20px rgba(255, 103, 0, 0.2);
+}
+
+.arcade-button:hover {
+    transform: translateY(-2px);
+    box-shadow:
+        0 6px 0 rgba(0,0,0,0.5),
+        var(--orange-glow),
+        inset 0 0 30px rgba(255, 103, 0, 0.4);
+}
+
+.arcade-button:active {
+    transform: translateY(2px);
+    box-shadow:
+        0 2px 0 rgba(0,0,0,0.5),
+        inset 0 0 20px rgba(255, 103, 0, 0.2);
+}
+
+.arcade-button.primary {
+    background: var(--blaze-orange);
+    border-color: var(--crt-amber);
+    color: var(--charcoal);
+    font-weight: bold;
+}
+
+.arcade-button.primary .button-glow {
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+}
+
+.arcade-button.large {
+    font-size: 1rem;
+    padding: 1.5rem 3rem;
+}
+
+.cta-container {
+    margin: 2rem 0;
+}
+
+/* ================================================
+   FEATURE PILLS
+   ================================================ */
+.feature-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+}
+
+.pill {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.5rem;
+    padding: 0.7rem 1.2rem;
+    background: rgba(46, 70, 0, 0.5);
+    border: 2px solid var(--terminal-green);
+    color: var(--terminal-green);
+    text-shadow: var(--green-glow);
+    border-radius: 20px;
+    white-space: nowrap;
+}
+
+/* ================================================
+   HERO IMAGE
+   ================================================ */
+.hero-image {
+    max-width: 900px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.screenshot {
+    width: 100%;
+    height: auto;
+    border: 6px solid var(--blaze-orange);
+    box-shadow:
+        0 10px 40px rgba(0,0,0,0.5),
+        var(--orange-glow),
+        inset 0 0 30px rgba(255, 103, 0, 0.1);
+    border-radius: 4px;
+    transition: transform 0.3s ease;
+}
+
+.screenshot:hover {
+    transform: scale(1.02);
+}
+
+/* ================================================
+   FEATURES SECTION
+   ================================================ */
+.features {
+    padding: 6rem 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.section-title {
+    text-align: center;
+    margin-bottom: 4rem;
+}
+
+.feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.feature-card {
+    background: rgba(46, 70, 0, 0.3);
+    border: 3px solid var(--forest-green);
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.feature-card:hover {
+    border-color: var(--blaze-orange);
+    box-shadow: var(--orange-glow);
+    transform: translateY(-5px);
+}
+
+.feature-card:hover::before {
+    border-color: var(--crt-amber);
+    box-shadow: inset 0 0 20px rgba(255, 176, 0, 0.2);
+}
+
+.feature-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    filter: drop-shadow(0 0 10px var(--crt-amber));
+}
+
+.feature-card h3 {
+    font-size: 1.3rem;
+    color: var(--crt-amber);
+    margin-bottom: 1rem;
+    font-weight: 700;
+}
+
+.feature-card p {
+    color: rgba(255, 255, 255, 0.8);
+    line-height: 1.6;
+}
+
+/* ================================================
+   SCREENSHOTS SECTION
+   ================================================ */
+.screenshots {
+    padding: 6rem 2rem;
+    background: rgba(13, 13, 13, 0.5);
+}
+
+.screenshot-showcase {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+    gap: 3rem;
+}
+
+.screenshot-item {
+    position: relative;
+}
+
+.screenshot-label {
+    margin-top: 1rem;
+    text-align: center;
+}
+
+.label-title {
+    display: block;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.9rem;
+    color: var(--blaze-orange);
+    text-shadow: var(--orange-glow);
+    margin-bottom: 0.5rem;
+}
+
+.label-desc {
+    display: block;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+}
+
+/* ================================================
+   PITCH SECTION
+   ================================================ */
+.pitch {
+    padding: 6rem 2rem;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.pitch-content {
+    text-align: center;
+}
+
+.pitch-text {
+    font-size: 1.2rem;
+    line-height: 1.8;
+    margin-bottom: 1.5rem;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.pitch-text strong {
+    color: var(--crt-amber);
+    font-weight: 700;
+}
+
+.stats-row {
+    display: flex;
+    justify-content: center;
+    gap: 4rem;
+    margin-top: 4rem;
+    flex-wrap: wrap;
+}
+
+.stat {
+    text-align: center;
+}
+
+.stat-number {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 3rem;
+    color: var(--crt-amber);
+    text-shadow: var(--amber-glow);
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.6rem;
+    color: var(--terminal-green);
+    text-shadow: var(--green-glow);
+}
+
+/* ================================================
+   CTA SECTION
+   ================================================ */
+.cta-section {
+    padding: 6rem 2rem;
+    background: linear-gradient(135deg, var(--forest-green) 0%, var(--charcoal) 100%);
+}
+
+.cta-box {
+    max-width: 700px;
+    margin: 0 auto;
+    text-align: center;
+    padding: 3rem;
+    border: 4px solid var(--blaze-orange);
+    background: rgba(26, 26, 26, 0.8);
+    box-shadow: var(--orange-glow);
+    position: relative;
+}
+
+.cta-box h2 {
+    margin-bottom: 1rem;
+}
+
+.cta-box p {
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.coming-soon-badge {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.6rem;
+    color: var(--terminal-green);
+    text-shadow: var(--green-glow);
+    margin-top: 1rem;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* ================================================
+   FOOTER
+   ================================================ */
+.footer {
+    padding: 3rem 2rem;
+    background: var(--dark-charcoal);
+    border-top: 3px solid var(--forest-green);
+}
+
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.footer-logo .pixel-text {
+    font-size: 1rem;
+    color: var(--blaze-orange);
+}
+
+.footer-tagline {
+    color: rgba(255, 255, 255, 0.6);
+    margin: 1rem 0;
+    font-size: 0.9rem;
+}
+
+.footer-links {
+    margin: 1.5rem 0;
+}
+
+.footer-links a {
+    color: var(--crt-amber);
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.footer-links a:hover {
+    color: var(--blaze-orange);
+    text-shadow: var(--orange-glow);
+}
+
+.footer-meta {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.5rem;
+    color: var(--terminal-green);
+    margin-top: 1rem;
+}
+
+.footer-meta span {
+    margin: 0 0.5rem;
+}
+
+/* ================================================
+   MODAL
+   ================================================ */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 10000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    align-items: center;
+    justify-content: center;
+}
+
+.modal.active {
+    display: flex;
+}
+
+.modal-content {
+    background: var(--charcoal);
+    border: 5px solid var(--blaze-orange);
+    padding: 3rem;
+    max-width: 500px;
+    text-align: center;
+    box-shadow: var(--orange-glow);
+    animation: modal-appear 0.3s ease;
+}
+
+@keyframes modal-appear {
+    from {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.modal-header {
+    margin-bottom: 1.5rem;
+}
+
+.modal-body {
+    margin-bottom: 2rem;
+}
+
+.modal-body p {
+    margin-bottom: 1rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.modal-message {
+    color: var(--crt-amber);
+    font-weight: 600;
+}
+
+.loading-bar {
+    width: 100%;
+    height: 20px;
+    background: var(--dark-charcoal);
+    border: 2px solid var(--terminal-green);
+    margin: 1.5rem 0;
+    overflow: hidden;
+}
+
+.loading-fill {
+    height: 100%;
+    background: var(--terminal-green);
+    width: 0;
+    animation: loading 2s ease-in-out infinite;
+    box-shadow: var(--green-glow);
+}
+
+@keyframes loading {
+    0%, 100% { width: 0; }
+    50% { width: 100%; }
+}
+
+/* ================================================
+   RESPONSIVE DESIGN
+   ================================================ */
+@media (max-width: 768px) {
+    .screenshot-showcase {
+        grid-template-columns: 1fr;
+    }
+
+    .feature-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .stats-row {
+        gap: 2rem;
+    }
+
+    .stat-number {
+        font-size: 2rem;
+    }
+
+    .pill {
+        font-size: 0.4rem;
+        padding: 0.5rem 1rem;
+    }
+
+    .modal-content {
+        margin: 1rem;
+        padding: 2rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .arcade-button {
+        font-size: 0.6rem;
+        padding: 0.8rem 1.5rem;
+    }
+
+    .arcade-button.large {
+        font-size: 0.7rem;
+        padding: 1rem 2rem;
+    }
+}

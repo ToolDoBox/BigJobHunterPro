@@ -96,9 +96,14 @@ docker-compose down -v                # Stop and remove volumes
 
 ## Project Documentation
 
-- `Docs/GETTING_STARTED.md` - Setup instructions and project scaffolding commands
-- `Docs/Project-Structure.md` - Architecture, data models, style guide, technical decisions
-- `Docs/Project-Scoping.md` - User stories, feature prioritization, roadmap
-- `Docs/concept.md` - Product vision and UX concepts
-- `Meta/Sprint 1.md` - Current sprint backlog and completion criteria
+- `Meta/Docs/Project-Structure.md` - Architecture, data models, style guide, technical decisions
+- `Meta/Docs/Project-Scoping.md` - User stories, feature prioritization, roadmap
+- `Meta/Docs/Project-Strategy.md` - Strategy and product positioning
+- `Meta/Docs/STRATEGY-UPDATE-SUMMARY.md` - Latest strategy updates
+- `Meta/Docs/concept.md` - Product vision and UX concepts
+- `Meta/Docs/deprecated_GETTING_STARTED.md` - Legacy setup/scaffolding notes
+- `Meta/Sprints/README.md` - Sprint system overview and templates
+- `Meta/Sprints/backlog.md` - Product backlog and pending stories
+- `Meta/Sprints/Sprint-1/sprint-plan.md` - Current sprint plan
+- `Meta/Ref/` - Reference artifacts, sample inputs, and archival planning notes
 - If you need a new Markdown file that does not fit an existing category, place it in `Meta/` (misc bucket, but do not create junk files).

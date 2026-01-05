@@ -3,7 +3,7 @@
 ## Project Structure and Module Organization
 - `index.html`, `styles.css`, and `script.js` implement the landing page.
 - `imgs/` contains screenshots and brand assets referenced by the HTML.
-- `Docs/` and `Meta/` hold strategy, scope, and architecture planning notes; keep them updated when product decisions change.
+- `Meta/Docs/` holds strategy, scope, and architecture planning notes; `Meta/Ref/` stores reference artifacts; `Meta/Sprints/` contains sprint planning, backlog, and templates. Keep these updated when product decisions change.
 - If you need a new Markdown file that does not fit an existing category, place it in `Meta/` (misc bucket, but do not create junk files).
 
 ## Build, Test, and Development Commands
@@ -22,7 +22,7 @@
 
 ## Commit and Pull Request Guidelines
 - Git history uses short Title Case summaries without prefixes (example: "Sprint planning"); keep commits concise and focused.
-- PRs should include a brief description, screenshots for UI changes, and manual test notes. Link any relevant updates in `Docs/`.
+- PRs should include a brief description, screenshots for UI changes, and manual test notes. Link any relevant updates in `Meta/Docs/` or `Meta/Sprints/`.
 
 ## Architecture Notes
-- Planned full-stack architecture and future commands are described in `Docs/Project-Structure.md` and `Docs/GETTING_STARTED.md`. Use them for direction, but do not add build instructions until the code exists.
+- Planned full-stack architecture and future commands are described in `Meta/Docs/Project-Structure.md` and `Meta/Docs/deprecated_GETTING_STARTED.md`. Use them for direction, but do not add build instructions until the code exists.

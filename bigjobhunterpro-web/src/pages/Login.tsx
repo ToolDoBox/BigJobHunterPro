@@ -75,26 +75,27 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-arcade flex items-center justify-center p-4">
-      <div className="scanlines" />
-
+    <div className="min-h-screen bg-metal-dark app-shell flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo/Title */}
         <div className="text-center mb-8">
-          <h1 className="font-arcade text-2xl md:text-3xl text-blaze text-glow-blaze mb-2">
+          <h1 className="font-arcade text-xl md:text-2xl text-blaze mb-2">
             BIG JOB HUNTER PRO
           </h1>
-          <p className="font-arcade text-xs text-terminal text-glow-terminal animate-blink">
-            [ HUNTER LOGIN ]
+          <p className="font-arcade text-xs text-terminal">
+            // HUNTER LOGIN //
           </p>
         </div>
 
-        {/* Login form */}
+        {/* Login form - Metal panel with screws */}
         <form
           onSubmit={handleSubmit}
-          className="bg-charcoal border-4 border-blaze p-6 shadow-orange-glow"
+          className="metal-panel metal-panel-orange"
         >
-          <h2 className="font-arcade text-lg text-amber text-glow-amber mb-6 text-center">
+          {/* Bottom screws */}
+          <div className="metal-panel-screws" />
+
+          <h2 className="font-arcade text-base text-amber mb-6 text-center">
             ACCESS THE LODGE
           </h2>
 
@@ -132,9 +133,9 @@ export default function Login() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full btn-arcade-primary mt-6 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full btn-metal-primary mt-6"
           >
-            {isLoading ? 'AUTHENTICATING...' : 'START HUNTING'}
+            {isLoading ? 'AUTHENTICATING...' : 'LOCK & LOAD'}
           </button>
 
           {/* Register link */}

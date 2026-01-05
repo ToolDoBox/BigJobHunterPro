@@ -37,8 +37,9 @@ export const router = createBrowserRouter([
       {
         path: 'applications',
         element: (
-          <div className="text-center py-12">
-            <h2 className="font-arcade text-xl text-amber text-glow-amber mb-4">
+          <div className="metal-panel text-center">
+            <div className="metal-panel-screws" />
+            <h2 className="font-arcade text-xl text-amber mb-4">
               THE ARMORY
             </h2>
             <p className="text-gray-400">Coming in Story 3...</p>
@@ -48,8 +49,9 @@ export const router = createBrowserRouter([
       {
         path: 'party',
         element: (
-          <div className="text-center py-12">
-            <h2 className="font-arcade text-xl text-amber text-glow-amber mb-4">
+          <div className="metal-panel text-center">
+            <div className="metal-panel-screws" />
+            <h2 className="font-arcade text-xl text-amber mb-4">
               HUNTING PARTY
             </h2>
             <p className="text-gray-400">Coming in future sprint...</p>
@@ -59,8 +61,9 @@ export const router = createBrowserRouter([
       {
         path: 'profile',
         element: (
-          <div className="text-center py-12">
-            <h2 className="font-arcade text-xl text-amber text-glow-amber mb-4">
+          <div className="metal-panel text-center">
+            <div className="metal-panel-screws" />
+            <h2 className="font-arcade text-xl text-amber mb-4">
               HUNTER PROFILE
             </h2>
             <p className="text-gray-400">Coming in future sprint...</p>

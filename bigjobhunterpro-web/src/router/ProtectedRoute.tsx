@@ -13,16 +13,16 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   // Show loading state while checking authentication
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-arcade flex items-center justify-center">
-        <div className="text-center">
-          <div className="scanlines" />
-          <h2 className="font-arcade text-lg text-amber text-glow-amber mb-4">
+      <div className="min-h-screen bg-metal-dark app-shell flex items-center justify-center">
+        <div className="metal-panel text-center">
+          <div className="metal-panel-screws" />
+          <h2 className="font-arcade text-base text-amber mb-4">
             LOADING...
           </h2>
-          <div className="w-48 h-4 bg-charcoal border-2 border-terminal overflow-hidden mx-auto">
-            <div className="h-full bg-terminal animate-pulse w-2/3" />
+          <div className="stat-display w-48 mx-auto overflow-hidden">
+            <div className="h-3 bg-terminal animate-pulse w-2/3" />
           </div>
-          <p className="font-arcade text-xs text-terminal mt-4 animate-blink">
+          <p className="font-arcade text-xs text-terminal mt-4">
             Initializing hunt systems...
           </p>
         </div>

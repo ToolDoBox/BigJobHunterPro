@@ -92,26 +92,27 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-arcade flex items-center justify-center p-4">
-      <div className="scanlines" />
-
+    <div className="min-h-screen bg-metal-dark app-shell flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo/Title */}
         <div className="text-center mb-8">
-          <h1 className="font-arcade text-2xl md:text-3xl text-blaze text-glow-blaze mb-2">
+          <h1 className="font-arcade text-xl md:text-2xl text-blaze mb-2">
             BIG JOB HUNTER PRO
           </h1>
-          <p className="font-arcade text-xs text-terminal text-glow-terminal animate-blink">
-            [ NEW HUNTER REGISTRATION ]
+          <p className="font-arcade text-xs text-terminal">
+            // NEW HUNTER REGISTRATION //
           </p>
         </div>
 
-        {/* Register form */}
+        {/* Register form - Metal panel with screws */}
         <form
           onSubmit={handleSubmit}
-          className="bg-charcoal border-4 border-blaze p-6 shadow-orange-glow"
+          className="metal-panel metal-panel-orange"
         >
-          <h2 className="font-arcade text-lg text-amber text-glow-amber mb-6 text-center">
+          {/* Bottom screws */}
+          <div className="metal-panel-screws" />
+
+          <h2 className="font-arcade text-base text-amber mb-6 text-center">
             JOIN THE HUNT
           </h2>
 
@@ -173,7 +174,7 @@ export default function Register() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full btn-arcade-primary mt-6 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full btn-metal-primary mt-6"
           >
             {isLoading ? 'CREATING ACCOUNT...' : 'CREATE HUNTER PROFILE'}
           </button>

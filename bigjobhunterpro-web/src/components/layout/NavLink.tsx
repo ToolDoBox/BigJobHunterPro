@@ -21,10 +21,10 @@ export default function NavLink({
       to={to}
       onClick={onClick}
       className={`
-        font-body text-sm uppercase tracking-wide
+        nav-link font-body text-sm uppercase tracking-wide
         transition-all duration-200
         ${isActive
-          ? 'text-blaze text-glow-blaze font-semibold'
+          ? 'text-blaze font-semibold'
           : 'text-gray-300 hover:text-amber'
         }
         ${className}

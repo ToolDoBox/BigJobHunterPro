@@ -5,9 +5,10 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-8">
-      {/* Welcome banner */}
-      <div className="bg-charcoal border-4 border-blaze p-6 shadow-orange-glow">
-        <h1 className="font-arcade text-xl md:text-2xl text-blaze text-glow-blaze mb-2">
+      {/* Welcome banner - Metal panel with orange border */}
+      <div className="metal-panel metal-panel-orange">
+        <div className="metal-panel-screws" />
+        <h1 className="font-arcade text-xl md:text-2xl text-blaze mb-2">
           WELCOME TO THE LODGE
         </h1>
         <p className="text-amber font-semibold">
@@ -18,30 +19,49 @@ export default function Dashboard() {
         </p>
       </div>
 
-      {/* Stats placeholder */}
+      {/* Stats - Industrial gauge/readout style */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-forest/30 border-2 border-terminal p-6 text-center">
-          <div className="font-arcade text-3xl text-terminal text-glow-terminal">
-            {user?.points ?? 0}
+        {/* Total Points */}
+        <div className="metal-panel text-center">
+          <div className="metal-panel-screws" />
+          <div className="stat-display inline-block mb-3">
+            <span className="stat-display-value text-3xl">
+              {user?.points ?? 0}
+            </span>
           </div>
-          <div className="font-arcade text-xs text-gray-400 mt-2">TOTAL POINTS</div>
+          <div className="font-arcade text-xs text-gray-500 tracking-wider">
+            TOTAL POINTS
+          </div>
         </div>
 
-        <div className="bg-forest/30 border-2 border-amber p-6 text-center">
-          <div className="font-arcade text-3xl text-amber text-glow-amber">0</div>
-          <div className="font-arcade text-xs text-gray-400 mt-2">APPLICATIONS</div>
+        {/* Applications */}
+        <div className="metal-panel text-center">
+          <div className="metal-panel-screws" />
+          <div className="stat-display inline-block mb-3">
+            <span className="stat-display-value text-3xl text-amber">0</span>
+          </div>
+          <div className="font-arcade text-xs text-gray-500 tracking-wider">
+            APPLICATIONS
+          </div>
         </div>
 
-        <div className="bg-forest/30 border-2 border-blaze p-6 text-center">
-          <div className="font-arcade text-3xl text-blaze text-glow-blaze">0</div>
-          <div className="font-arcade text-xs text-gray-400 mt-2">DAY STREAK</div>
+        {/* Day Streak */}
+        <div className="metal-panel text-center">
+          <div className="metal-panel-screws" />
+          <div className="stat-display inline-block mb-3">
+            <span className="stat-display-value text-3xl text-blaze">0</span>
+          </div>
+          <div className="font-arcade text-xs text-gray-500 tracking-wider">
+            DAY STREAK
+          </div>
         </div>
       </div>
 
-      {/* Quick actions placeholder */}
-      <div className="bg-charcoal border-2 border-forest p-6">
-        <h2 className="font-arcade text-lg text-amber mb-4">QUICK ACTIONS</h2>
-        <button className="btn-arcade-primary">
+      {/* Quick actions - Metal panel */}
+      <div className="metal-panel">
+        <div className="metal-panel-screws" />
+        <h2 className="font-arcade text-base text-amber mb-4">QUICK ACTIONS</h2>
+        <button className="btn-metal-primary">
           + QUICK CAPTURE
         </button>
         <p className="text-gray-500 text-sm mt-4">

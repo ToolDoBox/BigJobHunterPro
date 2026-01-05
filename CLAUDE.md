@@ -101,3 +101,4 @@ docker-compose down -v                # Stop and remove volumes
 - `Docs/Project-Scoping.md` - User stories, feature prioritization, roadmap
 - `Docs/concept.md` - Product vision and UX concepts
 - `Meta/Sprint 1.md` - Current sprint backlog and completion criteria
+- If you need a new Markdown file that does not fit an existing category, place it in `Meta/` (misc bucket, but do not create junk files).

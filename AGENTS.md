@@ -4,6 +4,7 @@
 - `index.html`, `styles.css`, and `script.js` implement the landing page.
 - `imgs/` contains screenshots and brand assets referenced by the HTML.
 - `Docs/` and `Meta/` hold strategy, scope, and architecture planning notes; keep them updated when product decisions change.
+- If you need a new Markdown file that does not fit an existing category, place it in `Meta/` (misc bucket, but do not create junk files).
 
 ## Build, Test, and Development Commands
 - Local preview: open `index.html` directly, or run `python -m http.server 8000` and visit `http://localhost:8000`.

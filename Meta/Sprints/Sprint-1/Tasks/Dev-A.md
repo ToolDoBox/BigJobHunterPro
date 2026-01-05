@@ -34,12 +34,29 @@ Before coding, confirm these contracts with realemmetts:
 
 ## YOUR TASKS
 
-### A1. Create Solution Structure
+### A0. Set Up Azure SQL Database ✅ COMPLETED
+**Status:** ✅ Completed on 2026-01-04
+- [x] Azure SQL Database (Free Offer) provisioned in Azure Portal
+- [x] Created new logical SQL server: `bjhp-dev-sql-cgta`
+- [x] Configured networking with firewall rule for local dev access (client public IP added)
+- [x] Retrieved connection details for application configuration
+- [x] **Note:** Connection string and credentials stored outside repository for security
+
+**Azure Resources Created:**
+- **Server:** `bjhp-dev-sql-cgta.database.windows.net`
+- **Database:** BigJobHunterPro (Free/Basic tier)
+- **Region:** [As configured in Azure Portal]
+- **Firewall:** Local development IP whitelisted
+
+---
+
+### A1. Create Solution Structure ✅ COMPLETED
+**Status:** ✅ Completed on 2026-01-04
 **Directory:** `src/`
-- [ ] Create .NET 8 solution with Clean Architecture layers
-- [ ] Projects: Domain, Application, Infrastructure, WebAPI
-- [ ] Add project references (WebAPI -> Infrastructure -> Application -> Domain)
-- [ ] Add .gitignore for .NET
+- [x] Create .NET 8 solution with Clean Architecture layers
+- [x] Projects: Domain, Application, Infrastructure, WebAPI
+- [x] Add project references (WebAPI -> Infrastructure -> Application -> Domain)
+- [x] Add .gitignore for .NET
 
 **Files to create:**
 ```
@@ -66,11 +83,15 @@ dotnet sln add src/Domain src/Application src/Infrastructure src/WebAPI
 
 ### A2. Configure ApplicationDbContext + Initial Migration
 **Depends on:** A1
-- [ ] Install EF Core + SQL Server packages
-- [ ] Create ApplicationDbContext inheriting IdentityDbContext
-- [ ] Configure connection string (use localdb or Docker SQL Server)
-- [ ] Create initial migration for Users table
+**Status:** In progress (uncommitted)
+- [x] Install EF Core + SQL Server packages
+- [x] Create ApplicationDbContext inheriting IdentityDbContext
+- [x] Configure connection string (placeholders + user secrets guidance)
+- [x] Create initial migration for Users table
 - [ ] Add seed data helper for dev environment
+
+**Notes:**
+- Migrations exist in `src/Infrastructure/Migrations/` (tracked) and `src/Infrastructure/Data/Migrations/` (untracked). Pick one location and remove the duplicate.
 
 **Files to create:**
 - `src/Infrastructure/Data/ApplicationDbContext.cs`
@@ -92,10 +113,11 @@ dotnet add package Microsoft.EntityFrameworkCore.Design
 
 ### A3. Configure ASP.NET Identity + Password Policy
 **Depends on:** A2
-- [ ] Configure Identity services in Program.cs
-- [ ] Set password requirements (min 8 chars, require digit, require uppercase)
+**Status:** In progress (uncommitted)
+- [x] Configure Identity services in Program.cs
+- [x] Set password requirements (min 8 chars, require digit, require uppercase)
 - [ ] Configure user lockout policy
-- [ ] Add ApplicationUser entity extending IdentityUser
+- [x] Add ApplicationUser entity extending IdentityUser
 
 **Files to create/modify:**
 - `src/Domain/Entities/ApplicationUser.cs`

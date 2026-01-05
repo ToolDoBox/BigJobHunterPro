@@ -55,14 +55,19 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
         ValidAudience = builder.Configuration["JwtSettings:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret))
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
+        NameClaimType = System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub
     };
 });
 
 builder.Services.AddAuthorization();
 
+// Add HTTP Context Accessor for CurrentUserService
+builder.Services.AddHttpContextAccessor();
+
 // Add Application Services
 builder.Services.AddScoped<Application.Interfaces.IJwtTokenService, Infrastructure.Services.JwtTokenService>();
+builder.Services.AddScoped<Application.Interfaces.ICurrentUserService, Infrastructure.Services.CurrentUserService>();
 
 // Add Controllers
 builder.Services.AddControllers();
@@ -97,3 +102,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.Run();
+
+// Make Program class accessible to integration tests
+public partial class Program { }

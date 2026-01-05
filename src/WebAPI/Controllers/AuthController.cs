@@ -12,16 +12,22 @@ namespace WebAPI.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly IJwtTokenService _jwtTokenService;
+    private readonly ICurrentUserService _currentUserService;
     private readonly ILogger<AuthController> _logger;
 
     public AuthController(
         UserManager<ApplicationUser> userManager,
+        SignInManager<ApplicationUser> signInManager,
         IJwtTokenService jwtTokenService,
+        ICurrentUserService currentUserService,
         ILogger<AuthController> logger)
     {
         _userManager = userManager;
+        _signInManager = signInManager;
         _jwtTokenService = jwtTokenService;
+        _currentUserService = currentUserService;
         _logger = logger;
     }
 
@@ -92,5 +98,123 @@ public class AuthController : ControllerBase
         };
 
         return CreatedAtAction(nameof(Register), new { id = user.Id }, response);
+    }
+
+    /// <summary>
+    /// Authenticate user and issue JWT token
+    /// </summary>
+    /// <param name="request">Login credentials (email and password)</param>
+    /// <returns>User ID, email, JWT token, and token expiration</returns>
+    [HttpPost("login")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<LoginResponse>> Login([FromBody] LoginRequest request)
+    {
+        // 1. Validate model state
+        if (!ModelState.IsValid)
+        {
+            var errors = ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => e.ErrorMessage)
+                .ToList();
+
+            return BadRequest(new ErrorResponse("Validation failed", errors));
+        }
+
+        // 2. Find user by email
+        var user = await _userManager.FindByEmailAsync(request.Email);
+        if (user == null)
+        {
+            _logger.LogWarning("Login failed: User not found for email {Email}", request.Email);
+            return Unauthorized(new ErrorResponse(
+                "Invalid credentials",
+                new List<string> { "Invalid email or password" }
+            ));
+        }
+
+        // 3. Check password with SignInManager (handles lockout automatically)
+        var result = await _signInManager.CheckPasswordSignInAsync(
+            user,
+            request.Password,
+            lockoutOnFailure: true
+        );
+
+        // 4. Handle lockout scenario
+        if (result.IsLockedOut)
+        {
+            _logger.LogWarning("Login failed: Account locked out for user {UserId}", user.Id);
+            return Unauthorized(new ErrorResponse(
+                "Account locked",
+                new List<string> {
+                    "Account is locked due to multiple failed login attempts. Please try again in 5 minutes."
+                }
+            ));
+        }
+
+        // 5. Handle invalid password
+        if (!result.Succeeded)
+        {
+            _logger.LogWarning("Login failed: Invalid password for email {Email}", request.Email);
+            return Unauthorized(new ErrorResponse(
+                "Invalid credentials",
+                new List<string> { "Invalid email or password" }
+            ));
+        }
+
+        // 6. Generate JWT token and return success response
+        var token = _jwtTokenService.GenerateToken(user);
+        var expiresAt = _jwtTokenService.GetTokenExpiration();
+
+        _logger.LogInformation("User logged in successfully: {Email}", request.Email);
+
+        var response = new LoginResponse
+        {
+            UserId = user.Id,
+            Email = user.Email ?? string.Empty,
+            Token = token,
+            ExpiresAt = expiresAt
+        };
+
+        return Ok(response);
+    }
+
+    /// <summary>
+    /// Get current authenticated user's information
+    /// </summary>
+    /// <returns>User ID, email, display name, and points</returns>
+    [HttpGet("me")]
+    [Authorize]
+    [ProducesResponseType(typeof(GetMeResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<GetMeResponse>> GetMe()
+    {
+        // Get current user via CurrentUserService
+        var user = await _currentUserService.GetCurrentUserAsync();
+
+        // Handle edge case: user deleted after JWT issued
+        if (user == null)
+        {
+            _logger.LogWarning("GetMe failed: User not found for authenticated request");
+            return NotFound(new ErrorResponse(
+                "User not found",
+                new List<string> { "The authenticated user no longer exists in the system" }
+            ));
+        }
+
+        // Map to response DTO
+        var response = new GetMeResponse
+        {
+            UserId = user.Id,
+            Email = user.Email ?? string.Empty,
+            DisplayName = user.DisplayName,
+            Points = user.Points
+        };
+
+        _logger.LogInformation("User retrieved own profile: {UserId}", user.Id);
+
+        return Ok(response);
     }
 }

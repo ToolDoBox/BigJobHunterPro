@@ -162,45 +162,61 @@ options.Password.RequireNonAlphanumeric = false;
 
 ---
 
-### A5. Implement Login Endpoint + JWT Issuance
+### A5. Implement Login Endpoint + JWT Issuance ✅ COMPLETED
 **Depends on:** A4
-- [ ] Create LoginRequest DTO
-- [ ] Create LoginResponse DTO
-- [ ] Add POST /api/auth/login to AuthController
-- [ ] Validate credentials via Identity SignInManager
-- [ ] Create JWT token with configured claims
-- [ ] Set appropriate token expiration (e.g., 7 days)
+**Status:** ✅ Completed on 2026-01-05
+- [x] Create LoginRequest DTO
+- [x] Create LoginResponse DTO (includes expiresAt field)
+- [x] Add POST /api/auth/login to AuthController
+- [x] Validate credentials via Identity SignInManager
+- [x] Create JWT token with configured claims
+- [x] Set appropriate token expiration (7 days)
 
-**Files to create:**
+**Files created:**
 - `src/Application/DTOs/Auth/LoginRequest.cs`
 - `src/Application/DTOs/Auth/LoginResponse.cs`
-- `src/Infrastructure/Services/JwtTokenService.cs`
-- `src/Application/Interfaces/IJwtTokenService.cs`
 
-**JWT Config (appsettings.json):**
-```json
-{
-  "Jwt": {
-    "Key": "your-256-bit-secret-key-here-make-it-long",
-    "Issuer": "BigJobHunterPro",
-    "Audience": "BigJobHunterPro",
-    "ExpirationDays": 7
-  }
-}
-```
+**Files modified:**
+- `src/WebAPI/Controllers/AuthController.cs` - Added SignInManager to constructor, added Login endpoint
+
+**Notes:**
+- Login endpoint uses SignInManager.CheckPasswordSignInAsync() with lockout support
+- LoginResponse includes expiresAt field (differs from RegisterResponse)
+- Account lockout enforced: 5 failed attempts = 5-minute lockout
+- Generic error messages prevent account enumeration attacks
+- Logging: Warning for failed attempts, Info for successful logins
 
 ---
 
-### A6. Add Auth Middleware + User Claim Helpers
+### A6. Add Auth Middleware + User Claim Helpers ✅ COMPLETED
 **Depends on:** A5
-- [ ] Configure JWT Bearer authentication in Program.cs
-- [ ] Add [Authorize] attribute support
-- [ ] Create CurrentUserService to extract user ID from claims
-- [ ] Create GET /api/auth/me endpoint (protected)
+**Status:** ✅ Completed on 2026-01-05
+- [x] Configure JWT Bearer authentication in Program.cs ✅ (already done in A3)
+- [x] Add [Authorize] attribute support ✅ (already done in A3)
+- [x] Configure JWT claim mapping (NameClaimType = Sub)
+- [x] Register IHttpContextAccessor in Program.cs
+- [x] Create ICurrentUserService interface
+- [x] Implement CurrentUserService to extract user ID from claims
+- [x] Register CurrentUserService in DI
+- [x] Create GET /api/auth/me endpoint (protected)
 
-**Files to create:**
+**Files created:**
 - `src/Application/Interfaces/ICurrentUserService.cs`
 - `src/Infrastructure/Services/CurrentUserService.cs`
+- `src/Application/DTOs/Auth/GetMeResponse.cs`
+
+**Files modified:**
+- `src/WebAPI/Program.cs` - Added NameClaimType configuration, registered IHttpContextAccessor and ICurrentUserService
+- `src/WebAPI/Controllers/AuthController.cs` - Added ICurrentUserService to constructor, added GetMe endpoint
+- `src/Infrastructure/Infrastructure.csproj` - Added Microsoft.AspNetCore.Http.Abstractions package
+
+**Notes:**
+- JWT claim mapping configured: NameClaimType = JwtRegisteredClaimNames.Sub
+- This enables User.FindFirst(ClaimTypes.NameIdentifier) to work correctly
+- CurrentUserService provides two methods: GetUserId() (fast) and GetCurrentUserAsync() (full user)
+- GetMe endpoint requires [Authorize] attribute, returns 401 for unauthenticated requests
+- Returns 404 if user deleted after JWT issued (edge case)
+- GetMeResponse DTO prevents exposing Identity internals
 
 ---
 

@@ -44,7 +44,7 @@ Job searching is emotionally draining and demotivating. Job seekers face a tripl
 
 **The Solution:**
 
-Big Job Hunter Pro transforms job hunting from isolated spreadsheet drudgery into a **collaborative arcade-style hunting game**. We gamify the entire job search process with a retro 90s hunting aesthetic that makes every application, interview, and even rejection feel like progress. Job seekers log applications in 15 seconds, earn points for real milestones (not just outcomes), maintain daily streaks to build momentum, and **compete with friends on social leaderboards**. Unlike competitors that focus solely on organization (Huntr, Teal) or ATS optimization (JobScan), we address the motivational crisis through game mechanics and **social accountability**—the missing piece that our friend group desperately needed.
+Big Job Hunter Pro transforms job hunting from isolated spreadsheet drudgery into an **AI-powered collaborative arcade-style hunting game**. We gamify the entire job search process with a retro 90s hunting aesthetic that makes every application, interview, and even rejection feel like progress. Job seekers log applications in **10 seconds** by simply pasting a job URL and page content—our AI automatically extracts company name, role title, required skills, salary range, and even generates potential interview questions. They earn points for real milestones (not just outcomes), maintain daily streaks to build momentum, and **compete with friends on social leaderboards**. Unlike competitors that focus solely on organization (Huntr, Teal) or ATS optimization (JobScan), we address both the **data entry friction** (via AI parsing) and the **motivational crisis** (via game mechanics and social accountability)—the two missing pieces that our friend group desperately needed.
 
 **Target Audience:**
 
@@ -52,11 +52,13 @@ Our **primary users are friend groups** (2-10 people) conducting simultaneous jo
 
 **Key Benefits:**
 
-1. **Instant Gratification:** 15-second quick capture with immediate point feedback transforms daily dread into daily wins
-2. **Resilience Rewarding:** Points for rejections (+5) reframe failure as progress, preventing shame spirals
-3. **Social Accountability:** Hunting party leaderboards create friendly competition and shared motivation
-4. **Momentum Building:** Daily streaks and the "fire icon" create habitual action even when motivation wanes
-5. **Emotional Design:** The nostalgic 90s arcade aesthetic makes the experience playful instead of clinical
+1. **Zero Manual Data Entry:** AI automatically extracts all job details (company, role, skills, salary) from pasted content—no typing required
+2. **10-Second Application Logging:** AI-powered quick capture with immediate point feedback transforms daily dread into daily wins
+3. **AI-Generated Interview Prep:** Get potential interview questions based on each job's requirements without manual research
+4. **Resilience Rewarding:** Points for rejections (+5) reframe failure as progress, preventing shame spirals
+5. **Social Accountability:** Hunting party leaderboards create friendly competition and shared motivation
+6. **Momentum Building:** Daily streaks and the "fire icon" create habitual action even when motivation wanes
+7. **Emotional Design:** The nostalgic 90s arcade aesthetic makes the experience playful instead of clinical
 
 **Why This Matters:**
 
@@ -168,7 +170,9 @@ Before building Big Job Hunter Pro, our friend group built a sophisticated solo 
 - Export to image (great for sharing milestones)
 
 **What We're Adding (The Missing Pieces):**
-- **15-second Quick Capture** (vs. 5-10 minute JSON file creation)
+- **AI-Powered 10-second Quick Capture** (vs. 5-10 minute JSON file creation)
+- **Zero manual data entry** (AI extracts company, role, skills, salary automatically)
+- **AI-generated interview questions** (vs. manual prep research)
 - **Collaborative leaderboards** (vs. solo dashboards)
 - **Real gamification** (points, achievements, rivalry panels)
 - **Social accountability** (hunting parties, group challenges)
@@ -318,15 +322,19 @@ The project balances "eating my vegetables" (learning enterprise patterns) with 
 - CQRS with MediatR (new pattern, but well-documented)
 - EF Core with SQL Server (transferable from other ORMs)
 - Clean Architecture structure (clear templates available)
+- **AI Integration** - Prompt engineering, error handling, cost optimization (new skill, but APIs are well-documented)
+- **Background Job Processing** - Async AI parsing with queue management (new concept, but IHostedService is straightforward)
 
 **Potentially Complex (Mitigated by Phasing):**
 - Leaderboard LINQ queries with complex aggregations (Phase 3, allows time to level up)
 - Real-time updates for activity feeds (could use polling initially, websockets later)
 - Azure deployment and CI/CD (Phase 4, plenty of learning resources)
+- **AI Prompt Optimization** - Balancing parsing accuracy with token cost (iterative improvement in Phase 2)
+- **AI Error Handling** - Graceful fallbacks when parsing fails (critical for UX, thoroughly tested)
 
 I've allocated 12 weeks for the core implementation with an expectation that Phases 1-2 will feel comfortable while Phases 3-4 will require research and iteration. The GETTING_STARTED.md document breaks down specific technologies to learn incrementally.
 
-**Complexity Assessment:** 7/10 difficulty—challenging enough to demonstrate skill growth, manageable enough to complete within 3 months.
+**Complexity Assessment:** 7.5/10 difficulty—AI integration adds complexity (prompt engineering, cost management, error handling) but leverages well-documented APIs. Challenging enough to demonstrate advanced skill growth, manageable enough to complete within 3 months with the right API choice (Claude Haiku or GPT-3.5-turbo for cost-effectiveness).
 
 ### 10. Enjoyment: Will you have fun working on this project, or do you just want a custom solution to a problem?
 
@@ -338,6 +346,8 @@ I've allocated 12 weeks for the core implementation with an expectation that Pha
 3. **Game design:** Tuning the point economy and achievement system scratches the game designer itch
 4. **Building for friends:** Testing with a cohort of job-seeking friends and seeing their reactions to features is rewarding
 5. **Technical puzzles:** Solving challenges like "How do I efficiently calculate leaderboard rankings?" or "What's the best way to model domain events?" is intrinsically enjoyable
+6. **AI prompt engineering:** Crafting prompts that extract structured data from messy job listings feels like a creative puzzle with immediate feedback
+7. **Watching AI magic:** Seeing the parser correctly extract salary ranges from "120k-150k" or "Competitive compensation + equity" is satisfying
 
 **Problem-Solving Aspect:**
 Yes, I want the custom solution—I'll use this tool for my own job search. But if it were purely utilitarian, I'd just use a spreadsheet. The gamification and aesthetic make this a project I'll enjoy building, not just endure.
@@ -375,13 +385,17 @@ Establishing clear goals ensures the project has direction and measurable succes
 
 1. **Make daily job search action habitual:** Users should log at least one action per day, maintaining streaks averaging 7+ consecutive days.
 
-2. **Reduce time spent on administrative tracking:** Quick Capture should genuinely take ≤15 seconds from thought to logged application.
+2. **Eliminate data entry friction:** AI-Powered Quick Capture should genuinely take ≤10 seconds from paste to logged application with zero manual typing.
 
-3. **Increase resilience to rejection:** Users should report feeling less demotivated by rejections after using the scoring system.
+3. **Provide automatic skill insights:** AI should automatically identify and tag required/nice-to-have skills from job descriptions, revealing skill gaps without manual tagging.
 
-4. **Create social accountability:** Hunting parties should generate friendly competition that motivates increased application volume.
+4. **Enable AI-powered interview prep:** Users should get AI-generated interview questions for each job, reducing prep time and increasing confidence.
 
-5. **Provide actionable insights:** Users should be able to identify which job sources and strategies yield the most interviews.
+5. **Increase resilience to rejection:** Users should report feeling less demotivated by rejections after using the scoring system.
+
+6. **Create social accountability:** Hunting parties should generate friendly competition that motivates increased application volume.
+
+7. **Provide actionable insights:** Users should be able to identify which job sources and strategies yield the most interviews.
 
 **Technical Goals:**
 
@@ -391,9 +405,13 @@ Establishing clear goals ensures the project has direction and measurable succes
 
 3. **Showcase SOLID principles:** Code should demonstrate Single Responsibility, Open/Closed, Liskov Substitution, Interface Segregation, and Dependency Inversion with documented examples.
 
-4. **Achieve 70%+ test coverage:** Unit tests for domain logic, integration tests for application layer, functional tests for API endpoints.
+4. **Build production-ready AI integration:** Implement robust AI parsing service with prompt engineering, error handling, retry logic, and cost optimization (token counting, response caching).
 
-5. **Deploy to production:** Application should be publicly accessible on Azure with CI/CD pipeline automatically deploying from main branch.
+5. **Master async background processing:** Queue-based architecture for AI parsing that provides instant user feedback while processing in background.
+
+6. **Achieve 70%+ test coverage:** Unit tests for domain logic, integration tests for application layer (including AI service mocks), functional tests for API endpoints.
+
+7. **Deploy to production:** Application should be publicly accessible on Azure with CI/CD pipeline automatically deploying from main branch, including AI API credential management via Azure Key Vault.
 
 ### 3. Personal Brand Alignment: How does this project align with your personal brand and style?
 

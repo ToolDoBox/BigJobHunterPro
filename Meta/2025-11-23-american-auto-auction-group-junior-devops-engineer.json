@@ -1,0 +1,345 @@
+{
+  "schema_version": "v1",
+  "id": "2025-11-23-american-auto-auction-group-junior-devops-engineer",
+  "created_at": "2025-12-14T00:00:00Z",
+  "updated_at": "2025-12-17T21:30:26Z",
+  "job_post_url": "[https://www.ziprecruiter.com/c/Americas-Auto-Auction/Job/Application-Developer-.NET/-in-Dallas%2CTX?jid=64eac5bfc311dc4f](https://www.ziprecruiter.com/c/Americas-Auto-Auction/Job/Application-Developer-.NET/-in-Dallas%2CTX?jid=64eac5bfc311dc4f)",
+  "company_name": "American Auto Auction Group LLC",
+  "company_location": "Dallas, TX",
+  "company_industry": "Vehicle auction and remarketing",
+  "role_title": "Mid-Level .NET DevOps Engineer ",
+  "role_level": "mid",
+  "employment_type": "full_time",
+  "work_mode": "remote",
+  "source_channel": "job_board",
+  "source_platform": "ZipRecruiter",
+  "source_details": "Originally applied via Indeed (app tracker link) for Junior DevOps Engineer. Recruiter clarified the open role being discussed is mid-level; junior role has already been filled. Closest public listing found: Paylocity/ZipRecruiter 'Application Developer-.NET' (Mid-Level .NET).",
+  "date_posted": "2025-12-11",
+  "date_saved": "2025-11-23",
+  "date_applied": "2025-11-23",
+  "status": {
+    "stage": "rejected",
+    "state": "closed"
+  },
+  "current_stage": "interview",
+  "current_status": "technical_interview_pending",
+  "final_outcome": "rejected",
+  "final_outcome_date": "2025-12-30",
+  "required_skills": [
+    ".NET / C#",
+    ".NET 8",
+    "ASP.NET (API controllers)",
+    "Queue services and queue processing",
+    "Legacy system modernization (strangler pattern)",
+    "Troubleshooting (application + environment)",
+    "Basic DevOps concepts (deployments, environment reliability)",
+    "CI/CD fundamentals",
+    "Release coordination / documentation",
+    "Containerization fundamentals"
+  ],
+  "nice_to_have_skills": [
+    "SQL Server",
+    "PowerShell",
+    "GitHub",
+    "Jira",
+    "Python scripting",
+    "Monitoring and alerting tools",
+    "Infrastructure automation (Terraform/Ansible)",
+    "Cloud exposure (Azure/AWS)",
+    "Docker/Kubernetes",
+    "Legacy C codebase familiarity"
+  ],
+  "skill_tags": [
+    "devops",
+    "windows",
+    "dotnet",
+    "net8",
+    "aspnet",
+    "iis",
+    "ci_cd",
+    "automation",
+    "troubleshooting",
+    "queues",
+    "containerization",
+    "legacy_c",
+    "strangler_pattern"
+  ],
+  "years_experience_required": 2,
+  "education_required": null,
+  "salary_currency": "USD",
+  "salary_min": 80000,
+  "salary_max": 90000,
+  "salary_type": "yearly",
+  "comp_notes": "Recruiter stated pay range 80–90K. Candidate indicated 80–83K is acceptable. (Benefits still expected per original posting: parental leave, health insurance, 401(k) matching, paid time off, vision insurance, dental insurance.)",
+  "contacts": [
+    {
+      "id": "contact_1",
+      "name": "Adalia Moran",
+      "role": "Corporate Recruiter",
+      "relationship": "company_recruiter",
+      "email": "[adalia.moran@americasaa.com](mailto:adalia.moran@americasaa.com)",
+      "phone": "Office: 317/689-7509; Mobile: 463/336-3547",
+      "linkedin": null,
+      "notes": "Conducted initial virtual screen on Monday, Dec 15, 2025. Scheduled next interview with Tim for Wednesday, Dec 17, 2025 at 10:00 AM CST."
+    },
+    {
+      "id": "contact_2",
+      "name": "Tim Ochs",
+      "role": "Team Lead",
+      "relationship": "hiring_manager",
+      "email": "[Tim.Ochs@americasaa.com](mailto:Tim.Ochs@americasaa.com)",
+      "phone": null,
+      "linkedin": null,
+      "notes": "Team lead for the role; direct manager (candidate would report to him)."
+    }
+  ],
+  "timeline_events": [
+    {
+      "event_type": "application_submitted",
+      "stage": "applied",
+      "direction": "outgoing",
+      "channel": "job_board",
+      "at": "2025-11-23T00:00:00-06:00",
+      "actor": "candidate",
+      "summary": "Applied on Indeed",
+      "notes": "Applied on Nov 23, 2025 via Indeed for Junior DevOps Engineer listing."
+    },
+    {
+      "event_type": "email_received",
+      "stage": "screening",
+      "direction": "incoming",
+      "channel": "email",
+      "at": "2025-12-11T06:59:00-06:00",
+      "actor": "recruiter",
+      "summary": "Interview invitation email (title referenced: .NET Application Developer)",
+      "notes": "Recruiter outreach referenced a .NET Application Developer opportunity."
+    },
+    {
+      "event_type": "email_sent",
+      "stage": "screening",
+      "direction": "outgoing",
+      "channel": "email",
+      "at": "2025-12-11T20:44:00-06:00",
+      "actor": "candidate",
+      "summary": "Replied with availability",
+      "notes": "Provided availability and time zone alignment (CST)."
+    },
+    {
+      "event_type": "email_received",
+      "stage": "screening",
+      "direction": "incoming",
+      "channel": "email",
+      "at": "2025-12-12T07:12:00-06:00",
+      "actor": "recruiter",
+      "summary": "Interview scheduled for Monday, Dec 15 at 9:00 AM CST",
+      "notes": "Initial screen scheduled."
+    },
+    {
+      "event_type": "interview",
+      "stage": "interview",
+      "direction": "other",
+      "channel": "video",
+      "at": "2025-12-15T09:00:00-06:00",
+      "actor": "company",
+      "summary": "Recruiter screen completed (Adalia Moran)",
+      "notes": "Key details captured: company expanded to ~50 locations and trending toward ~60; hiring for a mid-level .NET/DevOps-leaning role; junior role already filled; team includes Tim (lead), 3 sys admins, 1 application developer, plus a new junior role; stated pay range 80–90K (candidate OK with 80–83K); remote if not local but candidate is near Dallas and open to in-person; next step is 30-minute virtual interview with Tim and other team members; candidate availability confirmed for Wednesday Dec 17 at 10:00 AM CST; candidate suggested start date Monday Dec 29, 2025."
+    },
+    {
+      "event_type": "interview",
+      "stage": "interview",
+      "direction": "other",
+      "channel": "video",
+      "at": "2025-12-17T10:00:00-06:00",
+      "actor": "company",
+      "summary": "Team interview scheduled (Tim + team members)",
+      "notes": "30-minute virtual interview; recruiter indicated Tim will be out the following week."
+    },
+    {
+      "event_type": "interview",
+      "stage": "interview",
+      "direction": "other",
+      "channel": "video",
+      "at": "2025-12-17T09:45:00-06:00",
+      "actor": "company",
+      "summary": "Team interview completed (Tim Ochs)",
+      "notes": "Interview duration: 9:45 AM–10:45 AM CST. Tim Ochs is the team lead and direct manager for the role. Tim previously started Liquid Motors (retail + wholesale B2B car auction website/service) which was acquired after ~16 years by American Auto Auctions Group; the company has expanded to 50+ auctions. Current production system includes ~20-year-old C code with hand-written libraries and minimal external dependencies; they are implementing a new stack alongside the old using a strangler pattern. Current/newer stack includes C# on .NET 8 with ASP.NET API controllers, scheduled CLI tools, and substantial queue services/processing. Team is ~5 people total (Tim, 2 senior developers, 1 junior developer, 1 DBA). Goals include compartmentalizing code, containerizing it for cloud platforms, and reducing technical debt (including cleaning up older abstractions where anticipated features were never implemented). Python is used for some development tools but not production code. There are ~52 integrations, 9 active, with distinct retail vs wholesale business logic. Success in first 60–90 days: domain knowledge, architecture, business logic; longer-term: generalist contributor helping across the team. Role is fully remote; occasional optional Wednesday night bowling. Tim said candidate came across as passionate and indicated strong interest in continuing the process; Tim mentioned having ~5 interviews the same day and estimated ~10–20 candidates in total."
+    },
+    {
+      "event_type": "email_sent",
+      "stage": "interview",
+      "direction": "outgoing",
+      "channel": "email",
+      "at": "2025-12-17T16:15:00-06:00",
+      "actor": "candidate",
+      "summary": "Post-interview thank-you email sent to Tim Ochs",
+      "notes": "Candidate thanked Tim for the interview, expressed enthusiasm about Liquid Motors history and the evolution to .NET 8, and stated interest in the upcoming technical interview with a senior developer. Also followed up on Tim’s mention of his web game (Fish-Cremental) and requested a link."
+    },
+    {
+      "event_type": "voicemail_received",
+      "stage": "interview",
+      "direction": "incoming",
+      "channel": "phone",
+      "at": "2025-12-17T14:29:00-06:00",
+      "actor": "recruiter",
+      "summary": "Positive feedback; invited to final-round interview",
+      "notes": "Voicemail from Adalia Moran stating the team provided very good feedback and would like to invite the candidate to a final round interview on Monday, Dec 29, 2025. Recruiter requested a callback and noted availability between 11:00 AM and 3:00 PM CST. Callback number: 317-689-7509."
+    },
+    {
+      "event_type": "interview",
+      "stage": "interview",
+      "direction": "other",
+      "channel": "video",
+      "at": "2025-12-29T11:00:00-06:00",
+      "actor": "company",
+      "summary": "Technical interview completed (team panel)",
+      "notes": "Candidate attended technical/team interview at 11:00 AM CST. Candidate introduction emphasized All Kids Network worksheet generators (notably handwriting worksheet generator reaching front-page Google results and ~300,000+ page views) and work abstracting PDF generation into an internal abstraction layer to support future AI-assisted worksheet creation. Candidate discussed motivation for role change (growth into fuller stack responsibilities; reduced hours due to ad-revenue changes). Candidate described UI/UX process experience (strategy/skeleton/wireframes, iterative sketches/prototypes). Candidate walked through a multi-rewrite personal project 'Toolbox' (front-end → Node.js API → React/TypeScript + Supabase) including a configurable journaling/form system with evolving inputs over time. Candidate discussed team workflow at All Kids Network (small team, partial agile practices; weekly/biweekly syncs, mostly async via Slack/email; handling long-form projects and urgent maintenance/security work). Candidate asked the panel about current source control/deployment workflow, presence of testing, rationale for opening the role, integration cadence (given ~52 integrations, ~9 active mentioned previously), and what success looks like for a collaborator in the first months vs long term; also asked about communication channels and remote-collaboration expectations."
+    },
+    {
+      "event_type": "email_sent",
+      "stage": "interview",
+      "direction": "outgoing",
+      "channel": "email",
+      "at": "2025-12-29T13:25:00-06:00",
+      "actor": "candidate",
+      "summary": "Thank-you email after interview; requested timeline for next steps/decision",
+      "notes": "Sent to Tim Ochs. Candidate thanked Tim for the time, requested thanks be passed to Moises, Cameron, Walter, and Blessing, and asked about timeline for next steps or a decision."
+    },
+    {
+      "event_type": "email_received",
+      "stage": "interview",
+      "direction": "incoming",
+      "channel": "email",
+      "at": "2025-12-29T13:43:00-06:00",
+      "actor": "company",
+      "summary": "Tim replied: decision by New Year or within the first week",
+      "notes": "Tim stated the team enjoyed the interview, planned to make a decision either by the New Year or within the first week, and thanked the candidate for reaching out afterwards."
+    },
+    {
+      "event_type": "email_sent",
+      "stage": "interview",
+      "direction": "outgoing",
+      "channel": "email",
+      "at": "2025-12-29T14:39:00-06:00",
+      "actor": "candidate",
+      "summary": "Follow-up thank-you email; asked to pass thanks to team; Happy New Year",
+      "notes": "Sent to Tim Ochs. Candidate thanked Tim for feedback and timing update, asked to pass thanks along to the team, and wished them a Happy New Year."
+    },
+    {
+      "event_type": "email_received",
+      "stage": "closed",
+      "direction": "incoming",
+      "channel": "email",
+      "at": "2025-12-30T07:10:00-06:00",
+      "actor": "recruiter",
+      "summary": "Recruiter notified: offer extended to another candidate; wants to keep in contact",
+      "notes": "Email from Adalia Moran: thanked candidate for interviewing; team enjoyed conversation and had great feedback; interviews wrapped up and they extended an offer to a different candidate; they wished they had two positions and were very interested; asked whether it would be okay to keep in contact and keep the candidate in consideration if an opportunity becomes available."
+    }
+  ],
+  "interview_questions_asked_inferred": [
+    {
+      "at": "2025-12-29T11:00:00-06:00",
+      "stage": "interview",
+      "question": "Can you introduce yourself and summarize your background?",
+      "evidence": "Candidate gives a structured intro (All Kids Network role, generators, handwriting project, PDF abstraction work)."
+    },
+    {
+      "at": "2025-12-29T11:00:00-06:00",
+      "stage": "interview",
+      "question": "Why are you interested in this role / why are you looking to change jobs now?",
+      "evidence": "Candidate answers with growth (full stack) and necessity (hours reduced due to ad revenue changes)."
+    },
+    {
+      "at": "2025-12-29T11:00:00-06:00",
+      "stage": "interview",
+      "question": "Tell us about your UI/UX experience and process.",
+      "evidence": "Candidate describes UI/UX workflow, wireframing, color decisions, iterative sketching/prototyping."
+    },
+    {
+      "at": "2025-12-29T11:00:00-06:00",
+      "stage": "interview",
+      "question": "Can you walk through your backend/technical experience and recent projects?",
+      "evidence": "Candidate asks whether to talk through backend projects and then describes 'Toolbox' architecture and rewrites."
+    },
+    {
+      "at": "2025-12-29T11:00:00-06:00",
+      "stage": "interview",
+      "question": "Tell us about a project you own end-to-end (architecture, storage, stack choices, rewrites).",
+      "evidence": "Candidate details toolbox evolution: HTML/CSS/JS → Node.js API → React + TypeScript + Supabase, earlier MongoDB mention."
+    },
+    {
+      "at": "2025-12-29T11:00:00-06:00",
+      "stage": "interview",
+      "question": "How does your team work day-to-day (Agile/Scrum, planning, iteration cadence)?",
+      "evidence": "Candidate explains small team cadence, not textbook scrum, weekly/biweekly calls, async updates."
+    },
+    {
+      "at": "2025-12-29T11:00:00-06:00",
+      "stage": "interview",
+      "question": "How do you handle long projects vs urgent maintenance/security work?",
+      "evidence": "Candidate contrasts 6–8 month handwriting project with urgent upgrades/security fixes interrupting work."
+    },
+    {
+      "at": "2025-12-29T11:00:00-06:00",
+      "stage": "interview",
+      "question": "How do you collaborate remotely and keep stakeholders aligned?",
+      "evidence": "Candidate describes weekly/monthly updates, Slack/email, sync calls; asks the team about their comms channel."
+    }
+  ],
+  "resume_version_used": null,
+  "cover_letter_version_used": null,
+  "why_interested": "",
+  "fit_summary": [],
+  "risk_flags": [
+    "Public posting for a 'Mid-Level .NET DevOps Engineer' could not be located; closest public match is a Mid-Level '.NET Application Developer' posting (Paylocity/ZipRecruiter). Clarify exact title + expectations with Tim.",
+    "Original Indeed listing was Junior DevOps Engineer, but recruiter stated the junior role has already been filled and the open role being discussed is mid-level.",
+    "Significant legacy modernization effort: ~20-year-old C codebase, technical debt, and multiple integrations may increase complexity and onboarding time.",
+    "Next technical interview timing and format are not yet confirmed (only an expected window was mentioned)."
+  ],
+  "next_action": "Follow up with recruiter to confirm and schedule the next technical interview (expected window: Dec 29, 2025–Jan 1, 2026). Prepare by reviewing C#/.NET 8 fundamentals, ASP.NET API patterns, queue/worker design and failure modes (idempotency, retries, poison messages), containerization basics, and legacy modernization/strangler-pattern tradeoffs. Be ready to discuss how you identify and pay down technical debt while delivering features, and how you ramp up on domain knowledge (retail vs wholesale logic, integrations).",
+  "general_notes": "Initial application was to an Indeed 'Junior DevOps Engineer' posting. During recruiter screen on Dec 15, 2025, recruiter stated the junior role is already filled and the active opportunity is mid-level. Public web search did not find a distinct 'Mid-Level .NET DevOps Engineer' listing, but did find an official Paylocity posting titled 'Application Developer-.NET' that explicitly states 'Mid-Level .NET' and includes IIS/Windows Server + CI/CD exposure. (Paylocity details: [https://recruiting.paylocity.com/recruiting/jobs/Details/3769485/American-Auto-Auction-Group-LLC/Application-Developer-NET](https://recruiting.paylocity.com/recruiting/jobs/Details/3769485/American-Auto-Auction-Group-LLC/Application-Developer-NET) ; ZipRecruiter mirror: [https://www.ziprecruiter.com/c/Americas-Auto-Auction/Job/Application-Developer-.NET/-in-Dallas%2CTX?jid=64eac5bfc311dc4f](https://www.ziprecruiter.com/c/Americas-Auto-Auction/Job/Application-Developer-.NET/-in-Dallas%2CTX?jid=64eac5bfc311dc4f) )\n\nInterview (Dec 17, 2025) notes: role described as fully remote; team is small (~5) and focused on modernizing a long-lived system (legacy C) by building a .NET 8/C# stack alongside it via a strangler pattern. Architecture includes queue processing, an ASP.NET API, and scheduled CLI tooling. Emphasis on paying down technical debt while building, containerization/cloud readiness, and domain understanding (retail vs wholesale, integrations).",
+  "interviewPrep": {
+    "preparedDate": "2025-12-15",
+    "experienceGaps": {
+      "critical": [
+        {
+          "skill": "Windows Server & IIS Administration",
+          "gap": "Limited direct IIS/Windows Server hosting experience",
+          "specifics": "App pools, bindings, deployment troubleshooting, logging"
+        },
+        {
+          "skill": "CI/CD Pipelines",
+          "gap": "Limited hands-on with formal CI/CD tools in production",
+          "specifics": "Pipeline design, automated tests, deployment gates"
+        }
+      ],
+      "secondary": [
+        {
+          "skill": "Monitoring and alerting tools",
+          "gap": "Not deeply used in prior role",
+          "specifics": "Dashboards, alert thresholds, incident response"
+        }
+      ]
+    },
+    "strengths": [
+      {
+        "area": "C# & .NET",
+        "experience": "Multi-year professional experience",
+        "details": "Built end-to-end generators (including PDF output) and admin tooling; strong troubleshooting and automation mindset."
+      },
+      {
+        "area": "Automation mindset",
+        "experience": "Professional",
+        "details": "Improved internal processes; built tooling for content/admin workflows; comfortable scripting."
+      }
+    ],
+    "questionsToAsk": [
+      "Is the environment Windows-only, or is there Linux as well?",
+      "How often do you deploy/releases happen, and what does the release checklist look like?",
+      "What CI/CD tooling is currently in place (if any), and what automated testing exists today?",
+      "What is the split between DevOps-style work (deployments/infra/reliability) and application development work?",
+      "What queue technology is used today, and what are the most common failure modes you see (retries, poison messages, idempotency)?",
+      "What is the current plan for containerization and cloud migration (targets, milestones, blockers)?",
+      "How do you manage the strangler-pattern boundary between legacy C components and the newer .NET 8 services?"
+    ]
+  }
+}

@@ -40,37 +40,50 @@ Walking through the user's journey from job search frustration to successful job
 9. **Total time: 5-10 minutes**
 10. **Friction point: Too slow when applying to 10+ jobs per day**
 
-**Target Workflow (Big Job Hunter Pro):**
-1. Find job posting on job board
-2. Click "Quick Capture" button (or keyboard shortcut)
-3. Fill 3 essential fields: Company, Role Title, Source URL
-4. Click "Lock & Load" (+1 point feedback appears instantly)
-5. **Total time: 15 seconds**
-6. Optional: Add skills/requirements/notes later via application detail view
-7. See leaderboard update immediately (competitive feedback)
-8. **Happy Path:** User logs 10 applications in 2.5 minutes, feels accomplished, sees leaderboard position improve
+**Target Workflow (Big Job Hunter Pro - AI-Powered):**
+1. Find job posting on job board (Indeed, LinkedIn, etc.)
+2. Select all content (Ctrl+A), copy (Ctrl+C)
+3. Click "Quick Capture" button (or keyboard shortcut)
+4. Paste job listing URL in first field
+5. Paste full page content in second field (large text area)
+6. Click "Lock & Load" - AI parses content in background
+7. **AI Processing:** Cheap AI API extracts structured data (company, role, skills, requirements, salary, etc.)
+8. **Total time: 10-15 seconds** (including copy/paste)
+9. +1 point feedback appears instantly (parsing happens async)
+10. See leaderboard update immediately (competitive feedback)
+11. Optional: Review/edit AI-parsed data later via application detail view
+12. **Happy Path:** User logs 10 applications in 2 minutes, AI handles all data extraction, user sees leaderboard position improve
 
 **Steps Breakdown:**
 1. **Trigger:** User finds job posting worth tracking
-2. **Action:** Open Quick Capture modal (hotkey or button)
-3. **Input:** Company name (autocomplete), Role title, Source URL
+2. **Action:** Copy entire page content (Ctrl+A, Ctrl+C)
+3. **Input:**
+   - Paste job listing URL (for reference)
+   - Paste full page content (raw HTML/text)
 4. **Submit:** Click "Lock & Load"
-5. **Feedback:** +1 point animation, score updates, leaderboard refreshes
-6. **Result:** Application logged, user returns to job search
+5. **AI Processing (Async):**
+   - Send content to cheap AI API (e.g., Claude Haiku, GPT-3.5-turbo)
+   - AI extracts: Company name, role title, required skills, nice-to-have skills, salary range, work mode, location, job description summary
+   - AI generates: Potential interview questions based on role/requirements
+   - Store structured JSON in database
+6. **Feedback:** +1 point animation, score updates, leaderboard refreshes
+7. **Result:** Application logged with rich data, user returns to job search
 
 **Decision Points:**
-- Should I add detailed info now or later? (Later = faster)
-- Should I tag skills immediately? (Optional, can add later)
+- Should I review AI-parsed data immediately or trust it? (Review later = faster)
+- Should I manually edit fields if AI missed something? (Yes, via detail view)
 
 **Obstacles:**
-- Autocomplete doesn't find company → Manual entry fallback
-- Duplicate application warning → User chooses to skip or override
-- Internet connection lost → Offline queue with retry
+- AI parsing fails or returns incomplete data → Fallback to manual entry form
+- Duplicate application detected by URL → User chooses to skip or override
+- Internet connection lost → Queue for parsing when back online
+- AI API rate limit hit → Show warning, queue for retry
 
 **Simplification Opportunities:**
-- Pre-fill company info from URL (if browser extension active)
-- Auto-tag skills from job description (Phase 4: AI parsing)
-- Save draft applications for multi-step forms
+- Browser extension auto-captures page content with one click (Phase 4)
+- AI learns from user corrections to improve parsing accuracy
+- Batch import: paste multiple job URLs, AI processes all in background
+- AI-generated interview prep questions stored per application
 
 ---
 
@@ -403,26 +416,42 @@ Comprehensive feature list derived from:
 84. **Salary Negotiation Guide** - Resources for offers
 85. **Application Status Decoder** - "What does 'Under Review' mean?"
 
-### ADVANCED/FUTURE FEATURES
+### AI-POWERED FEATURES (PHASE 1 PRIORITY)
 
-86. **AI Resume Feedback** - Score resume against job description
-87. **AI Job Matching** - Suggest jobs based on skills/preferences
-88. **AI Cover Letter Generator** - GPT-powered drafting
-89. **Application Auto-filler** - Fill common forms automatically
-90. **Interview Recording Transcription** - Practice interview analysis
-91. **Mood Tracking** - Emotional state correlation with success
-92. **Habit Stacking** - Connect job search to other productivity tools
-93. **Referral Network** - Connect with people who work at target companies
-94. **Salary Data Aggregation** - Crowdsourced compensation insights
-95. **Job Market Trends** - Hiring trends for specific roles/companies
+86. **AI Job Listing Parser** - Extract structured data from pasted job content (company, role, skills, salary, requirements)
+87. **AI Interview Question Generator** - Generate potential interview questions based on job requirements
+88. **AI Skill Extraction** - Automatically tag required and nice-to-have skills from job description
+89. **AI Salary Range Detection** - Parse compensation from various formats ($120k-$150k, $60-$75/hr, etc.)
+90. **AI Work Mode Detection** - Identify Remote/Hybrid/Onsite from job description
+91. **AI Location Parsing** - Extract city, state, country from listing
+92. **AI Company Information Enrichment** - Look up company industry, size, rating (Phase 2)
+93. **AI Job Description Summarization** - Generate concise summary of role responsibilities
+
+### ADVANCED/FUTURE AI FEATURES
+
+94. **AI Resume Feedback** - Score resume against job description
+95. **AI Job Matching** - Suggest jobs based on skills/preferences
+96. **AI Cover Letter Generator** - GPT-powered drafting
+97. **Application Auto-filler** - Fill common forms automatically
+98. **Interview Recording Transcription** - Practice interview analysis
+99. **AI Interview Prep Assistant** - Personalized prep based on job requirements
+100. **AI Application Optimizer** - Suggest resume/cover letter improvements per job
+
+### OTHER ADVANCED FEATURES
+
+101. **Mood Tracking** - Emotional state correlation with success
+102. **Habit Stacking** - Connect job search to other productivity tools
+103. **Referral Network** - Connect with people who work at target companies
+104. **Salary Data Aggregation** - Crowdsourced compensation insights
+105. **Job Market Trends** - Hiring trends for specific roles/companies
 
 ### ADMINISTRATIVE/OPERATIONAL FEATURES
 
-96. **User Account Management** - Profile, settings, preferences
-97. **Billing/Subscription** - Free tier + premium tier
-98. **Admin Dashboard** - User analytics, health metrics
-99. **Customer Support Chat** - In-app help
-100. **Feedback System** - In-app feature voting (Canny integration)
+106. **User Account Management** - Profile, settings, preferences
+107. **Billing/Subscription** - Free tier + premium tier
+108. **Admin Dashboard** - User analytics, health metrics
+109. **Customer Support Chat** - In-app help
+110. **Feedback System** - In-app feature voting (Canny integration)
 
 ---
 
@@ -456,11 +485,11 @@ Importance: **7** | Feasibility: **8** | Story Points: **5**
 
 ### CORE TRACKING
 
-**⬜ US-004: Quick Capture Application (15-Second Promise)**
+**⬜ US-004: AI-Powered Quick Capture (10-Second Promise)**
 As a **job seeker**,
-I want to **log a new application in 15 seconds with just company, role, and source**
-so that I can **maintain momentum during high-volume application days**.
-Importance: **10** | Feasibility: **9** | Story Points: **5**
+I want to **log a new application in 10 seconds by pasting the job URL and page content, with AI automatically extracting all details (company, role, skills, salary, requirements)**
+so that I can **maintain momentum during high-volume application days without manual data entry**.
+Importance: **10** | Feasibility: **7** | Story Points: **8**
 
 **⬜ US-005: View Application List**
 As a **job seeker**,
@@ -806,21 +835,61 @@ Importance: **7** | Feasibility: **9** | Story Points: **2**
 
 ---
 
+### AI-POWERED PARSING (PHASE 1 PRIORITY)
+
+**⬜ US-056: AI Job Listing Parser**
+As a **job seeker**,
+I want to **paste a job listing URL and page content, and have AI automatically extract all structured data (company, role, skills, salary, requirements)**
+so that I can **avoid manual data entry and log applications in 10 seconds**.
+Importance: **10** | Feasibility: **6** | Story Points: **13**
+
+**⬜ US-057: AI Skill Extraction**
+As a **job seeker analyzing market demand**,
+I want to **have AI automatically identify and tag required and nice-to-have skills from job descriptions**
+so that I can **see skill gaps without manual tagging**.
+Importance: **9** | Feasibility: **7** | Story Points: **8**
+
+**⬜ US-058: AI Interview Question Generator**
+As a **job seeker preparing for interviews**,
+I want to **have AI generate potential interview questions based on the job requirements and description**
+so that I can **prepare effectively for each specific role**.
+Importance: **8** | Feasibility: **6** | Story Points: **8**
+
+**⬜ US-059: AI Salary Range Detection**
+As a **job seeker tracking compensation**,
+I want to **have AI parse salary ranges from various formats ($120k-$150k, $60-$75/hr, equity details)**
+so that I can **track compensation without manual normalization**.
+Importance: **7** | Feasibility: **7** | Story Points: **5**
+
+**⬜ US-060: AI Work Mode Detection**
+As a **job seeker with location preferences**,
+I want to **have AI detect work mode (Remote/Hybrid/Onsite) from job descriptions**
+so that I can **automatically filter by my preferred work arrangements**.
+Importance: **8** | Feasibility: **8** | Story Points: **5**
+
+**⬜ US-061: Review AI-Parsed Data**
+As a **cautious user**,
+I want to **review and edit AI-extracted data in the application detail view**
+so that I can **correct any parsing errors or add missing information**.
+Importance: **9** | Feasibility: **9** | Story Points: **5**
+
+---
+
 ### ADVANCED/AI FEATURES (FUTURE PHASES)
 
-**⬜ US-056: AI Resume Feedback**
+**⬜ US-062: AI Resume Feedback**
 As a **job seeker optimizing my resume**,
 I want to **get AI-powered feedback scoring my resume against a job description**
 so that I can **improve match rate and ATS compatibility**.
 Importance: **8** | Feasibility: **4** | Story Points: **21**
 
-**⬜ US-057: AI Cover Letter Generator**
+**⬜ US-063: AI Cover Letter Generator**
 As a **job seeker tired of writing cover letters**,
 I want to **generate tailored cover letters via GPT-4**
 so that I can **save time and maintain quality**.
 Importance: **7** | Feasibility: **5** | Story Points: **13**
 
-**⬜ US-058: AI Job Matching**
+**⬜ US-064: AI Job Matching**
 As a **job seeker discovering opportunities**,
 I want to **receive AI suggestions for jobs matching my skills/preferences**
 so that I can **find hidden opportunities I might miss**.
@@ -828,7 +897,7 @@ Importance: **8** | Feasibility: **3** | Story Points: **21**
 
 ---
 
-## Total User Stories: 58 (Scoped for comprehensive coverage)
+## Total User Stories: 64 (Scoped for comprehensive coverage, +6 AI parsing features)
 
 ---
 
@@ -874,7 +943,7 @@ E 3 │AVOID│AVOID│AVOID│AVOID│AVOID│AVOID│AVOID│AVOID│NICE│NI
 |----|------------|------------|-------------|--------------|----------|
 | US-001 | User Registration | 10 | 9 | 3 | DO NOW |
 | US-002 | User Login | 10 | 10 | 2 | DO NOW |
-| US-004 | Quick Capture (15-sec) | 10 | 9 | 5 | DO NOW |
+| US-004 | AI-Powered Quick Capture (10-sec) | 10 | 7 | 8 | DO NOW |
 | US-005 | View Application List | 10 | 10 | 3 | DO NOW |
 | US-006 | Application Detail View | 9 | 9 | 8 | DO NOW |
 | US-007 | Update Application Status | 10 | 9 | 5 | DO NOW |
@@ -886,8 +955,10 @@ E 3 │AVOID│AVOID│AVOID│AVOID│AVOID│AVOID│AVOID│AVOID│NICE│NI
 | US-021 | Leaderboard (All-Time) | 10 | 8 | 5 | DO NOW |
 | US-024 | Activity Feed (Party) | 9 | 8 | 5 | DO NOW |
 | US-029 | Export to JSON | 8 | 9 | 3 | DO NOW |
+| US-060 | AI Work Mode Detection | 8 | 8 | 5 | DO NOW |
+| US-061 | Review AI-Parsed Data | 9 | 9 | 5 | DO NOW |
 
-**Phase 1 Total Story Points: ~56** (Aggressive but achievable in 4 weeks with full focus)
+**Phase 1 Total Story Points: ~73** (Includes AI parsing - aggressive 4-week timeline)
 
 ---
 
@@ -909,8 +980,12 @@ E 3 │AVOID│AVOID│AVOID│AVOID│AVOID│AVOID│AVOID│AVOID│NICE│NI
 | US-039 | Group Retrospective | 9 | 6 | 13 | PLAN FOR |
 | US-042 | Responsive Design | 9 | 7 | 8 | PLAN FOR |
 | US-043 | PWA Installation | 8 | 6 | 8 | PLAN FOR |
+| US-056 | AI Job Listing Parser | 10 | 6 | 13 | PLAN FOR (MVP) |
+| US-057 | AI Skill Extraction | 9 | 7 | 8 | PLAN FOR (MVP) |
+| US-058 | AI Interview Questions | 8 | 6 | 8 | PLAN FOR |
+| US-059 | AI Salary Detection | 7 | 7 | 5 | PLAN FOR |
 
-**Note:** US-018, US-023, US-026, US-027 moved to Phase 1 MVP despite lower feasibility due to friend group needs.
+**Note:** US-018, US-023, US-026, US-027, US-056, US-057 moved to Phase 1 MVP despite lower feasibility due to core AI-powered input strategy and friend group needs.
 
 ---
 
@@ -966,39 +1041,49 @@ E 3 │AVOID│AVOID│AVOID│AVOID│AVOID│AVOID│AVOID│AVOID│NICE│NI
 **Core Problem:** Friend group experiencing job search burnout due to isolation, lack of motivation, and tracking friction.
 
 **20% of Goals:**
-1. **Enable fast application logging** (Quick Capture in 15 seconds)
-2. **Create competitive social accountability** (Hunting parties + leaderboards)
-3. **Preserve existing work** (Import Job-Hunt-Context data with retroactive points)
-4. **Gamify effort** (Points for applications, interviews, AND rejections)
-5. **Show progress visibly** (Dashboard with score, rank, activity feed)
+1. **Enable ultra-fast application logging** (AI-Powered Quick Capture in 10 seconds - just paste URL + content)
+2. **Eliminate manual data entry** (AI extracts company, role, skills, salary, requirements automatically)
+3. **Create competitive social accountability** (Hunting parties + leaderboards)
+4. **Preserve existing work** (Import Job-Hunt-Context data with retroactive points)
+5. **Gamify effort** (Points for applications, interviews, AND rejections)
+6. **Show progress visibly** (Dashboard with score, rank, activity feed)
 
-These 5 goals solve:
+These 6 goals solve:
 - ✅ **Isolation** → Hunting parties + leaderboards create visibility
 - ✅ **Motivation decay** → Points + rivalry panel drive daily action
-- ✅ **Tracking friction** → 15-second Quick Capture vs. 5-10 minute JSON editing
+- ✅ **Tracking friction** → AI-powered 10-second Quick Capture vs. 5-10 minute JSON editing
+- ✅ **Manual data entry** → AI parses everything automatically (company, skills, salary, etc.)
 - ✅ **Data migration** → Import 24 existing applications without loss
 - ✅ **Burnout** → Rejections earn +5 points, reframing failure as progress
+- ✅ **Interview prep** → AI generates potential interview questions per job
 
 ---
 
 ### 2. Prioritized Features (DO NOW Quadrant)
 
-**Phase 1 MVP Features (14 User Stories):**
+**Phase 1 MVP Features (22 User Stories):**
 
 **Authentication (2):**
 - US-001: User Registration
 - US-002: User Login
 
-**Core Tracking (6):**
-- US-004: Quick Capture (15-second promise)
+**Core Tracking (7):**
+- US-004: AI-Powered Quick Capture (10-second promise)
 - US-005: View Application List
 - US-006: Application Detail View
 - US-007: Update Application Status
 - US-009: Add/Edit Notes
 - US-011: Earn Points for Actions
 - US-012: View Total Score
+- US-061: Review AI-Parsed Data
 
-**Social/Collaborative (5):**
+**AI-Powered Parsing (4):**
+- US-056: AI Job Listing Parser (extracts company, role, skills, salary, requirements)
+- US-057: AI Skill Extraction (auto-tags required/nice-to-have skills)
+- US-059: AI Salary Range Detection
+- US-060: AI Work Mode Detection (Remote/Hybrid/Onsite)
+
+**Social/Collaborative (6):**
 - US-018: Create Hunting Party
 - US-019: Generate Invite Link
 - US-020: Join Hunting Party
@@ -1010,7 +1095,7 @@ These 5 goals solve:
 - US-026: Import Job-Hunt-Context JSON
 - US-027: Retroactive Point Calculation
 
-**Total: 16 User Stories, ~68 Story Points** (4 weeks @ 17 points/week)
+**Total: 22 User Stories, ~105 Story Points** (Aggressive 4-week timeline with AI features)
 
 ---
 
@@ -1044,15 +1129,25 @@ These 5 goals solve:
 
 **Big Job Hunter Pro MVP (Phase 1) Scope:**
 
-Big Job Hunter Pro Phase 1 delivers a collaborative gamified job tracker that enables friend groups to:
-1. **Log applications in 15 seconds** via Quick Capture (company, role, source)
-2. **Import existing data** from Job-Hunt-Context (24+ applications with retroactive points)
-3. **Create hunting parties** and invite friends via shareable links
-4. **Compete on leaderboards** (all-time rankings by total points)
-5. **View rival progress** via rivalry panel showing who's directly ahead and how to close the gap
-6. **Celebrate together** via activity feed broadcasting wins (interviews, offers, achievements)
-7. **Earn points for effort** (Applied +1, Interview +5, Rejection +5, Offer +50)
-8. **Track applications** in a master list with detail view and status updates
+Big Job Hunter Pro Phase 1 delivers an **AI-powered** collaborative gamified job tracker that enables friend groups to:
+1. **Log applications in 10 seconds** via AI-Powered Quick Capture (paste URL + page content, AI extracts all data)
+2. **Eliminate manual data entry** - AI automatically parses company, role, required skills, nice-to-have skills, salary range, work mode, location
+3. **Get AI-generated interview prep** - AI creates potential interview questions based on job requirements
+4. **Import existing data** from Job-Hunt-Context (24+ applications with retroactive points)
+5. **Create hunting parties** and invite friends via shareable links
+6. **Compete on leaderboards** (all-time rankings by total points)
+7. **View rival progress** via rivalry panel showing who's directly ahead and how to close the gap
+8. **Celebrate together** via activity feed broadcasting wins (interviews, offers, achievements)
+9. **Earn points for effort** (Applied +1, Interview +5, Rejection +5, Offer +50)
+10. **Track applications** in a master list with detail view and status updates
+11. **Review and edit AI-parsed data** in detail view to correct any errors
+
+**What's IN MVP (New AI Features):**
+- ✅ AI job listing parser (company, role, skills, salary extraction)
+- ✅ AI skill extraction and tagging
+- ✅ AI salary range detection
+- ✅ AI work mode detection (Remote/Hybrid/Onsite)
+- ✅ AI interview question generator (Phase 1.5 - may defer to Phase 2)
 
 **What's NOT in MVP:**
 - Daily streaks (Phase 2)
@@ -1060,7 +1155,7 @@ Big Job Hunter Pro Phase 1 delivers a collaborative gamified job tracker that en
 - Sankey diagrams (Phase 2)
 - Weekly leaderboards (Phase 3)
 - Browser extension (Phase 4)
-- AI features (Future)
+- Advanced AI features: Resume feedback, Cover letter generation, Job matching (Future)
 
 **Success Criteria:**
 - Friend group (4-6 people) imports existing 24+ applications
@@ -1078,8 +1173,13 @@ Big Job Hunter Pro Phase 1 delivers a collaborative gamified job tracker that en
 
 **Features:**
 - ✅ User authentication (email/password, OAuth)
-- ✅ Quick Capture (15-second application logging)
-- ✅ Application list + detail view
+- ✅ **AI-Powered Quick Capture** (10-second application logging - paste URL + content)
+- ✅ **AI Job Listing Parser** (extracts company, role, skills, salary, requirements automatically)
+- ✅ **AI Skill Extraction** (auto-tags required/nice-to-have skills)
+- ✅ **AI Salary Detection** (parses various salary formats)
+- ✅ **AI Work Mode Detection** (Remote/Hybrid/Onsite identification)
+- ✅ Application list + detail view with AI-parsed data
+- ✅ Review/edit AI-parsed data interface
 - ✅ Status updates (Applied → Screening → Interview → Offer/Rejected)
 - ✅ Points system (Applied +1, Interview +5, Rejection +5, Offer +50)
 - ✅ Total score dashboard
@@ -1091,8 +1191,9 @@ Big Job Hunter Pro Phase 1 delivers a collaborative gamified job tracker that en
 - ✅ Export to JSON (data portability)
 - ✅ Notes system (private notes per application)
 
-**Story Points:** 68
+**Story Points:** 105
 **Team:** Solo developer (Christian) with friend group testing
+**AI Integration:** Cheap AI API (Claude Haiku, GPT-3.5-turbo, or similar) for parsing
 **Deployment:** Azure App Service (API) + Azure Static Web Apps (React)
 
 ---

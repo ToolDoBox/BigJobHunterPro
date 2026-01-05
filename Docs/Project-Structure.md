@@ -154,16 +154,113 @@ This document defines the architectural foundation, technical standards, informa
 - **CSS:** BEM methodology (block__element--modifier) or Tailwind utility classes
 - **Database:** PascalCase tables (Applications, Users), PascalCase columns (CreatedDate, UserId)
 
-**D3. Version Control**
-- Git flow: main (production), develop (integration), feature/* branches
-- Commit messages: Conventional Commits format (`feat:`, `fix:`, `refactor:`, `docs:`)
-- Pull requests require 1 approval (friend group peer review)
-- No direct commits to main branch
+**D3. Version Control (Trunk-Based Development)**
+- **Branching Strategy:** Trunk-based development with `main` as the single source of truth
+- **Feature Branches:** Short-lived (≤2 days), created from and merged back to `main`
+- **Commit Messages:** Conventional Commits format (`feat:`, `fix:`, `refactor:`, `docs:`)
+- **Integration:** Merge to `main` multiple times per day (minimum once per day)
+- **Pull Requests:** Optional for solo work, required when pair programming or seeking review
+- **Direct Commits:** Allowed for small changes (<50 lines, non-breaking, with passing tests)
+- **Feature Flags:** Use for incomplete features that need to ship to production hidden
 
 **D4. Testing Requirements**
 - Unit tests for business logic (services, utilities) ≥70% coverage
 - Integration tests for critical API endpoints (Quick Capture, Import, Leaderboard)
 - E2E tests for core user flows (Playwright or Cypress: register → log application → view leaderboard)
+- All tests must pass before merging to `main` (enforced by CI)
+
+---
+
+### Trunk-Based Development Workflow
+
+**Philosophy:**
+Trunk-based development emphasizes continuous integration with a single long-lived branch (`main`). All developers integrate their work frequently (at least daily) to avoid merge conflicts and enable rapid deployment. This workflow is ideal for small teams and solo developers.
+
+**Core Principles:**
+1. **Single Source of Truth:** `main` branch is always deployable and reflects production state
+2. **Short-Lived Branches:** Feature branches live hours to 2 days maximum
+3. **Frequent Integration:** Merge to `main` at least once per day, ideally multiple times
+4. **Small Commits:** Break work into small, incremental changes that can be integrated quickly
+5. **Feature Flags:** Hide incomplete features in production using flags/toggles rather than long-lived branches
+
+**Daily Workflow:**
+
+**Option 1: Direct Commit (Small Changes)**
+```bash
+# For small, low-risk changes (<50 lines, non-breaking)
+git pull origin main
+# Make changes, write tests
+npm test && npm run build  # Verify locally
+git add .
+git commit -m "feat: add quick capture keyboard shortcut"
+git push origin main
+# CI runs tests, deploys if passing
+```
+
+**Option 2: Short-Lived Feature Branch (Larger Changes)**
+```bash
+# Create branch from latest main
+git checkout main
+git pull origin main
+git checkout -b feat/add-rivalry-panel
+
+# Work in small increments, commit frequently
+git add .
+git commit -m "feat: add rivalry panel UI component"
+git push origin feat/add-rivalry-panel
+
+# Integrate back to main within 1-2 days
+git checkout main
+git pull origin main
+git merge feat/add-rivalry-panel
+git push origin main
+git branch -d feat/add-rivalry-panel
+
+# Or use GitHub PR for review (optional)
+gh pr create --title "Add rivalry panel" --body "Implements leaderboard rivalry feature"
+gh pr merge --squash  # Merge when CI passes
+```
+
+**Option 3: Feature Flags (Incomplete Features)**
+```typescript
+// Hide incomplete features in production until ready
+if (featureFlags.rivalryPanel && user.isInBetaGroup) {
+  return <RivalryPanel />;
+}
+return null;
+
+// Ship to production daily, toggle feature on when complete
+```
+
+**Branch Naming:**
+- `feat/feature-name` - New features
+- `fix/bug-description` - Bug fixes
+- `refactor/component-name` - Code refactoring
+- `docs/section-name` - Documentation updates
+
+**Integration Rules:**
+- **Before Merging:** Pull latest `main`, resolve conflicts locally, run full test suite
+- **After Merging:** CI pipeline runs tests, lints, builds, deploys to staging automatically
+- **Production Deploys:** Manual trigger after staging verification (Phase 1), automatic after CI passes (Phase 2+)
+
+**Advantages for This Project:**
+- **Solo/Small Team Friendly:** No complex branching overhead (no develop, release, hotfix branches)
+- **Rapid Iteration:** Ship features incrementally, get feedback faster
+- **Reduced Merge Conflicts:** Frequent integration prevents divergence
+- **Simplified CI/CD:** Single branch to test and deploy (no branch-specific pipelines)
+- **Easy Rollbacks:** Git revert on `main` is straightforward
+
+**When to Use Pull Requests:**
+- Seeking code review from friend group
+- Pair programming session outcomes
+- Complex changes affecting core architecture
+- Learning/experimentation (request feedback before merge)
+
+**When to Skip Pull Requests:**
+- Typo fixes, documentation updates
+- Small UI tweaks (<20 lines)
+- Dependency updates (if tests pass)
+- Solo work on well-understood features
 
 ---
 

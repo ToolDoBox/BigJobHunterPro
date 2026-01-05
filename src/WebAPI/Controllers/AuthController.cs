@@ -1,0 +1,220 @@
+using Application.DTOs.Auth;
+using Application.Interfaces;
+using Domain.Entities;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+
+namespace WebAPI.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class AuthController : ControllerBase
+{
+    private readonly UserManager<ApplicationUser> _userManager;
+    private readonly SignInManager<ApplicationUser> _signInManager;
+    private readonly IJwtTokenService _jwtTokenService;
+    private readonly ICurrentUserService _currentUserService;
+    private readonly ILogger<AuthController> _logger;
+
+    public AuthController(
+        UserManager<ApplicationUser> userManager,
+        SignInManager<ApplicationUser> signInManager,
+        IJwtTokenService jwtTokenService,
+        ICurrentUserService currentUserService,
+        ILogger<AuthController> logger)
+    {
+        _userManager = userManager;
+        _signInManager = signInManager;
+        _jwtTokenService = jwtTokenService;
+        _currentUserService = currentUserService;
+        _logger = logger;
+    }
+
+    /// <summary>
+    /// Register a new user account
+    /// </summary>
+    /// <param name="request">Registration details including email, password, and display name</param>
+    /// <returns>User ID, email, and JWT token</returns>
+    [HttpPost("register")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(RegisterResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<RegisterResponse>> Register([FromBody] RegisterRequest request)
+    {
+        // Validate model state
+        if (!ModelState.IsValid)
+        {
+            var errors = ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => e.ErrorMessage)
+                .ToList();
+
+            return BadRequest(new ErrorResponse("Validation failed", errors));
+        }
+
+        // Check if email already exists
+        var existingUser = await _userManager.FindByEmailAsync(request.Email);
+        if (existingUser != null)
+        {
+            return BadRequest(new ErrorResponse(
+                "Email already registered",
+                new List<string> { "A user with this email address already exists. Please try logging in or use a different email." }
+            ));
+        }
+
+        // Create new user
+        var user = new ApplicationUser
+        {
+            Email = request.Email,
+            UserName = request.Email, // Using email as username
+            DisplayName = request.DisplayName,
+            Points = 0,
+            CreatedDate = DateTime.UtcNow
+        };
+
+        // Create user with password
+        var result = await _userManager.CreateAsync(user, request.Password);
+
+        if (!result.Succeeded)
+        {
+            var errors = result.Errors.Select(e => e.Description).ToList();
+            _logger.LogWarning("User registration failed for {Email}: {Errors}",
+                request.Email, string.Join(", ", errors));
+
+            return BadRequest(new ErrorResponse("Registration failed", errors));
+        }
+
+        _logger.LogInformation("User registered successfully: {Email}", request.Email);
+
+        // Generate JWT token
+        var token = _jwtTokenService.GenerateToken(user);
+
+        var response = new RegisterResponse
+        {
+            UserId = user.Id,
+            Email = user.Email ?? string.Empty,
+            Token = token
+        };
+
+        return CreatedAtAction(nameof(Register), new { id = user.Id }, response);
+    }
+
+    /// <summary>
+    /// Authenticate user and issue JWT token
+    /// </summary>
+    /// <param name="request">Login credentials (email and password)</param>
+    /// <returns>User ID, email, JWT token, and token expiration</returns>
+    [HttpPost("login")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<LoginResponse>> Login([FromBody] LoginRequest request)
+    {
+        // 1. Validate model state
+        if (!ModelState.IsValid)
+        {
+            var errors = ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => e.ErrorMessage)
+                .ToList();
+
+            return BadRequest(new ErrorResponse("Validation failed", errors));
+        }
+
+        // 2. Find user by email
+        var user = await _userManager.FindByEmailAsync(request.Email);
+        if (user == null)
+        {
+            _logger.LogWarning("Login failed: User not found for email {Email}", request.Email);
+            return Unauthorized(new ErrorResponse(
+                "Invalid credentials",
+                new List<string> { "Invalid email or password" }
+            ));
+        }
+
+        // 3. Check password with SignInManager (handles lockout automatically)
+        var result = await _signInManager.CheckPasswordSignInAsync(
+            user,
+            request.Password,
+            lockoutOnFailure: true
+        );
+
+        // 4. Handle lockout scenario
+        if (result.IsLockedOut)
+        {
+            _logger.LogWarning("Login failed: Account locked out for user {UserId}", user.Id);
+            return Unauthorized(new ErrorResponse(
+                "Account locked",
+                new List<string> {
+                    "Account is locked due to multiple failed login attempts. Please try again in 5 minutes."
+                }
+            ));
+        }
+
+        // 5. Handle invalid password
+        if (!result.Succeeded)
+        {
+            _logger.LogWarning("Login failed: Invalid password for email {Email}", request.Email);
+            return Unauthorized(new ErrorResponse(
+                "Invalid credentials",
+                new List<string> { "Invalid email or password" }
+            ));
+        }
+
+        // 6. Generate JWT token and return success response
+        var token = _jwtTokenService.GenerateToken(user);
+        var expiresAt = _jwtTokenService.GetTokenExpiration();
+
+        _logger.LogInformation("User logged in successfully: {Email}", request.Email);
+
+        var response = new LoginResponse
+        {
+            UserId = user.Id,
+            Email = user.Email ?? string.Empty,
+            Token = token,
+            ExpiresAt = expiresAt
+        };
+
+        return Ok(response);
+    }
+
+    /// <summary>
+    /// Get current authenticated user's information
+    /// </summary>
+    /// <returns>User ID, email, display name, and points</returns>
+    [HttpGet("me")]
+    [Authorize]
+    [ProducesResponseType(typeof(GetMeResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<GetMeResponse>> GetMe()
+    {
+        // Get current user via CurrentUserService
+        var user = await _currentUserService.GetCurrentUserAsync();
+
+        // Handle edge case: user deleted after JWT issued
+        if (user == null)
+        {
+            _logger.LogWarning("GetMe failed: User not found for authenticated request");
+            return NotFound(new ErrorResponse(
+                "User not found",
+                new List<string> { "The authenticated user no longer exists in the system" }
+            ));
+        }
+
+        // Map to response DTO
+        var response = new GetMeResponse
+        {
+            UserId = user.Id,
+            Email = user.Email ?? string.Empty,
+            DisplayName = user.DisplayName,
+            Points = user.Points
+        };
+
+        _logger.LogInformation("User retrieved own profile: {UserId}", user.Id);
+
+        return Ok(response);
+    }
+}

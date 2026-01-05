@@ -27,6 +27,11 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 
     // Sign in settings
     options.SignIn.RequireConfirmedEmail = false;
+
+    // Lockout settings
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
+    options.Lockout.MaxFailedAccessAttempts = 5;
+    options.Lockout.AllowedForNewUsers = true;
 })
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
@@ -50,11 +55,19 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
         ValidAudience = builder.Configuration["JwtSettings:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret))
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
+        NameClaimType = System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub
     };
 });
 
 builder.Services.AddAuthorization();
+
+// Add HTTP Context Accessor for CurrentUserService
+builder.Services.AddHttpContextAccessor();
+
+// Add Application Services
+builder.Services.AddScoped<Application.Interfaces.IJwtTokenService, Infrastructure.Services.JwtTokenService>();
+builder.Services.AddScoped<Application.Interfaces.ICurrentUserService, Infrastructure.Services.CurrentUserService>();
 
 // Add Controllers
 builder.Services.AddControllers();
@@ -79,4 +92,16 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+// Seed database in development environment
+if (app.Environment.IsDevelopment())
+{
+    using (var scope = app.Services.CreateScope())
+    {
+        await Infrastructure.Data.SeedData.InitializeAsync(scope.ServiceProvider);
+    }
+}
+
 app.Run();
+
+// Make Program class accessible to integration tests
+public partial class Program { }

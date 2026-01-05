@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import FormInput from '@/components/forms/FormInput';
 import FormError from '@/components/forms/FormError';
+import PasswordInput from '@/components/forms/PasswordInput';
 
 interface FormErrors {
   email?: string;
@@ -29,16 +30,22 @@ export default function Login() {
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
 
-    // Email validation
+    // Email validation with detailed feedback
     if (!email.trim()) {
-      newErrors.email = 'Email is required';
+      newErrors.email = 'Please enter your email address to log in';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      newErrors.email = 'Please enter a valid email address';
+      if (!email.includes('@')) {
+        newErrors.email = 'Email must contain an @ symbol (e.g., hunter@example.com)';
+      } else if (!email.split('@')[1]?.includes('.')) {
+        newErrors.email = 'Email must contain a domain with a period (e.g., @example.com)';
+      } else {
+        newErrors.email = 'Please enter a valid email address (e.g., hunter@example.com)';
+      }
     }
 
     // Password validation
     if (!password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = 'Please enter your password to log in';
     } else if (password.length < 8) {
       newErrors.password = 'Password must be at least 8 characters';
     }
@@ -99,9 +106,25 @@ export default function Login() {
             ACCESS THE LODGE
           </h2>
 
-          {/* General error message */}
+          {/* General error message with enhanced styling for multi-line errors */}
           {errors.general && (
-            <FormError message={errors.general} className="mb-4" />
+            <div className="mb-4 p-3 bg-red-900/20 border border-red-500/50 rounded">
+              <p className="text-sm text-red-400 whitespace-pre-line flex items-start gap-2">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  className="w-5 h-5 mt-0.5 flex-shrink-0"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <span>{errors.general}</span>
+              </p>
+            </div>
           )}
 
           {/* Email field */}
@@ -117,11 +140,10 @@ export default function Login() {
             autoFocus
           />
 
-          {/* Password field */}
-          <FormInput
+          {/* Password field with visibility toggle */}
+          <PasswordInput
             id="password"
             label="Password"
-            type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             error={errors.password}
@@ -149,6 +171,14 @@ export default function Login() {
             </Link>
           </p>
         </form>
+
+        {/* Helpful tips section */}
+        <div className="mt-4 text-center text-xs text-gray-500">
+          <p className="font-semibold mb-1">💡 Login Tips:</p>
+          <p>• Use the 👁️ icon to verify your password</p>
+          <p>• Email addresses are case-insensitive</p>
+          <p>• Account locked? Wait 5 minutes after multiple failed attempts</p>
+        </div>
       </div>
     </div>
   );

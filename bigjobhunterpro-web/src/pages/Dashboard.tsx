@@ -1,7 +1,17 @@
+import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { useKeyboardShortcut } from '@/hooks/useKeyboardShortcut';
+import QuickCaptureModal from '@/components/applications/QuickCaptureModal';
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const [isQuickCaptureOpen, setIsQuickCaptureOpen] = useState(false);
+
+  // Ctrl+K / Cmd+K shortcut to open Quick Capture
+  useKeyboardShortcut('k', () => setIsQuickCaptureOpen(true), {
+    ctrl: true,
+    disabled: isQuickCaptureOpen, // Don't trigger when already open
+  });
 
   return (
     <div className="space-y-8">
@@ -61,13 +71,22 @@ export default function Dashboard() {
       <div className="metal-panel">
         <div className="metal-panel-screws" />
         <h2 className="font-arcade text-base text-amber mb-4">QUICK ACTIONS</h2>
-        <button className="btn-metal-primary">
+        <button
+          className="btn-metal-primary"
+          onClick={() => setIsQuickCaptureOpen(true)}
+        >
           + QUICK CAPTURE
         </button>
-        <p className="text-gray-500 text-sm mt-4">
-          Quick Capture coming in Sprint 1 Story 2...
-        </p>
       </div>
+
+      {/* Quick Capture Modal */}
+      <QuickCaptureModal
+        isOpen={isQuickCaptureOpen}
+        onClose={() => setIsQuickCaptureOpen(false)}
+        onSuccess={() => {
+          // Optionally refresh applications list (Story 3)
+        }}
+      />
     </div>
   );
 }

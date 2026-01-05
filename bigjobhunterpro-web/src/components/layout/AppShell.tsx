@@ -1,5 +1,6 @@
 import { Outlet } from 'react-router-dom';
 import Header from './Header';
+import ToastContainer from '@/components/ui/ToastContainer';
 
 export default function AppShell() {
   return (
@@ -20,6 +21,9 @@ export default function AppShell() {
           </span>
         </div>
       </footer>
+
+      {/* Toast notifications */}
+      <ToastContainer />
     </div>
   );
 }

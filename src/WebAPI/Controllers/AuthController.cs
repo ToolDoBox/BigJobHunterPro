@@ -210,11 +210,41 @@ public class AuthController : ControllerBase
             UserId = user.Id,
             Email = user.Email ?? string.Empty,
             DisplayName = user.DisplayName,
-            Points = user.Points
+            Points = user.Points,
+            TotalPoints = user.TotalPoints
         };
 
         _logger.LogInformation("User retrieved own profile: {UserId}", user.Id);
 
         return Ok(response);
+    }
+
+    /// <summary>
+    /// Logout current user (client-side token deletion)
+    /// </summary>
+    /// <returns>Success confirmation</returns>
+    /// <remarks>
+    /// Since JWTs are stateless, logout is primarily handled client-side by deleting the token.
+    /// This endpoint provides a server-side confirmation and can be extended for token blacklisting if needed.
+    /// </remarks>
+    [HttpPost("logout")]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+    public ActionResult Logout()
+    {
+        // Get current user ID for logging
+        var userId = _currentUserService.GetUserId();
+
+        if (!string.IsNullOrEmpty(userId))
+        {
+            _logger.LogInformation("User logged out: {UserId}", userId);
+        }
+
+        // In a JWT-based auth system, logout is primarily client-side
+        // The client deletes the token from localStorage
+        // Future enhancement: Implement token blacklisting here if needed
+
+        return Ok(new { success = true });
     }
 }

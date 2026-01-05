@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import FormInput from '@/components/forms/FormInput';
 import FormError from '@/components/forms/FormError';
+import PasswordInput, { type PasswordRequirement } from '@/components/forms/PasswordInput';
 
 interface FormErrors {
   displayName?: string;
@@ -28,39 +29,57 @@ export default function Register() {
     return null;
   }
 
+  // Password requirements for real-time validation
+  const passwordRequirements: PasswordRequirement[] = [
+    { label: 'At least 8 characters', test: (pwd) => pwd.length >= 8 },
+    { label: 'Contains at least one digit (0-9)', test: (pwd) => /\d/.test(pwd) },
+    { label: 'Contains at least one uppercase letter (A-Z)', test: (pwd) => /[A-Z]/.test(pwd) },
+    { label: 'Contains at least one lowercase letter (a-z)', test: (pwd) => /[a-z]/.test(pwd) },
+  ];
+
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
 
-    // Display name validation
+    // Display name validation with detailed feedback
     if (!displayName.trim()) {
-      newErrors.displayName = 'Display name is required';
+      newErrors.displayName = 'Display name is required to create your hunter profile';
     } else if (displayName.trim().length < 2) {
-      newErrors.displayName = 'Display name must be at least 2 characters';
+      newErrors.displayName = 'Display name must be at least 2 characters (current: ' + displayName.trim().length + ')';
+    } else if (displayName.trim().length > 50) {
+      newErrors.displayName = 'Display name must be less than 50 characters (current: ' + displayName.trim().length + ')';
     }
 
-    // Email validation
+    // Email validation with detailed feedback
     if (!email.trim()) {
-      newErrors.email = 'Email is required';
+      newErrors.email = 'Email address is required to create your account';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      newErrors.email = 'Please enter a valid email address';
+      if (!email.includes('@')) {
+        newErrors.email = 'Email must contain an @ symbol (e.g., hunter@example.com)';
+      } else if (!email.split('@')[1]?.includes('.')) {
+        newErrors.email = 'Email must contain a domain with a period (e.g., @example.com)';
+      } else {
+        newErrors.email = 'Please enter a valid email address (e.g., hunter@example.com)';
+      }
     }
 
-    // Password validation
+    // Password validation - check all requirements
     if (!password) {
-      newErrors.password = 'Password is required';
-    } else if (password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters';
-    } else if (!/\d/.test(password)) {
-      newErrors.password = 'Password must contain at least one digit';
-    } else if (!/[A-Z]/.test(password)) {
-      newErrors.password = 'Password must contain at least one uppercase letter';
+      newErrors.password = 'Password is required to secure your account';
+    } else {
+      const failedRequirements = passwordRequirements
+        .filter(req => !req.test(password))
+        .map(req => req.label);
+
+      if (failedRequirements.length > 0) {
+        newErrors.password = 'Password missing: ' + failedRequirements.join(', ');
+      }
     }
 
-    // Confirm password validation
+    // Confirm password validation with detailed feedback
     if (!confirmPassword) {
-      newErrors.confirmPassword = 'Please confirm your password';
+      newErrors.confirmPassword = 'Please re-enter your password to confirm';
     } else if (password !== confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
+      newErrors.confirmPassword = 'Passwords do not match - please make sure both passwords are identical';
     }
 
     setErrors(newErrors);
@@ -116,9 +135,25 @@ export default function Register() {
             JOIN THE HUNT
           </h2>
 
-          {/* General error message */}
+          {/* General error message with enhanced styling for multi-line errors */}
           {errors.general && (
-            <FormError message={errors.general} className="mb-4" />
+            <div className="mb-4 p-3 bg-red-900/20 border border-red-500/50 rounded">
+              <p className="text-sm text-red-400 whitespace-pre-line flex items-start gap-2">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  className="w-5 h-5 mt-0.5 flex-shrink-0"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <span>{errors.general}</span>
+              </p>
+            </div>
           )}
 
           {/* Display name field */}
@@ -146,23 +181,23 @@ export default function Register() {
             autoComplete="email"
           />
 
-          {/* Password field */}
-          <FormInput
+          {/* Password field with requirements */}
+          <PasswordInput
             id="password"
             label="Password"
-            type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             error={errors.password}
-            placeholder="Min 8 chars, 1 digit, 1 uppercase"
+            placeholder="Create a strong password"
             autoComplete="new-password"
+            showRequirements={true}
+            requirements={passwordRequirements}
           />
 
           {/* Confirm password field */}
-          <FormInput
+          <PasswordInput
             id="confirmPassword"
             label="Confirm Password"
-            type="password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             error={errors.confirmPassword}
@@ -191,10 +226,11 @@ export default function Register() {
           </p>
         </form>
 
-        {/* Password requirements hint */}
+        {/* Password requirements hint (static) */}
         <div className="mt-4 text-center text-xs text-gray-500">
-          <p>Password must contain:</p>
-          <p>At least 8 characters, 1 digit, 1 uppercase letter</p>
+          <p className="font-semibold mb-1">🔒 Password Security Requirements:</p>
+          <p>At least 8 characters • 1 digit • 1 uppercase • 1 lowercase</p>
+          <p className="mt-1 text-gray-600">Tip: Use the 👁️ icon to view your password</p>
         </div>
       </div>
     </div>

@@ -81,17 +81,18 @@ dotnet sln add src/Domain src/Application src/Infrastructure src/WebAPI
 
 ---
 
-### A2. Configure ApplicationDbContext + Initial Migration
+### A2. Configure ApplicationDbContext + Initial Migration ✅ COMPLETED
 **Depends on:** A1
-**Status:** In progress (uncommitted)
+**Status:** ✅ Completed on 2026-01-05
 - [x] Install EF Core + SQL Server packages
 - [x] Create ApplicationDbContext inheriting IdentityDbContext
 - [x] Configure connection string (placeholders + user secrets guidance)
 - [x] Create initial migration for Users table
-- [ ] Add seed data helper for dev environment
+- [x] Add seed data helper for dev environment
 
 **Notes:**
-- Migrations exist in `src/Infrastructure/Migrations/` (tracked) and `src/Infrastructure/Data/Migrations/` (untracked). Pick one location and remove the duplicate.
+- Migrations consolidated in `src/Infrastructure/Migrations/` (duplicate removed)
+- Seed data helper created in `src/Infrastructure/Data/SeedData.cs` with 3 test users
 
 **Files to create:**
 - `src/Infrastructure/Data/ApplicationDbContext.cs`
@@ -111,12 +112,12 @@ dotnet add package Microsoft.EntityFrameworkCore.Design
 
 ---
 
-### A3. Configure ASP.NET Identity + Password Policy
+### A3. Configure ASP.NET Identity + Password Policy ✅ COMPLETED
 **Depends on:** A2
-**Status:** In progress (uncommitted)
+**Status:** ✅ Completed on 2026-01-05
 - [x] Configure Identity services in Program.cs
 - [x] Set password requirements (min 8 chars, require digit, require uppercase)
-- [ ] Configure user lockout policy
+- [x] Configure user lockout policy (5 attempts, 5 min lockout)
 - [x] Add ApplicationUser entity extending IdentityUser
 
 **Files to create/modify:**
@@ -134,19 +135,30 @@ options.Password.RequireNonAlphanumeric = false;
 
 ---
 
-### A4. Implement Register Endpoint
+### A4. Implement Register Endpoint ✅ COMPLETED
 **Depends on:** A3
-- [ ] Create RegisterRequest DTO with validation attributes
-- [ ] Create RegisterResponse DTO
-- [ ] Create AuthController with POST /api/auth/register
-- [ ] Validate email uniqueness
-- [ ] Hash password via Identity
-- [ ] Return JWT token on successful registration
+**Status:** ✅ Completed on 2026-01-05
+- [x] Create RegisterRequest DTO with validation attributes
+- [x] Create RegisterResponse DTO
+- [x] Create ErrorResponse DTO (standardized error format)
+- [x] Create AuthController with POST /api/auth/register
+- [x] Validate email uniqueness
+- [x] Hash password via Identity
+- [x] Return JWT token on successful registration
 
-**Files to create:**
+**Files created:**
 - `src/Application/DTOs/Auth/RegisterRequest.cs`
 - `src/Application/DTOs/Auth/RegisterResponse.cs`
+- `src/Application/DTOs/Auth/ErrorResponse.cs`
+- `src/Application/Interfaces/IJwtTokenService.cs`
+- `src/Infrastructure/Services/JwtTokenService.cs`
 - `src/WebAPI/Controllers/AuthController.cs`
+
+**Notes:**
+- Register endpoint follows RFC error format: `{ "error": "string", "details": ["string"] }`
+- JWT token includes claims: sub (userId), email, name (displayName), jti
+- Token expiration set to 7 days as per requirements
+- Email is used as both UserName and Email (Identity requirement)
 
 ---
 
@@ -192,11 +204,13 @@ options.Password.RequireNonAlphanumeric = false;
 
 ---
 
-### A7. Create Health Check Endpoint
+### A7. Create Health Check Endpoint ✅ COMPLETED
 **Depends on:** A1
-- [ ] Add GET /api/health endpoint (unauthenticated)
-- [ ] Return { status: "healthy", timestamp: ISO8601 }
-- [ ] Useful for frontend to verify API is running
+**Status:** ✅ Completed on 2026-01-04
+- [x] Add GET /api/health endpoint (unauthenticated)
+- [x] Return { status: "healthy", timestamp: ISO8601 }
+- [x] Useful for frontend to verify API is running
+- [x] Bonus: Added GET /api/health/db for database connectivity check
 
 **Response:**
 ```json

@@ -27,6 +27,11 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 
     // Sign in settings
     options.SignIn.RequireConfirmedEmail = false;
+
+    // Lockout settings
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
+    options.Lockout.MaxFailedAccessAttempts = 5;
+    options.Lockout.AllowedForNewUsers = true;
 })
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
@@ -56,6 +61,9 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
+// Add Application Services
+builder.Services.AddScoped<Application.Interfaces.IJwtTokenService, Infrastructure.Services.JwtTokenService>();
+
 // Add Controllers
 builder.Services.AddControllers();
 
@@ -78,5 +86,14 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Seed database in development environment
+if (app.Environment.IsDevelopment())
+{
+    using (var scope = app.Services.CreateScope())
+    {
+        await Infrastructure.Data.SeedData.InitializeAsync(scope.ServiceProvider);
+    }
+}
 
 app.Run();

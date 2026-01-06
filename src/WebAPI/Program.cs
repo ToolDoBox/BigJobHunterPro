@@ -24,7 +24,13 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     }
     else
     {
-        options.UseSqlServer(connectionString);
+        options.UseSqlServer(connectionString, sqlOptions =>
+        {
+            sqlOptions.EnableRetryOnFailure(
+                maxRetryCount: 5,
+                maxRetryDelay: TimeSpan.FromSeconds(30),
+                errorNumbersToAdd: null);
+        });
     }
 });
 
@@ -81,6 +87,9 @@ builder.Services.AddAuthorization();
 // Add HTTP Context Accessor for CurrentUserService
 builder.Services.AddHttpContextAccessor();
 
+// Add Application Insights telemetry
+builder.Services.AddApplicationInsightsTelemetry();
+
 // Add Application Services
 builder.Services.AddScoped<Application.Interfaces.IJwtTokenService, Infrastructure.Services.JwtTokenService>();
 builder.Services.AddScoped<Application.Interfaces.ICurrentUserService, Infrastructure.Services.CurrentUserService>();
@@ -114,7 +123,11 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:5173", "http://localhost:5174")
+        var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins")
+            .Get<string[]>()
+            ?? new[] { "http://localhost:5173", "http://localhost:5174" };
+
+        policy.WithOrigins(allowedOrigins)
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials();

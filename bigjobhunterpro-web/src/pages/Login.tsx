@@ -179,6 +179,33 @@ export default function Login() {
           <p>• Email addresses are case-insensitive</p>
           <p>• Account locked? Wait 5 minutes after multiple failed attempts</p>
         </div>
+
+        {/* Footer */}
+        <div className="mt-8 text-center space-y-1">
+          <div className="text-xs text-terminal">
+            Big Job Hunter Pro v0.1
+          </div>
+          <div className="text-xs text-gray-400">
+            Crafted in co-op mode by{' '}
+            <a
+              href="https://christianadleta.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-amber hover:text-blaze transition-colors"
+            >
+              Christian Adleta
+            </a>
+            {' & '}
+            <a
+              href="https://emmettshaughnessy.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-amber hover:text-blaze transition-colors"
+            >
+              Emmett Shaughnessy
+            </a>
+          </div>
+        </div>
       </div>
     </div>
   );

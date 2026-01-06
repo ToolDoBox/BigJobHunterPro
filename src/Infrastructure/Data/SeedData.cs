@@ -17,8 +17,15 @@ public static class SeedData
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
-        // Ensure database is created and migrations are applied
-        await context.Database.MigrateAsync();
+        // Ensure database is created - use EnsureCreated for SQLite (no migrations), Migrate for SQL Server
+        if (context.Database.IsSqlite())
+        {
+            await context.Database.EnsureCreatedAsync();
+        }
+        else
+        {
+            await context.Database.MigrateAsync();
+        }
 
         // Seed test users if they don't exist
         await SeedTestUsersAsync(userManager);

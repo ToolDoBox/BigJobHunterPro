@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using WebAPI.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -74,6 +75,21 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
         NameClaimType = System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub
     };
+
+    // Configure SignalR to read JWT from query string
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var accessToken = context.Request.Query["access_token"];
+            var path = context.HttpContext.Request.Path;
+            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+            {
+                context.Token = accessToken;
+            }
+            return Task.CompletedTask;
+        }
+    };
 });
 
 builder.Services.AddAuthorization();
@@ -108,6 +124,13 @@ builder.Services.AddHttpClient("Anthropic", client =>
 // Add AI Parsing Services
 builder.Services.AddScoped<Application.Interfaces.IAiParsingService, Infrastructure.Services.AiParsingService>();
 builder.Services.AddHostedService<Infrastructure.Services.AiParsingBackgroundService>();
+
+// Add Hunting Party Services
+builder.Services.AddScoped<Application.Interfaces.IHuntingPartyService, Infrastructure.Services.HuntingPartyService>();
+builder.Services.AddScoped<Application.Interfaces.ILeaderboardNotifier, WebAPI.Services.LeaderboardNotifier>();
+
+// Add SignalR
+builder.Services.AddSignalR();
 
 // Add CORS
 builder.Services.AddCors(options =>
@@ -159,11 +182,42 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// Seed database in development environment
+// Map SignalR hub
+app.MapHub<LeaderboardHub>("/hubs/leaderboard");
+
+// Ensure database is created and seed data in development environment
 if (app.Environment.IsDevelopment())
 {
     using (var scope = app.Services.CreateScope())
     {
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        // Ensure HuntingParty tables exist (for SQLite development)
+        await context.Database.ExecuteSqlRawAsync(@"
+            CREATE TABLE IF NOT EXISTS HuntingParties (
+                Id TEXT NOT NULL PRIMARY KEY,
+                Name TEXT NOT NULL,
+                InviteCode TEXT NOT NULL,
+                CreatorId TEXT NOT NULL,
+                CreatedDate TEXT NOT NULL,
+                FOREIGN KEY (CreatorId) REFERENCES AspNetUsers(Id) ON DELETE RESTRICT
+            )");
+        await context.Database.ExecuteSqlRawAsync(@"
+            CREATE UNIQUE INDEX IF NOT EXISTS IX_HuntingParties_InviteCode ON HuntingParties (InviteCode)");
+        await context.Database.ExecuteSqlRawAsync(@"
+            CREATE TABLE IF NOT EXISTS HuntingPartyMemberships (
+                Id TEXT NOT NULL PRIMARY KEY,
+                HuntingPartyId TEXT NOT NULL,
+                UserId TEXT NOT NULL,
+                Role INTEGER NOT NULL,
+                JoinedDate TEXT NOT NULL,
+                IsActive INTEGER NOT NULL DEFAULT 1,
+                FOREIGN KEY (HuntingPartyId) REFERENCES HuntingParties(Id) ON DELETE CASCADE,
+                FOREIGN KEY (UserId) REFERENCES AspNetUsers(Id) ON DELETE CASCADE
+            )");
+        await context.Database.ExecuteSqlRawAsync(@"
+            CREATE UNIQUE INDEX IF NOT EXISTS IX_HuntingPartyMemberships_HuntingPartyId_UserId ON HuntingPartyMemberships (HuntingPartyId, UserId)");
+
         await Infrastructure.Data.SeedData.InitializeAsync(scope.ServiceProvider);
     }
 }

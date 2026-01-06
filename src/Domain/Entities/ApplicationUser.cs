@@ -8,7 +8,10 @@ public class ApplicationUser : IdentityUser
     public int Points { get; set; } = 0;
     public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
 
-    // Add to ApplicationUser.cs
+    // Navigation properties
     public ICollection<Application> Applications { get; set; } = new List<Application>();
     public int TotalPoints { get; set; }
+
+    // Hunting party membership (one party per user for MVP)
+    public ICollection<HuntingPartyMembership> PartyMemberships { get; set; } = new List<HuntingPartyMembership>();
 }

@@ -13,8 +13,10 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
     }
 
-    // Add DbSet for Applications
+    // DbSets
     public DbSet<Domain.Entities.Application> Applications => Set<Domain.Entities.Application>();
+    public DbSet<HuntingParty> HuntingParties => Set<HuntingParty>();
+    public DbSet<HuntingPartyMembership> HuntingPartyMemberships => Set<HuntingPartyMembership>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -43,6 +45,34 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             entity.HasIndex(e => e.CreatedDate);
             entity.HasOne(e => e.User)
                   .WithMany(u => u.Applications)
+                  .HasForeignKey(e => e.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Configure HuntingParty entity
+        builder.Entity<HuntingParty>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.InviteCode).IsRequired().HasMaxLength(8);
+            entity.HasIndex(e => e.InviteCode).IsUnique();
+            entity.HasOne(e => e.Creator)
+                  .WithMany()
+                  .HasForeignKey(e => e.CreatorId)
+                  .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Configure HuntingPartyMembership entity
+        builder.Entity<HuntingPartyMembership>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => new { e.HuntingPartyId, e.UserId }).IsUnique();
+            entity.HasOne(e => e.HuntingParty)
+                  .WithMany(p => p.Memberships)
+                  .HasForeignKey(e => e.HuntingPartyId)
+                  .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.User)
+                  .WithMany(u => u.PartyMemberships)
                   .HasForeignKey(e => e.UserId)
                   .OnDelete(DeleteBehavior.Cascade);
         });

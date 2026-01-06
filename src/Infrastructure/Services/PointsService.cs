@@ -9,10 +9,12 @@ namespace Infrastructure.Services;
 public class PointsService : IPointsService
 {
     private readonly ApplicationDbContext _context;
+    private readonly ILeaderboardNotifier? _leaderboardNotifier;
 
-    public PointsService(ApplicationDbContext context)
+    public PointsService(ApplicationDbContext context, ILeaderboardNotifier? leaderboardNotifier = null)
     {
         _context = context;
+        _leaderboardNotifier = leaderboardNotifier;
     }
 
     public int CalculatePoints(ApplicationStatus status)
@@ -32,6 +34,18 @@ public class PointsService : IPointsService
 
         user.Points = Math.Max(0, user.Points + pointsToAdd);
         user.TotalPoints = Math.Max(0, user.TotalPoints + pointsToAdd);
+
+        // Notify leaderboard if user is in a party
+        if (_leaderboardNotifier != null)
+        {
+            var membership = await _context.HuntingPartyMemberships
+                .FirstOrDefaultAsync(m => m.UserId == userId && m.IsActive);
+
+            if (membership != null)
+            {
+                await _leaderboardNotifier.NotifyLeaderboardUpdateAsync(membership.HuntingPartyId);
+            }
+        }
 
         return user.TotalPoints;
     }

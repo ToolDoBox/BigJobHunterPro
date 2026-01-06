@@ -113,6 +113,7 @@ builder.Services.AddScoped<Application.Interfaces.ICurrentUserService, Infrastru
 // Add after other service registrations
 builder.Services.AddScoped<Application.Interfaces.IPointsService, Infrastructure.Services.PointsService>();
 builder.Services.AddScoped<Application.Interfaces.IApplicationService, Infrastructure.Services.ApplicationService>();
+builder.Services.AddScoped<Application.Interfaces.ITimelineEventService, Infrastructure.Services.TimelineEventService>();
 
 // Add HttpClient for Anthropic API
 builder.Services.AddHttpClient("Anthropic", client =>
@@ -158,7 +159,11 @@ builder.Services.AddCors(options =>
 });
 
 // Add Controllers
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+    });
 
 builder.Services.Configure<ApiBehaviorOptions>(options =>
 {
@@ -205,31 +210,9 @@ if (app.Environment.IsDevelopment())
     {
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-        // Ensure HuntingParty tables exist (for SQLite development)
-        await context.Database.ExecuteSqlRawAsync(@"
-            CREATE TABLE IF NOT EXISTS HuntingParties (
-                Id TEXT NOT NULL PRIMARY KEY,
-                Name TEXT NOT NULL,
-                InviteCode TEXT NOT NULL,
-                CreatorId TEXT NOT NULL,
-                CreatedDate TEXT NOT NULL,
-                FOREIGN KEY (CreatorId) REFERENCES AspNetUsers(Id) ON DELETE RESTRICT
-            )");
-        await context.Database.ExecuteSqlRawAsync(@"
-            CREATE UNIQUE INDEX IF NOT EXISTS IX_HuntingParties_InviteCode ON HuntingParties (InviteCode)");
-        await context.Database.ExecuteSqlRawAsync(@"
-            CREATE TABLE IF NOT EXISTS HuntingPartyMemberships (
-                Id TEXT NOT NULL PRIMARY KEY,
-                HuntingPartyId TEXT NOT NULL,
-                UserId TEXT NOT NULL,
-                Role INTEGER NOT NULL,
-                JoinedDate TEXT NOT NULL,
-                IsActive INTEGER NOT NULL DEFAULT 1,
-                FOREIGN KEY (HuntingPartyId) REFERENCES HuntingParties(Id) ON DELETE CASCADE,
-                FOREIGN KEY (UserId) REFERENCES AspNetUsers(Id) ON DELETE CASCADE
-            )");
-        await context.Database.ExecuteSqlRawAsync(@"
-            CREATE UNIQUE INDEX IF NOT EXISTS IX_HuntingPartyMemberships_HuntingPartyId_UserId ON HuntingPartyMemberships (HuntingPartyId, UserId)");
+        // Tables are created via EF migrations, no need for manual SQL
+        // Commented out SQLite-specific SQL that breaks on SQL Server
+        // await context.Database.ExecuteSqlRawAsync(@"CREATE TABLE IF NOT EXISTS HuntingParties...");
 
         await Infrastructure.Data.SeedData.InitializeAsync(scope.ServiceProvider);
     }

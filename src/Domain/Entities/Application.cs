@@ -27,6 +27,35 @@ public class Application
     public DateTime CreatedDate { get; set; }
     public DateTime UpdatedDate { get; set; }
 
-    // Navigation property
+    // Navigation properties
     public ApplicationUser User { get; set; } = null!;
+    public List<TimelineEvent> TimelineEvents { get; set; } = new();
+
+    // Computed properties for performance
+    public ApplicationStatus ComputeCurrentStatus()
+    {
+        var latestEvent = TimelineEvents
+            .Where(e => e.EventType != EventType.Prospecting)
+            .OrderByDescending(e => e.Timestamp)
+            .FirstOrDefault();
+
+        if (latestEvent == null)
+            return ApplicationStatus.Applied;
+
+        return latestEvent.EventType switch
+        {
+            EventType.Applied => ApplicationStatus.Applied,
+            EventType.Screening => ApplicationStatus.Screening,
+            EventType.Interview => ApplicationStatus.Interview,
+            EventType.Offer => ApplicationStatus.Offer,
+            EventType.Rejected => ApplicationStatus.Rejected,
+            EventType.Withdrawn => ApplicationStatus.Withdrawn,
+            _ => ApplicationStatus.Applied
+        };
+    }
+
+    public int ComputeTotalPoints()
+    {
+        return TimelineEvents.Sum(e => e.Points);
+    }
 }

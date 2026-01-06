@@ -15,6 +15,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
     // DbSets
     public DbSet<Domain.Entities.Application> Applications => Set<Domain.Entities.Application>();
+    public DbSet<TimelineEvent> TimelineEvents => Set<TimelineEvent>();
     public DbSet<HuntingParty> HuntingParties => Set<HuntingParty>();
     public DbSet<HuntingPartyMembership> HuntingPartyMemberships => Set<HuntingPartyMembership>();
 
@@ -47,6 +48,19 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
                   .WithMany(u => u.Applications)
                   .HasForeignKey(e => e.UserId)
                   .OnDelete(DeleteBehavior.Cascade);
+            entity.HasMany(e => e.TimelineEvents)
+                  .WithOne(te => te.Application)
+                  .HasForeignKey(te => te.ApplicationId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Configure TimelineEvent entity
+        builder.Entity<TimelineEvent>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Notes).HasMaxLength(1000);
+            entity.HasIndex(e => e.ApplicationId);
+            entity.HasIndex(e => e.Timestamp);
         });
 
         // Configure HuntingParty entity

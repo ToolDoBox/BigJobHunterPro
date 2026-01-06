@@ -7,12 +7,12 @@ import applicationsService from '@/services/applications';
 import { useToast } from '@/context/ToastContext';
 import { formatRelativeDate } from '@/utils/date';
 import { useAuth } from '@/hooks/useAuth';
+import { TimelineView } from '@/components/applications/TimelineView';
 import type {
   ApplicationDetail,
   UpdateApplicationRequest
 } from '@/types/application';
 
-const STATUS_OPTIONS = ['Applied', 'Screening', 'Interview', 'Offer', 'Rejected', 'Withdrawn'];
 const WORK_MODE_OPTIONS = ['Remote', 'Hybrid', 'Onsite', 'Unknown'];
 
 interface FormState {
@@ -114,11 +114,7 @@ const validateForm = (formData: FormState): FormErrors => {
     errors.sourceName = 'Source name cannot exceed 100 characters';
   }
 
-  if (!formData.status.trim()) {
-    errors.status = 'Status is required';
-  } else if (!STATUS_OPTIONS.includes(formData.status)) {
-    errors.status = 'Status must be a valid option';
-  }
+  // Status is now computed from timeline events, no validation needed
 
   if (formData.workMode && !WORK_MODE_OPTIONS.includes(formData.workMode)) {
     errors.workMode = 'Work mode must be a valid option';
@@ -185,37 +181,37 @@ export default function ApplicationDetail() {
     [formData, initialFormData]
   );
 
-  useEffect(() => {
+  const fetchApplication = async () => {
     if (!id) {
       setNotFound(true);
       setIsLoading(false);
       return;
     }
 
-    const fetchApplication = async () => {
-      setIsLoading(true);
-      setLoadError(null);
-      setNotFound(false);
+    setIsLoading(true);
+    setLoadError(null);
+    setNotFound(false);
 
-      try {
-        const result = await applicationsService.getApplication(id);
-        setApplication(result);
-        const nextFormState = buildFormState(result);
-        setFormData(nextFormState);
-        setInitialFormData(nextFormState);
-        setIsEditing(false);
-      } catch (error) {
-        const err = error as Error & { code?: string };
-        if (err.code === 'NOT_FOUND' || err.message === 'NOT_FOUND') {
-          setNotFound(true);
-        } else {
-          setLoadError(err.message ?? 'Unable to load application.');
-        }
-      } finally {
-        setIsLoading(false);
+    try {
+      const result = await applicationsService.getApplication(id);
+      setApplication(result);
+      const nextFormState = buildFormState(result);
+      setFormData(nextFormState);
+      setInitialFormData(nextFormState);
+      setIsEditing(false);
+    } catch (error) {
+      const err = error as Error & { code?: string };
+      if (err.code === 'NOT_FOUND' || err.message === 'NOT_FOUND') {
+        setNotFound(true);
+      } else {
+        setLoadError(err.message ?? 'Unable to load application.');
       }
-    };
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchApplication();
   }, [id]);
 
@@ -266,7 +262,8 @@ export default function ApplicationDetail() {
       roleTitle: formData.roleTitle.trim(),
       sourceName: formData.sourceName.trim(),
       sourceUrl: formData.sourceUrl.trim() || undefined,
-      status: formData.status,
+      // status is computed from timeline events, not updated directly
+      status: application?.status || 'Applied', // Send current computed status
       workMode: formData.workMode || undefined,
       location: formData.location.trim() || undefined,
       salaryMin: formData.salaryMin ? parseNumber(formData.salaryMin) : null,
@@ -485,30 +482,15 @@ export default function ApplicationDetail() {
               disabled={!isEditing || isSaving}
             />
 
+            {/* Status is now computed from timeline events */}
             <div className="mb-4">
-              <label htmlFor="status" className="block font-arcade text-xs text-amber mb-2">
-                STATUS
+              <label className="block font-arcade text-xs text-amber mb-2">
+                CURRENT STATUS
               </label>
-              <select
-                id="status"
-                name="status"
-                className={`input-arcade ${errors.status ? 'input-arcade-error' : ''}`}
-                value={formData.status}
-                onChange={handleChange}
-                disabled={!isEditing || isSaving}
-              >
-                <option value="">Select status</option>
-                {STATUS_OPTIONS.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-              {errors.status && (
-                <p className="mt-1 text-sm text-red-400 font-medium" role="alert">
-                  {errors.status}
-                </p>
-              )}
+              <div className="input-arcade flex items-center gap-2" style={{ opacity: 0.7 }}>
+                <StatusBadge status={application?.status || 'Applied'} />
+                <span className="text-xs text-gray-400">(Computed from timeline)</span>
+              </div>
             </div>
           </div>
 
@@ -665,6 +647,17 @@ export default function ApplicationDetail() {
             </p>
           )}
         </div>
+
+        <div className="divider-metal my-6" />
+
+        {/* Timeline Events Section */}
+        {application && (
+          <TimelineView
+            applicationId={application.id}
+            events={application.timelineEvents || []}
+            onEventsUpdated={fetchApplication}
+          />
+        )}
 
         {errors.general && (
           <p className="text-red-400 text-sm mt-4">{errors.general}</p>

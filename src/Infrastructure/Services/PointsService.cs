@@ -22,6 +22,11 @@ public class PointsService : IPointsService
         return PointsRules.GetPoints(status);
     }
 
+    public int CalculatePoints(EventType eventType, int? interviewRound = null)
+    {
+        return PointsRules.GetPoints(eventType, interviewRound);
+    }
+
     public async Task<int> UpdateUserTotalPointsAsync(string userId, int pointsToAdd)
     {
         var user = await _context.Users.FindAsync(userId);

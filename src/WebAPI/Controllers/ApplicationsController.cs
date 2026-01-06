@@ -102,33 +102,6 @@ public class ApplicationsController : ControllerBase
     }
 
     /// <summary>
-    /// Updates only the status of an application
-    /// </summary>
-    [HttpPatch("{id:guid}/status")]
-    [ProducesResponseType(typeof(ApplicationDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> UpdateApplicationStatus(Guid id, [FromBody] UpdateStatusRequest request)
-    {
-        try
-        {
-            var result = await _applicationService.UpdateApplicationStatusAsync(id, request);
-
-            if (result == null)
-            {
-                return NotFound();
-            }
-
-            return Ok(result);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new ErrorResponse("Validation failed", new List<string> { ex.Message }));
-        }
-    }
-
-    /// <summary>
     /// Deletes a single application by ID
     /// </summary>
     [HttpDelete("{id:guid}")]

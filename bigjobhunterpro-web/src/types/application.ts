@@ -1,3 +1,5 @@
+import type { TimelineEvent } from './timelineEvent';
+
 export interface CreateApplicationRequest {
   sourceUrl?: string;
   rawPageContent: string;
@@ -49,6 +51,7 @@ export interface ApplicationDetail {
   updatedDate: string;
   lastAIParsedDate: string | null;
   rawPageContent: string | null;
+  timelineEvents: TimelineEvent[];
 }
 
 export interface UpdateApplicationRequest {

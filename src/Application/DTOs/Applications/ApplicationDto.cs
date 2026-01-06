@@ -1,3 +1,5 @@
+using Application.DTOs.TimelineEvents;
+
 namespace Application.DTOs.Applications;
 
 public class ApplicationDto
@@ -22,4 +24,5 @@ public class ApplicationDto
     public DateTime UpdatedDate { get; set; }
     public DateTime? LastAIParsedDate { get; set; }
     public string? RawPageContent { get; set; }
+    public List<TimelineEventDto> TimelineEvents { get; set; } = new();
 }

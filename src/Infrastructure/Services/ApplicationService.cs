@@ -1,5 +1,8 @@
 using Application.DTOs.Applications;
+using Application.DTOs.TimelineEvents;
 using Application.Interfaces;
+using Application.Scoring;
+using Domain.Entities;
 using Domain.Enums;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -27,12 +30,13 @@ public class ApplicationService : IApplicationService
         var userId = _currentUser.GetUserId()
             ?? throw new UnauthorizedAccessException("User not authenticated");
 
-        var points = _pointsService.CalculatePoints(ApplicationStatus.Applied);
-
         var normalizedSourceUrl = string.IsNullOrWhiteSpace(request.SourceUrl)
             ? null
             : request.SourceUrl.Trim();
 
+        var createdDate = DateTime.UtcNow;
+
+        // Create application with initial timeline event
         var application = new Domain.Entities.Application
         {
             Id = Guid.NewGuid(),
@@ -46,14 +50,30 @@ public class ApplicationService : IApplicationService
             ParsedByAI = false,
             AiParsingStatus = AiParsingStatus.Pending,
             RawPageContent = request.RawPageContent.Trim(),
-            Points = points,
-            CreatedDate = DateTime.UtcNow,
-            UpdatedDate = DateTime.UtcNow
+            Points = 1, // Will be computed from timeline events
+            CreatedDate = createdDate,
+            UpdatedDate = createdDate
         };
 
-        _context.Applications.Add(application);
+        // Create initial "Applied" timeline event
+        var initialPoints = PointsRules.GetPoints(EventType.Applied);
+        var timelineEvent = new TimelineEvent
+        {
+            Id = Guid.NewGuid(),
+            ApplicationId = application.Id,
+            EventType = EventType.Applied,
+            InterviewRound = null,
+            Timestamp = createdDate,
+            Notes = "Application created",
+            Points = initialPoints,
+            CreatedDate = createdDate
+        };
 
-        var totalPoints = await _pointsService.UpdateUserTotalPointsAsync(userId, points);
+        application.TimelineEvents.Add(timelineEvent);
+        _context.Applications.Add(application);
+        _context.TimelineEvents.Add(timelineEvent);
+
+        var totalPoints = await _pointsService.UpdateUserTotalPointsAsync(userId, initialPoints);
 
         await _context.SaveChangesAsync();
 
@@ -114,6 +134,7 @@ public class ApplicationService : IApplicationService
 
         var application = await _context.Applications
             .AsNoTracking()
+            .Include(a => a.TimelineEvents)
             .FirstOrDefaultAsync(item => item.Id == id && item.UserId == userId);
 
         if (application == null)
@@ -135,11 +156,6 @@ public class ApplicationService : IApplicationService
         if (application == null)
         {
             return null;
-        }
-
-        if (!Enum.TryParse<ApplicationStatus>(request.Status.Trim(), true, out var parsedStatus))
-        {
-            throw new InvalidOperationException("Status must be a valid application status");
         }
 
         application.CompanyName = request.CompanyName.Trim();
@@ -189,61 +205,6 @@ public class ApplicationService : IApplicationService
 
         application.SalaryMin = request.SalaryMin;
         application.SalaryMax = request.SalaryMax;
-
-        if (application.Status != parsedStatus)
-        {
-            var previousPoints = application.Points;
-            var newPoints = _pointsService.CalculatePoints(parsedStatus);
-            // Do not remove points on status downgrade; only award higher-value status changes.
-            var pointsToAdd = Math.Max(0, newPoints - previousPoints);
-
-            application.Status = parsedStatus;
-            application.Points = Math.Max(previousPoints, newPoints);
-
-            if (pointsToAdd > 0)
-            {
-                await _pointsService.UpdateUserTotalPointsAsync(userId, pointsToAdd);
-            }
-        }
-
-        application.UpdatedDate = DateTime.UtcNow;
-
-        await _context.SaveChangesAsync();
-
-        return MapToDetailDto(application);
-    }
-
-    public async Task<ApplicationDto?> UpdateApplicationStatusAsync(Guid id, UpdateStatusRequest request)
-    {
-        var userId = _currentUser.GetUserId()
-            ?? throw new UnauthorizedAccessException("User not authenticated");
-
-        var application = await _context.Applications
-            .FirstOrDefaultAsync(item => item.Id == id && item.UserId == userId);
-
-        if (application == null)
-        {
-            return null;
-        }
-
-        var parsedStatus = request.Status;
-
-        if (application.Status != parsedStatus)
-        {
-            var previousPoints = application.Points;
-            var newPoints = _pointsService.CalculatePoints(parsedStatus);
-            // Do not remove points on status downgrade; only award higher-value status changes.
-            var pointsToAdd = Math.Max(0, newPoints - previousPoints);
-
-            application.Status = parsedStatus;
-            application.Points = Math.Max(previousPoints, newPoints);
-
-            if (pointsToAdd > 0)
-            {
-                await _pointsService.UpdateUserTotalPointsAsync(userId, pointsToAdd);
-            }
-        }
-
         application.UpdatedDate = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
@@ -299,7 +260,21 @@ public class ApplicationService : IApplicationService
             CreatedDate = application.CreatedDate,
             UpdatedDate = application.UpdatedDate,
             LastAIParsedDate = application.LastAIParsedDate,
-            RawPageContent = application.RawPageContent
+            RawPageContent = application.RawPageContent,
+            TimelineEvents = application.TimelineEvents
+                .OrderByDescending(e => e.Timestamp)
+                .Select(e => new TimelineEventDto
+                {
+                    Id = e.Id,
+                    ApplicationId = e.ApplicationId,
+                    EventType = e.EventType.ToString(),
+                    InterviewRound = e.InterviewRound,
+                    Timestamp = e.Timestamp,
+                    Notes = e.Notes,
+                    Points = e.Points,
+                    CreatedDate = e.CreatedDate
+                })
+                .ToList()
         };
     }
 

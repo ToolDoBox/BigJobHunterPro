@@ -10,9 +10,23 @@ using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add Database Context
+// Add Database Context - Use SQLite for development if SQL Server not available
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+var useSqlite = builder.Environment.IsDevelopment() &&
+    (string.IsNullOrEmpty(connectionString) || connectionString.Contains("PLACEHOLDER") || connectionString.Contains("USER SECRETS"));
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+{
+    if (useSqlite)
+    {
+        var dbPath = Path.Combine(Environment.CurrentDirectory, "bigjobhunterpro.db");
+        options.UseSqlite($"Data Source={dbPath}");
+    }
+    else
+    {
+        options.UseSqlServer(connectionString);
+    }
+});
 
 // Add Identity with Password Policy
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
@@ -74,6 +88,26 @@ builder.Services.AddScoped<Application.Interfaces.ICurrentUserService, Infrastru
 // Add after other service registrations
 builder.Services.AddScoped<Application.Interfaces.IPointsService, Infrastructure.Services.PointsService>();
 builder.Services.AddScoped<Application.Interfaces.IApplicationService, Infrastructure.Services.ApplicationService>();
+
+// Add HttpClient for Anthropic API
+builder.Services.AddHttpClient("Anthropic", client =>
+{
+    var apiKey = builder.Configuration["AnthropicSettings:ApiKey"]
+        ?? throw new InvalidOperationException("Anthropic API key not configured");
+
+    client.BaseAddress = new Uri("https://api.anthropic.com/v1/");
+    client.DefaultRequestHeaders.Add("x-api-key", apiKey);
+    client.DefaultRequestHeaders.Add("anthropic-version", "2023-06-01");
+
+    var timeoutSeconds = int.TryParse(builder.Configuration["AnthropicSettings:TimeoutSeconds"], out var seconds)
+        ? seconds
+        : 30;
+    client.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
+});
+
+// Add AI Parsing Services
+builder.Services.AddScoped<Application.Interfaces.IAiParsingService, Infrastructure.Services.AiParsingService>();
+builder.Services.AddHostedService<Infrastructure.Services.AiParsingBackgroundService>();
 
 // Add CORS
 builder.Services.AddCors(options =>

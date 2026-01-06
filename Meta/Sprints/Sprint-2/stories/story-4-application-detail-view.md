@@ -10,7 +10,7 @@
 - **Priority:** High
 - **Sprint:** Sprint 2
 - **Assignee(s):** cadleta (Backend) + realemmetts (Frontend)
-- **Status:** ? Not Started
+- **Status:** ✅ Completed (with minor gaps)
 
 **Status Legend:** ? Not Started | ?? In Progress | ? Completed | ?? Blocked | ?? Moved to Next Sprint
 
@@ -25,29 +25,29 @@ After completing this story, users can open an application detail view from the 
 ## Acceptance Criteria (Definition of Done)
 
 ### Functional Requirements
-- [ ] Clicking an application row opens a detail view (route: `/app/applications/{id}`)
-- [ ] Detail view shows company, role title, status, source name, source URL (if present), created date, points, work mode, location, salary range, job description, required skills, nice-to-have skills, and AI parsing status
-- [ ] User can edit company, role title, source name, source URL, status, work mode, location, salary range, job description, required skills, and nice-to-have skills with Save/Cancel controls
-- [ ] User can delete an application log from the detail view with confirmation
-- [ ] Saving updates the record via PUT `/api/applications/{id}` and refreshes displayed values
-- [ ] Invalid IDs show a not found state; unauthenticated users are redirected to login
+- [x] Clicking an application row opens a detail view (route: `/app/applications/{id}`)
+- [x] Detail view shows company, role title, status, source name, source URL (if present), created date, points, work mode, location, salary range, job description, required skills, nice-to-have skills, and AI parsing status
+- [x] User can edit company, role title, source name, source URL, status, work mode, location, salary range, job description, required skills, and nice-to-have skills with Save/Cancel controls
+- [x] User can delete an application log from the detail view with confirmation (Modal: "DELETE APPLICATION" with NEVERMIND/CONFIRM buttons)
+- [x] Saving updates the record via PUT `/api/applications/{id}` and refreshes displayed values
+- [x] Invalid IDs show a not found state; unauthenticated users are redirected to login (404: "TARGET LOST" page with "BACK TO ARMORY" button)
 
 ### Non-Functional Requirements
-- [ ] Detail view loads in <400ms at p95 for typical records
-- [ ] Responsive layout on mobile, tablet, and desktop
-- [ ] No console errors or warnings
+- [x] Detail view loads in <400ms at p95 for typical records
+- [x] Responsive layout on mobile, tablet, and desktop (Tested at 375x667 mobile resolution - responsive)
+- [x] No console errors or warnings
 
 ### Technical Requirements
-- [ ] GET `/api/applications/{id}` returns a detail DTO (including AI parsing fields)
-- [ ] PUT `/api/applications/{id}` validates input and updates audit timestamps
-- [ ] DELETE `/api/applications/{id}` removes the application log and adjusts points
-- [ ] Integration tests for GET/PUT endpoints
-- [ ] Frontend component tests for render + edit flow
+- [x] GET `/api/applications/{id}` returns a detail DTO (including AI parsing fields)
+- [x] PUT `/api/applications/{id}` validates input and updates audit timestamps
+- [x] DELETE `/api/applications/{id}` removes the application log and adjusts points (Returns 204, correctly deducts points)
+- [x] Integration tests for GET/PUT endpoints (tests/WebAPI.IntegrationTests/Controllers/ApplicationsControllerTests.cs exists)
+- [!] Frontend component tests for render + edit flow (Not verified in codebase)
 
 ### UX Requirements
-- [ ] Status badge styling matches list view
-- [ ] Inline validation for required fields
-- [ ] Clear success feedback on save
+- [x] Status badge styling matches list view
+- [!] Inline validation for required fields (Fields are editable but no real-time validation observed)
+- [x] Clear success feedback on save (Toast: "Application updated successfully!" / "Application deleted.")
 
 ---
 

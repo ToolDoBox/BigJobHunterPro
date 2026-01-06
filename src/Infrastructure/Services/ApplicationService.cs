@@ -213,6 +213,44 @@ public class ApplicationService : IApplicationService
         return MapToDetailDto(application);
     }
 
+    public async Task<ApplicationDto?> UpdateApplicationStatusAsync(Guid id, UpdateStatusRequest request)
+    {
+        var userId = _currentUser.GetUserId()
+            ?? throw new UnauthorizedAccessException("User not authenticated");
+
+        var application = await _context.Applications
+            .FirstOrDefaultAsync(item => item.Id == id && item.UserId == userId);
+
+        if (application == null)
+        {
+            return null;
+        }
+
+        var parsedStatus = request.Status;
+
+        if (application.Status != parsedStatus)
+        {
+            var previousPoints = application.Points;
+            var newPoints = _pointsService.CalculatePoints(parsedStatus);
+            // Do not remove points on status downgrade; only award higher-value status changes.
+            var pointsToAdd = Math.Max(0, newPoints - previousPoints);
+
+            application.Status = parsedStatus;
+            application.Points = Math.Max(previousPoints, newPoints);
+
+            if (pointsToAdd > 0)
+            {
+                await _pointsService.UpdateUserTotalPointsAsync(userId, pointsToAdd);
+            }
+        }
+
+        application.UpdatedDate = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        return MapToDetailDto(application);
+    }
+
     public async Task<bool> DeleteApplicationAsync(Guid id)
     {
         var userId = _currentUser.GetUserId()

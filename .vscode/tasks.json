@@ -1,0 +1,51 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Backend: Run API (http)",
+            "type": "process",
+            "command": "dotnet",
+            "args": [
+                "run",
+                "--launch-profile",
+                "http"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/src/WebAPI"
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "group": "backend"
+            }
+        },
+        {
+            "label": "Frontend: Run Dev Server",
+            "type": "process",
+            "command": "npm",
+            "args": [
+                "run",
+                "dev"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/bigjobhunterpro-web"
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "group": "frontend"
+            }
+        },
+        {
+            "label": "Full Stack: Run API + Web",
+            "dependsOn": [
+                "Backend: Run API (http)",
+                "Frontend: Run Dev Server"
+            ],
+            "dependsOrder": "parallel",
+            "problemMatcher": []
+        }
+    ]
+}

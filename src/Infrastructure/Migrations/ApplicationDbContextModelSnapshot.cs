@@ -33,16 +33,48 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<int>("AiParsingStatus")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("JobDescription")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<DateTime?>("LastAIParsedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Location")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<List<string>>("NiceToHaveSkills")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("ParsedByAI")
+                        .HasColumnType("bit");
+
                     b.Property<int>("Points")
                         .HasColumnType("int");
+
+                    b.Property<string>("RawPageContent")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<List<string>>("RequiredSkills")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("RoleTitle")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
+
+                    b.Property<int?>("SalaryMax")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("SalaryMin")
+                        .HasColumnType("int");
 
                     b.Property<string>("SourceName")
                         .IsRequired()
@@ -62,6 +94,9 @@ namespace Infrastructure.Migrations
                     b.Property<string>("UserId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
+
+                    b.Property<int?>("WorkMode")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 

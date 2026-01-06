@@ -1,8 +1,10 @@
 using System.Text;
+using Application.DTOs.Auth;
 using Domain.Entities;
 using Infrastructure.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
@@ -87,6 +89,19 @@ builder.Services.AddCors(options =>
 
 // Add Controllers
 builder.Services.AddControllers();
+
+builder.Services.Configure<ApiBehaviorOptions>(options =>
+{
+    options.InvalidModelStateResponseFactory = context =>
+    {
+        var errors = context.ModelState.Values
+            .SelectMany(value => value.Errors)
+            .Select(error => error.ErrorMessage)
+            .ToList();
+
+        return new BadRequestObjectResult(new ErrorResponse("Validation failed", errors));
+    };
+});
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

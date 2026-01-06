@@ -12,17 +12,13 @@ interface QuickCaptureModalProps {
 }
 
 interface FormData {
-  companyName: string;
-  roleTitle: string;
-  sourceName: string;
   sourceUrl: string;
+  rawPageContent: string;
 }
 
 interface FormErrors {
-  companyName?: string;
-  roleTitle?: string;
-  sourceName?: string;
   sourceUrl?: string;
+  rawPageContent?: string;
   general?: string;
 }
 
@@ -36,10 +32,8 @@ export default function QuickCaptureModal({
   const firstInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState<FormData>({
-    companyName: '',
-    roleTitle: '',
-    sourceName: '',
     sourceUrl: '',
+    rawPageContent: '',
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
@@ -55,12 +49,12 @@ export default function QuickCaptureModal({
   // Reset form when modal closes
   useEffect(() => {
     if (!isOpen) {
-      setFormData({ companyName: '', roleTitle: '', sourceName: '', sourceUrl: '' });
+      setFormData({ sourceUrl: '', rawPageContent: '' });
       setErrors({});
     }
   }, [isOpen]);
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     // Clear error when user starts typing
@@ -72,26 +66,20 @@ export default function QuickCaptureModal({
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
 
-    if (!formData.companyName.trim()) {
-      newErrors.companyName = 'Company name is required';
-    } else if (formData.companyName.length > 200) {
-      newErrors.companyName = 'Company name cannot exceed 200 characters';
-    }
-
-    if (!formData.roleTitle.trim()) {
-      newErrors.roleTitle = 'Role title is required';
-    } else if (formData.roleTitle.length > 200) {
-      newErrors.roleTitle = 'Role title cannot exceed 200 characters';
-    }
-
-    if (!formData.sourceName.trim()) {
-      newErrors.sourceName = 'Source is required';
-    } else if (formData.sourceName.length > 100) {
-      newErrors.sourceName = 'Source cannot exceed 100 characters';
-    }
-
     if (formData.sourceUrl && formData.sourceUrl.length > 500) {
       newErrors.sourceUrl = 'URL cannot exceed 500 characters';
+    }
+
+    if (formData.sourceUrl) {
+      try {
+        new URL(formData.sourceUrl);
+      } catch {
+        newErrors.sourceUrl = 'URL must be a valid URL';
+      }
+    }
+
+    if (!formData.rawPageContent.trim()) {
+      newErrors.rawPageContent = 'Job page content is required';
     }
 
     setErrors(newErrors);
@@ -108,10 +96,8 @@ export default function QuickCaptureModal({
 
     try {
       const result = await applicationsService.createApplication({
-        companyName: formData.companyName.trim(),
-        roleTitle: formData.roleTitle.trim(),
-        sourceName: formData.sourceName.trim(),
         sourceUrl: formData.sourceUrl.trim() || undefined,
+        rawPageContent: formData.rawPageContent.trim(),
       });
 
       // Refresh user to update points in header
@@ -142,49 +128,58 @@ export default function QuickCaptureModal({
       <form onSubmit={handleSubmit}>
         <FormInput
           ref={firstInputRef}
-          id="companyName"
-          name="companyName"
-          label="COMPANY"
-          placeholder="Enter company name"
-          value={formData.companyName}
-          onChange={handleChange}
-          error={errors.companyName}
-          disabled={isSubmitting}
-        />
-
-        <FormInput
-          id="roleTitle"
-          name="roleTitle"
-          label="ROLE"
-          placeholder="Enter role title"
-          value={formData.roleTitle}
-          onChange={handleChange}
-          error={errors.roleTitle}
-          disabled={isSubmitting}
-        />
-
-        <FormInput
-          id="sourceName"
-          name="sourceName"
-          label="SOURCE"
-          placeholder="e.g., LinkedIn, Indeed, Referral"
-          value={formData.sourceName}
-          onChange={handleChange}
-          error={errors.sourceName}
-          disabled={isSubmitting}
-        />
-
-        <FormInput
           id="sourceUrl"
           name="sourceUrl"
-          label="JOB URL (OPTIONAL)"
+          label="JOB URL"
           placeholder="https://..."
+          onChange={handleChange}
           type="url"
           value={formData.sourceUrl}
-          onChange={handleChange}
           error={errors.sourceUrl}
           disabled={isSubmitting}
         />
+
+        <div className="mb-4">
+          <label
+            htmlFor="rawPageContent"
+            className="block font-arcade text-xs text-amber mb-2"
+          >
+            JOB PAGE CONTENT
+          </label>
+          <textarea
+            id="rawPageContent"
+            name="rawPageContent"
+            rows={6}
+            className={`input-arcade ${errors.rawPageContent ? 'input-arcade-error' : ''}`}
+            placeholder="Paste the full job listing content here..."
+            value={formData.rawPageContent}
+            onChange={handleChange}
+            disabled={isSubmitting}
+            aria-describedby={errors.rawPageContent ? 'rawPageContent-error' : undefined}
+            aria-invalid={errors.rawPageContent ? 'true' : 'false'}
+          />
+          {errors.rawPageContent && (
+            <p
+              id="rawPageContent-error"
+              className="mt-1 text-sm text-red-400 font-medium flex items-start gap-1"
+              role="alert"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                className="w-4 h-4 mt-0.5 flex-shrink-0"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              <span>{errors.rawPageContent}</span>
+            </p>
+          )}
+        </div>
 
         {errors.general && (
           <p className="text-red-500 text-sm mb-4">{errors.general}</p>

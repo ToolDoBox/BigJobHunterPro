@@ -35,6 +35,7 @@ public static class SeedData
                 UserName = "hunter@test.com",
                 DisplayName = "Test Hunter",
                 Points = 150,
+                TotalPoints = 150,
                 EmailConfirmed = true,
                 CreatedDate = DateTime.UtcNow.AddDays(-30)
             };
@@ -51,6 +52,7 @@ public static class SeedData
                 UserName = "newbie@test.com",
                 DisplayName = "Newbie Hunter",
                 Points = 0,
+                TotalPoints = 0,
                 EmailConfirmed = true,
                 CreatedDate = DateTime.UtcNow
             };
@@ -67,6 +69,7 @@ public static class SeedData
                 UserName = "pro@test.com",
                 DisplayName = "Pro Hunter",
                 Points = 500,
+                TotalPoints = 500,
                 EmailConfirmed = true,
                 CreatedDate = DateTime.UtcNow.AddDays(-90)
             };

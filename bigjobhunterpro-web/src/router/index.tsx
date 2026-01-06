@@ -4,6 +4,8 @@ import ProtectedRoute from './ProtectedRoute';
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 import Dashboard from '@/pages/Dashboard';
+import Applications from '@/pages/Applications';
+import ApplicationDetail from '@/pages/ApplicationDetail';
 
 export const router = createBrowserRouter([
   // Public routes
@@ -36,15 +38,11 @@ export const router = createBrowserRouter([
       // Placeholder routes for future sprints
       {
         path: 'applications',
-        element: (
-          <div className="metal-panel text-center">
-            <div className="metal-panel-screws" />
-            <h2 className="font-arcade text-xl text-amber mb-4">
-              THE ARMORY
-            </h2>
-            <p className="text-gray-400">Coming in Story 3...</p>
-          </div>
-        ),
+        element: <Applications />,
+      },
+      {
+        path: 'applications/:id',
+        element: <ApplicationDetail />,
       },
       {
         path: 'party',

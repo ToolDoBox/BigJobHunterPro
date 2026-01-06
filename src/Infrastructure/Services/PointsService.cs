@@ -1,4 +1,5 @@
 using Application.Interfaces;
+using Application.Scoring;
 using Domain.Enums;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -16,15 +17,7 @@ public class PointsService : IPointsService
 
     public int CalculatePoints(ApplicationStatus status)
     {
-        return status switch
-        {
-            ApplicationStatus.Applied => 1,
-            ApplicationStatus.Screening => 2,
-            ApplicationStatus.Interview => 5,
-            ApplicationStatus.Rejected => 5,
-            ApplicationStatus.Offer => 50,
-            _ => 0
-        };
+        return PointsRules.GetPoints(status);
     }
 
     public async Task<int> UpdateUserTotalPointsAsync(string userId, int pointsToAdd)
@@ -32,8 +25,13 @@ public class PointsService : IPointsService
         var user = await _context.Users.FindAsync(userId);
         if (user == null) throw new InvalidOperationException("User not found");
 
-        user.TotalPoints += pointsToAdd;
-        await _context.SaveChangesAsync();
+        if (user.TotalPoints == 0 && user.Points > 0)
+        {
+            user.TotalPoints = user.Points;
+        }
+
+        user.Points = Math.Max(0, user.Points + pointsToAdd);
+        user.TotalPoints = Math.Max(0, user.TotalPoints + pointsToAdd);
 
         return user.TotalPoints;
     }

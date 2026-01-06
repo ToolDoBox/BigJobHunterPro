@@ -145,9 +145,15 @@ cd bigjobhunterpro-web
 npm run dev         # Start dev server
 npm run build       # Production build
 npm run preview     # Preview production build
-npm test            # Run tests (Vitest)
+npm run test        # Run tests (Vitest)
 npm run lint        # Run ESLint
 ```
+
+### VS Code Tasks
+From the Command Palette, run `Tasks: Run Task` and select:
+- `Full Stack: Run API + Web` (runs `dotnet run --launch-profile http` and `npm run dev`)
+- `Backend: Run API (http)` (runs `dotnet run --launch-profile http`)
+- `Frontend: Run Dev Server` (runs `npm run dev`)
 
 ## Development Notes
 

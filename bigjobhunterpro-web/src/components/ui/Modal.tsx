@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 
 interface ModalProps {
   isOpen: boolean;
@@ -15,7 +15,11 @@ export default function Modal({
   children,
   showCloseButton = true,
 }: ModalProps) {
+  const [isVisible, setIsVisible] = useState(isOpen);
+  const [isClosing, setIsClosing] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
+  const closeTimer = useRef<number | null>(null);
+  const ANIMATION_DURATION_MS = 200;
 
   // Handle Escape key
   useEffect(() => {
@@ -35,13 +39,42 @@ export default function Modal({
     }
   }, [isOpen]);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    if (isOpen) {
+      if (closeTimer.current) {
+        window.clearTimeout(closeTimer.current);
+        closeTimer.current = null;
+      }
+      setIsVisible(true);
+      setIsClosing(false);
+      return;
+    }
+
+    if (isVisible) {
+      setIsClosing(true);
+      closeTimer.current = window.setTimeout(() => {
+        setIsVisible(false);
+        setIsClosing(false);
+        closeTimer.current = null;
+      }, ANIMATION_DURATION_MS);
+    }
+  }, [isOpen, isVisible]);
+
+  useEffect(() => () => {
+    if (closeTimer.current) {
+      window.clearTimeout(closeTimer.current);
+    }
+  }, []);
+
+  if (!isVisible) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        className={`absolute inset-0 bg-black/70 backdrop-blur-sm ${
+          isClosing ? 'animate-fade-out' : 'animate-fade-in'
+        } motion-reduce:animate-none`}
         onClick={onClose}
       />
 
@@ -52,7 +85,9 @@ export default function Modal({
         aria-modal="true"
         aria-labelledby="modal-title"
         tabIndex={-1}
-        className="relative metal-panel metal-panel-orange w-full max-w-md mx-4 animate-scale-in"
+        className={`relative metal-panel metal-panel-orange w-full max-w-md mx-4 ${
+          isClosing ? 'animate-scale-out' : 'animate-scale-in'
+        } motion-reduce:animate-none`}
       >
         <div className="metal-panel-screws" />
 

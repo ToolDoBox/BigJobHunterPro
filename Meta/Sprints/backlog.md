@@ -1,6 +1,6 @@
 # Product Backlog
 
-**Last Updated:** 2026-01-04
+**Last Updated:** 2026-01-18
 **Product Owner:** Team
 **Total Backlog Items:** 12+
 
@@ -31,14 +31,23 @@ This file contains all user stories that are not yet assigned to a sprint. Stori
 
 ---
 
+## Sprint 2 (Planned)
+
+| ID | User Story | Story Points | Priority | Status |
+|----|------------|--------------|----------|--------|
+| 4  | Application detail view | 3 | P0 | 🔄 In Sprint 2 |
+| 5  | Application status updates | 3 | P0 | 🔄 In Sprint 2 |
+| 6  | Points calculation service | 2 | P0 | 🔄 In Sprint 2 |
+| 7  | User profile with points display | 2 | P0 | 🔄 In Sprint 2 |
+
+**Total:** 10 SP
+
+---
+
 ## Ready for Next Sprint (Estimated and Refined)
 
 | ID | User Story | Story Points | Priority | Epic | Notes |
 |----|------------|--------------|----------|------|-------|
-| 4  | Application detail view | 3 | P0 | Core Tracking | View/edit individual application details |
-| 5  | Application status updates | 3 | P0 | Core Tracking | Update status (Screening, Interview, Rejected, Offer) with points |
-| 6  | Points calculation service | 2 | P0 | Gamification | Award points for status changes (+2 screening, +5 interview, etc.) |
-| 7  | User profile with points display | 2 | P0 | Core App Shell | Show total points, streak info in nav |
 | 8  | Create hunting party | 5 | P1 | Social Features | Private friend groups with invite codes |
 | 9  | Hunting party leaderboard | 5 | P1 | Social Features | Ranked list of party members by points |
 | 10 | Rivalry panel | 3 | P1 | Social Features | Show who's directly ahead/behind and gap |

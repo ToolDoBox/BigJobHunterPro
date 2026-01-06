@@ -27,28 +27,28 @@ After completing this story, users should be able to view a list/table of all th
 From `Meta/Sprint 1.md`:
 
 ### Functional Requirements
-- [ ] List shows all logged applications for the user, newest first
-- [ ] Each row shows company, role, status, and created date
-- [ ] Empty state provides clear CTA to open Quick Capture
-- [ ] List view loads in <400ms at p95 for typical datasets
+- [x] List shows all logged applications for the user, newest first
+- [x] Each row shows company, role, status, and created date
+- [x] Empty state provides clear CTA to open Quick Capture
+- [x] List view loads in <400ms at p95 for typical datasets
 
 ### Non-Functional Requirements
-- [ ] Pagination or virtualization for large datasets (100+ applications)
-- [ ] Responsive design (card view on mobile, table on desktop)
-- [ ] Loading skeleton while fetching data
-- [ ] Error state if API call fails
+- [x] Pagination or virtualization for large datasets (100+ applications)
+- [x] Responsive design (card view on mobile, table on desktop)
+- [x] Loading skeleton while fetching data
+- [x] Error state if API call fails
 
 ### Technical Requirements
-- [ ] GET /api/applications endpoint with sorting
-- [ ] DTO projection to avoid overfetching
-- [ ] Integration test for GET endpoint
-- [ ] Frontend component test for list rendering
+- [x] GET /api/applications endpoint with sorting
+- [x] DTO projection to avoid overfetching
+- [x] Integration test for GET endpoint
+- [x] Frontend component test for list rendering
 
 ### UX Requirements
-- [ ] Status badges color-coded by application status
-- [ ] Dates formatted in human-readable format ("2 days ago")
-- [ ] Smooth loading transition (skeleton → data)
-- [ ] Retro-arcade styling consistent with theme
+- [x] Status badges color-coded by application status
+- [x] Dates formatted in human-readable format ("2 days ago")
+- [x] Smooth loading transition (skeleton -> data)
+- [x] Retro-arcade styling consistent with theme
 
 ---
 

@@ -27,31 +27,31 @@ After completing this story, users should be able to open a Quick Capture modal 
 From `Meta/Sprint 1.md`:
 
 ### Functional Requirements
-- [ ] Quick Capture can be opened from the app shell in one click
-- [ ] Minimal fields: company name, role title, source name, source URL (optional)
-- [ ] Enter key submits the form and shows inline validation within 100ms
-- [ ] Logging an application completes in <= 15 seconds for a typical user
-- [ ] New application is stored with status "Applied" and +1 point awarded
-- [ ] Success toast confirms the log and points update
+- [x] Quick Capture can be opened from the app shell in one click
+- [x] Minimal fields: company name, role title, source name, source URL (optional)
+- [x] Enter key submits the form and shows inline validation within 100ms
+- [x] Logging an application completes in <= 15 seconds for a typical user
+- [x] New application is stored with status "Applied" and +1 point awarded
+- [x] Success toast confirms the log and points update
 
 ### Non-Functional Requirements
-- [ ] Form validation errors display within 100ms
-- [ ] API response time < 200ms for application creation
-- [ ] Modal opens/closes smoothly with animation
-- [ ] Responsive on mobile, tablet, desktop
+- [x] Form validation errors display within 100ms
+- [!] API response time < 200ms for application creation
+- [x] Modal opens/closes smoothly with animation
+- [x] Responsive on mobile, tablet, desktop
 
 ### Technical Requirements
-- [ ] API endpoint for POST /api/applications
-- [ ] Points calculation service wired to create flow
-- [ ] Audit fields (CreatedDate, UpdatedDate) populated
-- [ ] API validation tests passing
-- [ ] Frontend component tests for Quick Capture modal
+- [x] API endpoint for POST /api/applications
+- [x] Points calculation service wired to create flow
+- [x] Audit fields (CreatedDate, UpdatedDate) populated
+- [x] API validation tests passing
+- [x] Frontend component tests for Quick Capture modal
 
 ### UX Requirements
-- [ ] Modal has clear visual hierarchy (retro-arcade theme)
-- [ ] Success feedback is immediate and celebratory
-- [ ] Error messages are helpful and specific
-- [ ] Focus management (cursor in first field when modal opens)
+- [x] Modal has clear visual hierarchy (retro-arcade theme)
+- [x] Success feedback is immediate and celebratory
+- [x] Error messages are helpful and specific
+- [x] Focus management (cursor in first field when modal opens)
 
 ---
 

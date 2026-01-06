@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Application.DTOs.Applications;
+using Application.DTOs.Auth;
 using Application.Interfaces;
 
 namespace WebAPI.Controllers;
@@ -36,14 +37,86 @@ public class ApplicationsController : ControllerBase
     }
 
     /// <summary>
-    /// Gets a single application by ID (placeholder for Story 3)
+    /// Gets applications for the current user (paged, newest first)
+    /// </summary>
+    [HttpGet]
+    [ProducesResponseType(typeof(ApplicationsListResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetApplications([FromQuery] int page = 1, [FromQuery] int pageSize = 25)
+    {
+        if (page < 1 || pageSize < 1 || pageSize > 100)
+        {
+            return BadRequest(new { error = "Page must be >= 1 and pageSize must be between 1 and 100." });
+        }
+
+        var result = await _applicationService.GetApplicationsAsync(page, pageSize);
+
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Gets a single application by ID
     /// </summary>
     [HttpGet("{id:guid}")]
     [ProducesResponseType(typeof(ApplicationDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetApplication(Guid id)
     {
-        // Placeholder for Story 3
-        return NotFound();
+        var result = await _applicationService.GetApplicationAsync(id);
+
+        if (result == null)
+        {
+            return NotFound();
+        }
+
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Updates a single application by ID
+    /// </summary>
+    [HttpPut("{id:guid}")]
+    [ProducesResponseType(typeof(ApplicationDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> UpdateApplication(Guid id, [FromBody] UpdateApplicationRequest request)
+    {
+        try
+        {
+            var result = await _applicationService.UpdateApplicationAsync(id, request);
+
+            if (result == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new ErrorResponse("Validation failed", new List<string> { ex.Message }));
+        }
+    }
+
+    /// <summary>
+    /// Deletes a single application by ID
+    /// </summary>
+    [HttpDelete("{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> DeleteApplication(Guid id)
+    {
+        var deleted = await _applicationService.DeleteApplicationAsync(id);
+
+        if (!deleted)
+        {
+            return NotFound();
+        }
+
+        return NoContent();
     }
 }

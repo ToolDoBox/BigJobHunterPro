@@ -25,31 +25,31 @@ After completing this story, users should be able to register a new account with
 ## Acceptance Criteria (Definition of Done)
 
 ### Functional Requirements
-- [ ] User can register and log in via email/password
-- [ ] Authenticated routes require a valid JWT; unauthenticated users are redirected to login
-- [ ] Logout clears tokens and returns user to login
-- [ ] API endpoints for applications reject unauthenticated requests with 401
-- [ ] App shell layout renders with working navigation placeholders
+- [x] User can register and log in via email/password
+- [x] Authenticated routes require a valid JWT; unauthenticated users are redirected to login
+- [x] Logout clears tokens and returns user to login
+- [x] API endpoints for applications reject unauthenticated requests with 401
+- [x] App shell layout renders with working navigation placeholders
 
 ### Non-Functional Requirements
-- [ ] Password must meet policy (min 8 chars, require digit, require uppercase)
-- [ ] JWT tokens expire after 7 days
-- [ ] Form validation errors display within 100ms
-- [ ] Login/register forms are responsive (mobile, tablet, desktop)
-- [ ] No sensitive data (passwords, tokens) logged to console
+- [x] Password must meet policy (min 8 chars, require digit, require uppercase)
+- [x] JWT tokens expire after 7 days
+- [x] Form validation errors display within 100ms
+- [x] Login/register forms are responsive (mobile, tablet, desktop)
+- [x] No sensitive data (passwords, tokens) logged to console
 
 ### Technical Requirements
-- [ ] Integration tests written and passing (backend auth endpoints)
-- [ ] Code reviewed and approved by team member
-- [ ] No console errors or warnings in browser
-- [ ] API documentation updated (Swagger/OpenAPI)
-- [ ] README updated with setup instructions
+- [x] Integration tests written and passing (backend auth endpoints)
+- [!] Code reviewed and approved by team member
+- [x] No console errors or warnings in browser
+- [x] API documentation updated (Swagger/OpenAPI)
+- [x] README updated with setup instructions
 
 ### UX Requirements
-- [ ] Forms have clear validation error messages
-- [ ] Loading states shown during API calls
-- [ ] Retro-arcade theme applied consistently
-- [ ] Keyboard navigation works (tab through forms, enter to submit)
+- [x] Forms have clear validation error messages
+- [x] Loading states shown during API calls
+- [x] Retro-arcade theme applied consistently
+- [x] Keyboard navigation works (tab through forms, enter to submit)
 
 ---
 

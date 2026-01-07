@@ -147,9 +147,26 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins")
-            .Get<string[]>()
-            ?? new[] { "http://localhost:5173", "http://localhost:5174" };
+        var configOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>();
+
+        string[] allowedOrigins;
+        if (configOrigins != null && configOrigins.Length > 0)
+        {
+            allowedOrigins = configOrigins;
+        }
+        else if (builder.Environment.IsDevelopment())
+        {
+            allowedOrigins = new[] { "http://localhost:5173", "http://localhost:5174" };
+        }
+        else
+        {
+            // Production fallback - always allow these origins
+            allowedOrigins = new[] {
+                "https://orange-cliff-0e76fcd10.1.azurestaticapps.net",
+                "https://bigjobhunter.pro",
+                "https://www.bigjobhunter.pro"
+            };
+        }
 
         policy.WithOrigins(allowedOrigins)
               .AllowAnyMethod()

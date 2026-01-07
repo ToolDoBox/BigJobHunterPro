@@ -2,7 +2,6 @@ import { useState, type FormEvent } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import FormInput from '@/components/forms/FormInput';
-import FormError from '@/components/forms/FormError';
 import PasswordInput from '@/components/forms/PasswordInput';
 
 interface FormErrors {

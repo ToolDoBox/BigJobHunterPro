@@ -17,7 +17,7 @@ interface SignalRConnection {
   connectionState: signalR.HubConnectionState;
   error: Error | null;
   invoke: <T>(methodName: string, ...args: unknown[]) => Promise<T | undefined>;
-  on: (methodName: string, callback: (...args: unknown[]) => void) => void;
+  on: <T extends unknown[] = unknown[]>(methodName: string, callback: (...args: T) => void) => void;
   off: (methodName: string) => void;
 }
 
@@ -111,8 +111,8 @@ export function useSignalR({
     []
   );
 
-  const on = useCallback((methodName: string, callback: (...args: unknown[]) => void) => {
-    connectionRef.current?.on(methodName, callback);
+  const on = useCallback(<T extends unknown[] = unknown[]>(methodName: string, callback: (...args: T) => void) => {
+    connectionRef.current?.on(methodName, callback as (...args: unknown[]) => void);
   }, []);
 
   const off = useCallback((methodName: string) => {

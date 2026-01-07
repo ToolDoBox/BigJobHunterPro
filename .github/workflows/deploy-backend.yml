@@ -1,12 +1,12 @@
 name: Deploy Backend to Azure
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'src/**'
-      - '.github/workflows/deploy-backend.yml'
-  workflow_dispatch:
+  # push:                            # DISABLED - using main_bjhp-api-prod.yml instead
+  #   branches: [main]
+  #   paths:
+  #     - 'src/**'
+  #     - '.github/workflows/deploy-backend.yml'
+  workflow_dispatch:                 # Keep manual trigger for emergencies
 
 env:
   AZURE_WEBAPP_NAME: bjhp-api-prod

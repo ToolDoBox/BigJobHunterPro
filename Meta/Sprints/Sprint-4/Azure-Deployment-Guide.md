@@ -47,7 +47,7 @@ az keyvault secret set \
 az keyvault secret set \
   --vault-name bjhp-keyvault-prod \
   --name AnthropicSettings--ApiKey \
-  --value "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"
+  --value "key"
 ```
 
 ### 1.3 Create App Service (Backend)

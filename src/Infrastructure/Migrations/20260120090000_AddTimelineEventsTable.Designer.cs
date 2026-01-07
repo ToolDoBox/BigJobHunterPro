@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260106164744_AddTimelineEventsTable")]
+    [Migration("20260120090000_AddTimelineEventsTable")]
     partial class AddTimelineEventsTable
     {
         /// <inheritdoc />

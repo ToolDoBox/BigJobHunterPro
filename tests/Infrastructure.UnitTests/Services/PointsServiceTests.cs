@@ -25,7 +25,7 @@ public class PointsServiceTests
     [InlineData(ApplicationStatus.Screening, 2)]
     [InlineData(ApplicationStatus.Interview, 5)]
     [InlineData(ApplicationStatus.Offer, 50)]
-    [InlineData(ApplicationStatus.Rejected, 5)]
+    [InlineData(ApplicationStatus.Rejected, 2)]
     [InlineData(ApplicationStatus.Withdrawn, 0)]
     public void CalculatePoints_ReturnsExpectedValue(ApplicationStatus status, int expected)
     {

@@ -263,6 +263,8 @@ public class ApplicationService : IApplicationService
             RawPageContent = application.RawPageContent,
             TimelineEvents = application.TimelineEvents
                 .OrderByDescending(e => e.Timestamp)
+                .ThenByDescending(e => e.CreatedDate)
+                .ThenByDescending(e => e.Id)
                 .Select(e => new TimelineEventDto
                 {
                     Id = e.Id,

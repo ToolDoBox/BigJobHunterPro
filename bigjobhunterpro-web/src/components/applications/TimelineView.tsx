@@ -40,7 +40,7 @@ export function TimelineView({ applicationId, events, onEventsUpdated }: Timelin
       setIsAddModalOpen(false);
       onEventsUpdated();
     } catch (error: any) {
-      showToast('error', error.response?.data?.error || 'Failed to add event');
+      showToast('error', error instanceof Error ? error.message : 'Unable to add the timeline event.');
     }
   };
 
@@ -54,7 +54,7 @@ export function TimelineView({ applicationId, events, onEventsUpdated }: Timelin
       setEditingEvent(null);
       onEventsUpdated();
     } catch (error: any) {
-      showToast('error', error.response?.data?.error || 'Failed to update event');
+      showToast('error', error instanceof Error ? error.message : 'Unable to update the timeline event.');
     }
   };
 
@@ -70,7 +70,7 @@ export function TimelineView({ applicationId, events, onEventsUpdated }: Timelin
       await refreshUser(); // Update user points
       onEventsUpdated();
     } catch (error: any) {
-      showToast('error', error.response?.data?.error || 'Failed to delete event');
+      showToast('error', error instanceof Error ? error.message : 'Unable to delete the timeline event.');
     } finally {
       setIsDeleting(null);
     }

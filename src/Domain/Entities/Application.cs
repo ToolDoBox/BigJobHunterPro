@@ -37,6 +37,8 @@ public class Application
         var latestEvent = TimelineEvents
             .Where(e => e.EventType != EventType.Prospecting)
             .OrderByDescending(e => e.Timestamp)
+            .ThenByDescending(e => e.CreatedDate)
+            .ThenByDescending(e => e.Id)
             .FirstOrDefault();
 
         if (latestEvent == null)

@@ -38,6 +38,10 @@ public class TimelineEventsController : ControllerBase
                 result
             );
         }
+        catch (UnauthorizedAccessException)
+        {
+            return Unauthorized(new { error = "Your session expired. Please log in again." });
+        }
         catch (KeyNotFoundException)
         {
             return NotFound(new { error = "Application not found" });
@@ -61,6 +65,10 @@ public class TimelineEventsController : ControllerBase
         {
             var result = await _timelineEventService.GetTimelineEventsAsync(applicationId);
             return Ok(result);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Unauthorized(new { error = "Your session expired. Please log in again." });
         }
         catch (KeyNotFoundException)
         {
@@ -88,6 +96,10 @@ public class TimelineEventsController : ControllerBase
             }
 
             return Ok(result);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Unauthorized(new { error = "Your session expired. Please log in again." });
         }
         catch (KeyNotFoundException)
         {
@@ -118,6 +130,10 @@ public class TimelineEventsController : ControllerBase
             }
 
             return NoContent();
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Unauthorized(new { error = "Your session expired. Please log in again." });
         }
         catch (KeyNotFoundException)
         {

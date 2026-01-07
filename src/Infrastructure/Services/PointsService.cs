@@ -30,7 +30,7 @@ public class PointsService : IPointsService
     public async Task<int> UpdateUserTotalPointsAsync(string userId, int pointsToAdd)
     {
         var user = await _context.Users.FindAsync(userId);
-        if (user == null) throw new InvalidOperationException("User not found");
+        if (user == null) throw new UnauthorizedAccessException("User not found");
 
         if (user.TotalPoints == 0 && user.Points > 0)
         {

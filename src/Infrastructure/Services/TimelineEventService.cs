@@ -54,8 +54,12 @@ public class TimelineEventService : ITimelineEventService
 
         // Recalculate application points and status
         var oldPoints = application.Points;
-        application.TimelineEvents.Add(timelineEvent);
-        application.Points = application.ComputeTotalPoints();
+        var totalPoints = application.TimelineEvents.Sum(e => e.Points);
+        if (!application.TimelineEvents.Any(e => e.Id == timelineEvent.Id))
+        {
+            totalPoints += points;
+        }
+        application.Points = totalPoints;
         application.Status = application.ComputeCurrentStatus();
         application.UpdatedDate = DateTime.UtcNow;
 
@@ -85,6 +89,8 @@ public class TimelineEventService : ITimelineEventService
 
         var events = application.TimelineEvents
             .OrderByDescending(e => e.Timestamp)
+            .ThenByDescending(e => e.CreatedDate)
+            .ThenByDescending(e => e.Id)
             .Select(MapToDto)
             .ToList();
 

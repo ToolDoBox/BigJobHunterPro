@@ -27,13 +27,20 @@ public class ApplicationsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> CreateApplication([FromBody] CreateApplicationRequest request)
     {
-        var result = await _applicationService.CreateApplicationAsync(request);
+        try
+        {
+            var result = await _applicationService.CreateApplicationAsync(request);
 
-        return CreatedAtAction(
-            nameof(GetApplication),
-            new { id = result.Id },
-            result
-        );
+            return CreatedAtAction(
+                nameof(GetApplication),
+                new { id = result.Id },
+                result
+            );
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Unauthorized(new { error = "Your session expired. Please log in again." });
+        }
     }
 
     /// <summary>
@@ -50,9 +57,15 @@ public class ApplicationsController : ControllerBase
             return BadRequest(new { error = "Page must be >= 1 and pageSize must be between 1 and 100." });
         }
 
-        var result = await _applicationService.GetApplicationsAsync(page, pageSize);
-
-        return Ok(result);
+        try
+        {
+            var result = await _applicationService.GetApplicationsAsync(page, pageSize);
+            return Ok(result);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Unauthorized(new { error = "Your session expired. Please log in again." });
+        }
     }
 
     /// <summary>
@@ -64,14 +77,21 @@ public class ApplicationsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetApplication(Guid id)
     {
-        var result = await _applicationService.GetApplicationAsync(id);
-
-        if (result == null)
+        try
         {
-            return NotFound();
-        }
+            var result = await _applicationService.GetApplicationAsync(id);
 
-        return Ok(result);
+            if (result == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(result);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Unauthorized(new { error = "Your session expired. Please log in again." });
+        }
     }
 
     /// <summary>
@@ -95,6 +115,10 @@ public class ApplicationsController : ControllerBase
 
             return Ok(result);
         }
+        catch (UnauthorizedAccessException)
+        {
+            return Unauthorized(new { error = "Your session expired. Please log in again." });
+        }
         catch (InvalidOperationException ex)
         {
             return BadRequest(new ErrorResponse("Validation failed", new List<string> { ex.Message }));
@@ -110,13 +134,20 @@ public class ApplicationsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> DeleteApplication(Guid id)
     {
-        var deleted = await _applicationService.DeleteApplicationAsync(id);
-
-        if (!deleted)
+        try
         {
-            return NotFound();
-        }
+            var deleted = await _applicationService.DeleteApplicationAsync(id);
 
-        return NoContent();
+            if (!deleted)
+            {
+                return NotFound();
+            }
+
+            return NoContent();
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Unauthorized(new { error = "Your session expired. Please log in again." });
+        }
     }
 }

@@ -117,6 +117,10 @@ export default function QuickCaptureModal({
           newErrors[key as keyof FormErrors] = messages[0];
         });
         setErrors(newErrors);
+      } else if (error instanceof Error) {
+        setErrors({ general: error.message });
+      } else {
+        setErrors({ general: 'We could not log this hunt. Please try again.' });
       }
     } finally {
       setIsSubmitting(false);

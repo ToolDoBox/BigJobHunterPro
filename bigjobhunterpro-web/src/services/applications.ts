@@ -60,6 +60,14 @@ const parseError = (error: unknown): Record<string, string[]> => {
   if (axios.isAxiosError(error)) {
     const data = error.response?.data as ApplicationError | undefined;
 
+    if (!error.response) {
+      if (error.code === 'ECONNABORTED' || error.message.toLowerCase().includes('timeout')) {
+        return { general: ['Request timed out. Please try again in a moment.'] };
+      }
+
+      return { general: ['Unable to reach the server. Please check your connection and try again.'] };
+    }
+
     if (data?.errors) {
       return data.errors;
     }
@@ -72,10 +80,30 @@ const parseError = (error: unknown): Record<string, string[]> => {
       return { general: [data.error] };
     }
 
-    return { general: ['An unexpected error occurred. Please try again.'] };
+    const status = error.response?.status;
+    if (status === 400) {
+      return { general: ['Some fields need attention. Please review your entries and try again.'] };
+    }
+    if (status === 401) {
+      return { general: ['Your session expired. Please log in again.'] };
+    }
+    if (status === 403) {
+      return { general: ['You do not have permission to perform that action.'] };
+    }
+    if (status === 404) {
+      return { general: ['We could not find that application. It may have been removed.'] };
+    }
+    if (status === 409) {
+      return { general: ['That change conflicted with a newer update. Refresh and try again.'] };
+    }
+    if (status && status >= 500) {
+      return { general: ['We hit a server issue while processing your request. Please try again shortly.'] };
+    }
+
+    return { general: ['Something went wrong. Please try again.'] };
   }
 
-  return { general: ['Network error. Please check your connection.'] };
+  return { general: ['Network error. Please check your connection and try again.'] };
 };
 
 export const applicationsService = {

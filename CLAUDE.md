@@ -62,7 +62,7 @@ docker-compose down -v                # Stop and remove volumes
 - **+1 point:** Application logged
 - **+2 points:** Screening call
 - **+5 points:** Interview completed (any round)
-- **+5 points:** Rejection logged (rewards resilience)
+- **+2 points:** Rejection logged (rewards resilience)
 - **+50 points:** Offer received
 
 ### Core Features (MVP Scope)

@@ -20,7 +20,7 @@ const EVENT_TYPE_OPTIONS: { value: EventType; label: string; points: number }[] 
   { value: 'Screening', label: 'Screening', points: 2 },
   { value: 'Interview', label: 'Interview', points: 5 },
   { value: 'Offer', label: 'Offer', points: 50 },
-  { value: 'Rejected', label: 'Rejected', points: 5 },
+  { value: 'Rejected', label: 'Rejected', points: 2 },
   { value: 'Withdrawn', label: 'Withdrawn', points: 0 },
 ];
 

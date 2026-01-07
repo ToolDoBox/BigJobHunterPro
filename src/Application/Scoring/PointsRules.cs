@@ -12,7 +12,7 @@ public static class PointsRules
             { ApplicationStatus.Screening, 2 },
             { ApplicationStatus.Interview, 5 },
             { ApplicationStatus.Offer, 50 },
-            { ApplicationStatus.Rejected, 5 },
+            { ApplicationStatus.Rejected, 2 },
             { ApplicationStatus.Withdrawn, 0 }
         };
 
@@ -24,7 +24,7 @@ public static class PointsRules
             { EventType.Screening, 2 },
             { EventType.Interview, 5 },
             { EventType.Offer, 50 },
-            { EventType.Rejected, 5 },
+            { EventType.Rejected, 2 },
             { EventType.Withdrawn, 0 }
         };
 

@@ -295,7 +295,11 @@ export default function ApplicationDetail() {
         });
         setErrors(nextErrors);
       } else {
-        setErrors({ general: 'Unable to save changes. Try again.' });
+        setErrors({
+          general: error instanceof Error
+            ? error.message
+            : 'We could not save your changes. Please try again.'
+        });
       }
     } finally {
       setIsSaving(false);

@@ -14,6 +14,7 @@ public class AiParsingService : IAiParsingService
     private readonly ILogger<AiParsingService> _logger;
     private readonly string _model;
     private readonly int _maxTokens;
+    private readonly bool _isApiKeyConfigured;
 
     public AiParsingService(
         IHttpClientFactory httpClientFactory,
@@ -24,6 +25,15 @@ public class AiParsingService : IAiParsingService
         _logger = logger;
         _model = configuration["AnthropicSettings:Model"] ?? "claude-haiku-4-5";
         _maxTokens = int.TryParse(configuration["AnthropicSettings:MaxTokens"], out var tokens) ? tokens : 1024;
+        var apiKey = configuration["AnthropicSettings:ApiKey"] ?? string.Empty;
+        _isApiKeyConfigured = !string.IsNullOrWhiteSpace(apiKey)
+            && !apiKey.Contains("PLACEHOLDER", StringComparison.OrdinalIgnoreCase)
+            && !apiKey.Contains("LOADED FROM AZURE KEY VAULT", StringComparison.OrdinalIgnoreCase);
+
+        if (!_isApiKeyConfigured)
+        {
+            _logger.LogWarning("Anthropic API key is not configured. AI parsing will be skipped.");
+        }
     }
 
     public async Task<AiParsingResult> ParseJobPostingAsync(string rawPageContent)
@@ -31,6 +41,11 @@ public class AiParsingService : IAiParsingService
         if (string.IsNullOrWhiteSpace(rawPageContent))
         {
             return AiParsingResult.Failed("No content to parse");
+        }
+
+        if (!_isApiKeyConfigured)
+        {
+            return AiParsingResult.Failed("Anthropic API key not configured");
         }
 
         try

@@ -200,8 +200,8 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// Map SignalR hub
-app.MapHub<LeaderboardHub>("/hubs/leaderboard");
+// Map SignalR hub with CORS
+app.MapHub<LeaderboardHub>("/hubs/leaderboard").RequireCors("AllowFrontend");
 
 // Ensure database is created and seed data in development environment
 if (app.Environment.IsDevelopment())

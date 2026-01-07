@@ -29,10 +29,21 @@ export function useSignalR({
   onReconnected,
 }: UseSignalROptions): SignalRConnection {
   const connectionRef = useRef<signalR.HubConnection | null>(null);
+  const onConnectedRef = useRef(onConnected);
+  const onDisconnectedRef = useRef(onDisconnected);
+  const onReconnectingRef = useRef(onReconnecting);
+  const onReconnectedRef = useRef(onReconnected);
   const [connectionState, setConnectionState] = useState<signalR.HubConnectionState>(
     signalR.HubConnectionState.Disconnected
   );
   const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    onConnectedRef.current = onConnected;
+    onDisconnectedRef.current = onDisconnected;
+    onReconnectingRef.current = onReconnecting;
+    onReconnectedRef.current = onReconnected;
+  }, [onConnected, onDisconnected, onReconnecting, onReconnected]);
 
   useEffect(() => {
     const token = tokenStorage.getToken();
@@ -40,6 +51,9 @@ export function useSignalR({
       setError(new Error('No authentication token available'));
       return;
     }
+
+    let isActive = true;
+    let retryTimeout: ReturnType<typeof setTimeout> | null = null;
 
     const connection = new signalR.HubConnectionBuilder()
       .withUrl(`${API_URL}${hubPath}`, {
@@ -52,48 +66,58 @@ export function useSignalR({
     connectionRef.current = connection;
 
     connection.onclose((err) => {
+      if (!isActive) return;
       setConnectionState(signalR.HubConnectionState.Disconnected);
       if (err) {
         setError(err);
       }
-      onDisconnected?.();
+      onDisconnectedRef.current?.();
     });
 
     connection.onreconnecting((err) => {
+      if (!isActive) return;
       setConnectionState(signalR.HubConnectionState.Reconnecting);
       if (err) {
         setError(err);
       }
-      onReconnecting?.();
+      onReconnectingRef.current?.();
     });
 
     connection.onreconnected(() => {
+      if (!isActive) return;
       setConnectionState(signalR.HubConnectionState.Connected);
       setError(null);
-      onReconnected?.();
+      onReconnectedRef.current?.();
     });
 
     const startConnection = async () => {
       try {
+        if (!isActive) return;
         setConnectionState(signalR.HubConnectionState.Connecting);
         await connection.start();
+        if (!isActive) return;
         setConnectionState(signalR.HubConnectionState.Connected);
         setError(null);
-        onConnected?.();
+        onConnectedRef.current?.();
       } catch (err) {
+        if (!isActive) return;
         setError(err as Error);
         setConnectionState(signalR.HubConnectionState.Disconnected);
         // Retry after 5 seconds
-        setTimeout(startConnection, 5000);
+        retryTimeout = setTimeout(startConnection, 5000);
       }
     };
 
     startConnection();
 
     return () => {
+      isActive = false;
+      if (retryTimeout) {
+        clearTimeout(retryTimeout);
+      }
       connection.stop();
     };
-  }, [hubPath, onConnected, onDisconnected, onReconnecting, onReconnected]);
+  }, [hubPath]);
 
   const invoke = useCallback(
     async <T>(methodName: string, ...args: unknown[]): Promise<T | undefined> => {

@@ -3,6 +3,7 @@
 ## Overview
 
 Deploy Big Job Hunter Pro MVP to Azure with:
+
 - **Backend**: .NET 8 API on Azure App Service
 - **Frontend**: React SPA on Azure Static Web Apps
 - **Database**: Existing Azure SQL (bjhp-dev-sql-cgta.database.windows.net)
@@ -104,6 +105,7 @@ az webapp show \
 ### 1.6 Create Static Web App (Frontend)
 
 **Via Azure Portal** (easier for initial setup):
+
 1. Navigate to: Azure Portal → Static Web Apps → Create
 2. Configure:
    - **Name**: bjhp-frontend-prod
@@ -173,11 +175,13 @@ az monitor app-insights component create \
 **File**: `src/WebAPI/appsettings.json`
 
 **Change line 12** from:
+
 ```json
 "ApiKey": "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",
 ```
 
 To:
+
 ```json
 "ApiKey": "** PLACEHOLDER - Use User Secrets for local dev, Azure Key Vault for production **",
 ```
@@ -189,6 +193,7 @@ To:
 **File**: `src/WebAPI/Program.cs`
 
 **Replace lines 18-29** with:
+
 ```csharp
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
@@ -215,6 +220,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 **File**: `src/WebAPI/Program.cs`
 
 **Find the CORS configuration** (around line 112-122) and replace with:
+
 ```csharp
 builder.Services.AddCors(options =>
 {
@@ -237,6 +243,7 @@ builder.Services.AddCors(options =>
 **File**: `src/WebAPI/WebAPI.csproj`
 
 Add package reference:
+
 ```xml
 <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.22.0" />
 ```
@@ -244,6 +251,7 @@ Add package reference:
 **File**: `src/WebAPI/Program.cs`
 
 Add after line 82 (after AddControllers):
+
 ```csharp
 // Add Application Insights telemetry
 builder.Services.AddApplicationInsightsTelemetry();
@@ -270,7 +278,10 @@ VITE_APP_NAME=Big Job Hunter Pro
 {
   "navigationFallback": {
     "rewrite": "/index.html",
-    "exclude": ["/images/*", "/*.{css,scss,js,json,png,jpg,jpeg,gif,svg,ico,woff,woff2,ttf}"]
+    "exclude": [
+      "/images/*",
+      "/*.{css,scss,js,json,png,jpg,jpeg,gif,svg,ico,woff,woff2,ttf}"
+    ]
   },
   "globalHeaders": {
     "X-Content-Type-Options": "nosniff",
@@ -356,9 +367,11 @@ dotnet ef migrations list
 ### Option B: Verify in Azure SQL
 
 **Connect to Azure SQL via Azure Portal**:
+
 1. Azure Portal → SQL Database (BigJobHunterPro) → Query editor
 2. Login with admin credentials
 3. Run:
+
 ```sql
 SELECT * FROM __EFMigrationsHistory;
 -- Should show: 20260105055544_InitialIdentity and 20260119090000_AddApplicationsTable
@@ -366,6 +379,12 @@ SELECT * FROM __EFMigrationsHistory;
 SELECT COUNT(*) FROM AspNetUsers;
 SELECT COUNT(*) FROM Applications;
 ```
+
+!!!! Double Check !!!!
+
+Failed to execute query. Error: Invalid object name '\_\_EFMigrationsHistory'.
+
+!!!!!!!!
 
 ---
 
@@ -382,47 +401,48 @@ on:
   push:
     branches: [main]
     paths:
-      - 'src/**'
-      - '.github/workflows/deploy-backend.yml'
+      - "src/**"
+      - ".github/workflows/deploy-backend.yml"
   workflow_dispatch:
 
 env:
   AZURE_WEBAPP_NAME: bjhp-api-prod
-  DOTNET_VERSION: '8.0.x'
+  DOTNET_VERSION: "8.0.x"
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: ${{ env.DOTNET_VERSION }}
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
 
-    - name: Restore dependencies
-      run: dotnet restore BigJobHunterPro.sln
+      - name: Restore dependencies
+        run: dotnet restore BigJobHunterPro.sln
 
-    - name: Build
-      run: dotnet build BigJobHunterPro.sln --configuration Release --no-restore
+      - name: Build
+        run: dotnet build BigJobHunterPro.sln --configuration Release --no-restore
 
-    - name: Publish
-      run: dotnet publish src/WebAPI/WebAPI.csproj --configuration Release --no-build --output ./publish
+      - name: Publish
+        run: dotnet publish src/WebAPI/WebAPI.csproj --configuration Release --no-build --output ./publish
 
-    - name: Deploy to Azure App Service
-      uses: azure/webapps-deploy@v3
-      with:
-        app-name: ${{ env.AZURE_WEBAPP_NAME }}
-        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-        package: ./publish
+      - name: Deploy to Azure App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: ./publish
 ```
 
 ### 6.2 Add GitHub Secret
 
 1. **Download Publish Profile**:
+
    - Azure Portal → App Service (bjhp-api-prod) → Get publish profile (download)
    - Open the downloaded `.PublishSettings` file in a text editor
 
@@ -451,6 +471,7 @@ git push origin main
 **Navigate to**: Azure Portal → Static Web App (bjhp-frontend-prod) → Configuration
 
 **Add environment variables**:
+
 - **Name**: `VITE_API_URL`
 - **Value**: `https://bjhp-api-prod.azurewebsites.net`
 
@@ -459,9 +480,11 @@ git push origin main
 ### 7.2 Update Backend CORS with Static Web App URL
 
 **After Static Web App is deployed**, get its URL:
+
 - Azure Portal → Static Web App → Overview → Copy URL (e.g., `https://bjhp-frontend-prod-xyz.azurestaticapps.net`)
 
 **Update Backend App Service**:
+
 - Azure Portal → App Service (bjhp-api-prod) → Configuration → Application settings
 - Update `AllowedOrigins__0` to the Static Web App URL
 - **Save**
@@ -473,6 +496,7 @@ git push origin main
 ### 8.1 Backend Health Check
 
 **Test health endpoint**:
+
 ```bash
 curl https://bjhp-api-prod.azurewebsites.net/api/health
 # Expected: {"status":"ok","timestampUtc":"..."}
@@ -507,10 +531,12 @@ curl -X POST https://bjhp-api-prod.azurewebsites.net/api/auth/register \
 ### 8.4 Check Key Vault Integration
 
 **Azure Portal → App Service → Configuration**:
+
 - Verify Key Vault references show **green checkmark** ✓
 - If red X, check Managed Identity permissions
 
 **Check logs**:
+
 ```bash
 # Azure Portal → App Service → Log stream
 # Look for any "KeyVault" or authentication errors
@@ -519,6 +545,7 @@ curl -X POST https://bjhp-api-prod.azurewebsites.net/api/auth/register \
 ### 8.5 Verify CORS
 
 **In browser**:
+
 1. Open DevTools → Network tab
 2. Login to frontend
 3. Watch API calls
@@ -533,16 +560,19 @@ curl -X POST https://bjhp-api-prod.azurewebsites.net/api/auth/register \
 **Azure Portal → Application Insights → Alerts**:
 
 **Alert 1: High Error Rate**
+
 - Signal: Failed requests
 - Threshold: > 10 in 5 minutes
 - Action: Email notification
 
 **Alert 2: High Response Time**
+
 - Signal: Server response time
 - Threshold: > 2 seconds (P95)
 - Action: Email notification
 
 **Alert 3: Database Issues**
+
 - Signal: Dependency failures
 - Threshold: > 5 in 5 minutes
 - Action: Email notification
@@ -562,12 +592,14 @@ az consumption budget create \
 ## Summary of Changes Required
 
 ### New Files to Create:
+
 1. ✅ `src/WebAPI/appsettings.Production.json` - Production config
 2. ✅ `bigjobhunterpro-web/.env.production` - Frontend prod env vars
 3. ✅ `bigjobhunterpro-web/public/staticwebapp.config.json` - SPA routing config
 4. ✅ `.github/workflows/deploy-backend.yml` - CI/CD pipeline
 
 ### Files to Modify:
+
 1. ✅ `src/WebAPI/appsettings.json`:line:12 - Remove hardcoded API key
 2. ✅ `src/WebAPI/Program.cs`:18-29 - Add SQL retry logic
 3. ✅ `src/WebAPI/Program.cs`:112-122 - Update CORS for production
@@ -578,14 +610,14 @@ az consumption budget create \
 
 ## Cost Breakdown (Monthly)
 
-| Resource | Tier | Cost |
-|----------|------|------|
-| Azure SQL Database | Basic (Free tier) | $0 |
-| App Service Plan | B1 | ~$13 |
-| Static Web App | Free | $0 |
-| Key Vault | Standard | ~$0.03 |
-| Application Insights | Pay-as-you-go | ~$2-5 |
-| **TOTAL** | | **~$15-18** |
+| Resource             | Tier              | Cost        |
+| -------------------- | ----------------- | ----------- |
+| Azure SQL Database   | Basic (Free tier) | $0          |
+| App Service Plan     | B1                | ~$13        |
+| Static Web App       | Free              | $0          |
+| Key Vault            | Standard          | ~$0.03      |
+| Application Insights | Pay-as-you-go     | ~$2-5       |
+| **TOTAL**            |                   | **~$15-18** |
 
 **Cost Optimization**: For testing/low traffic, use F1 (Free) App Service tier instead of B1 to reduce to $0-5/month.
 
@@ -594,18 +626,23 @@ az consumption budget create \
 ## Troubleshooting Guide
 
 ### Issue: App Service shows "Service Unavailable"
+
 **Solution**: Check App Service logs for startup errors, verify Key Vault access
 
 ### Issue: Frontend can't reach API (CORS error)
+
 **Solution**: Verify `AllowedOrigins__0` matches Static Web App URL exactly
 
 ### Issue: Database connection fails
+
 **Solution**: Check SQL Server firewall rules include App Service outbound IPs
 
 ### Issue: Key Vault secrets not loading
+
 **Solution**: Verify Managed Identity is assigned and has "Get" permission on secrets
 
 ### Issue: JWT authentication fails
+
 **Solution**: Check that JWT secret is properly loaded from Key Vault (not placeholder)
 
 ---
@@ -613,18 +650,21 @@ az consumption budget create \
 ## Next Steps After Deployment
 
 ### Immediate (Week 1):
+
 - [ ] Custom domain setup (e.g., bigjobhunter.pro)
 - [ ] SSL certificate for custom domain
 - [ ] Update JWT Issuer/Audience to match domain
 - [ ] Rotate secrets (generate new JWT secret for production)
 
 ### Short-term (Month 1):
+
 - [ ] Set up automated backups for Azure SQL
 - [ ] Configure deployment slots for zero-downtime deployments
 - [ ] Add health check monitoring alerts
 - [ ] Implement rate limiting on API
 
 ### Medium-term (Quarter 1):
+
 - [ ] Auto-scaling rules for App Service
 - [ ] Redis cache for JWT validation
 - [ ] Email service integration (SendGrid/Azure Communication Services)

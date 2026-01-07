@@ -7,9 +7,14 @@ import Dashboard from '@/pages/Dashboard';
 import Applications from '@/pages/Applications';
 import ApplicationDetail from '@/pages/ApplicationDetail';
 import Party from '@/pages/Party';
+import Landing from '@/pages/Landing';
 
 export const router = createBrowserRouter([
   // Public routes
+  {
+    path: '/',
+    element: <Landing />,
+  },
   {
     path: '/login',
     element: <Login />,
@@ -67,6 +72,6 @@ export const router = createBrowserRouter([
   // Catch-all redirect
   {
     path: '*',
-    element: <Navigate to="/app" replace />,
+    element: <Navigate to="/" replace />,
   },
 ]);

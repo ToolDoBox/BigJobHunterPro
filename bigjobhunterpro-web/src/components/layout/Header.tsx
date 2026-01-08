@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import NavLink from './NavLink';
 import { useAuth } from '@/hooks/useAuth';
@@ -11,13 +11,20 @@ const navItems = [
 ];
 
 export default function Header() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user, logout, isLoading } = useAuth();
   const location = useLocation();
 
   const handleLogout = async () => {
     await logout();
+    setIsUserMenuOpen(false);
   };
+
+  useEffect(() => {
+    setIsUserMenuOpen(false);
+    setIsMobileMenuOpen(false);
+  }, [location.pathname]);
 
   return (
     <header className="header-bar">
@@ -57,17 +64,20 @@ export default function Header() {
             {/* User dropdown */}
             <div className="relative">
               <button
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                onClick={() => {
+                  setIsUserMenuOpen((open) => !open);
+                  setIsMobileMenuOpen(false);
+                }}
                 className="btn-metal flex items-center gap-2"
               >
                 <span className="text-amber font-semibold">
                   {user?.displayName ?? 'Hunter'}
                 </span>
-                <span className="text-terminal">{isMenuOpen ? '▲' : '▼'}</span>
+                <span className="text-terminal">{isUserMenuOpen ? '▲' : '▼'}</span>
               </button>
 
               {/* Dropdown menu */}
-              {isMenuOpen && (
+              {isUserMenuOpen && (
                 <div className="absolute right-0 mt-2 w-48 metal-panel z-50">
                   <div className="p-3 border-b border-metal-border">
                     <p className="text-xs text-gray-500">Signed in as</p>
@@ -88,16 +98,16 @@ export default function Header() {
 
             {/* Mobile menu button */}
             <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              onClick={() => { setIsMobileMenuOpen((open) => !open); setIsUserMenuOpen(false); }}
               className="md:hidden p-2 text-amber hover:text-blaze bg-transparent border-none cursor-pointer"
             >
-              <span className="text-2xl">{isMenuOpen ? '✕' : '☰'}</span>
+              <span className="text-2xl">{isMobileMenuOpen ? '✕' : '☰'}</span>
             </button>
           </div>
         </div>
 
         {/* Mobile Navigation */}
-        {isMenuOpen && (
+        {isMobileMenuOpen && (
           <nav className="md:hidden py-4 border-t border-metal-border">
             {navItems.map((item) => (
               <NavLink
@@ -105,7 +115,7 @@ export default function Header() {
                 to={item.to}
                 isActive={location.pathname.startsWith(item.to)}
                 className="block py-2"
-                onClick={() => setIsMenuOpen(false)}
+                onClick={() => setIsMobileMenuOpen(false)}
               >
                 <span className="mr-2">{item.icon}</span>
                 {item.label}

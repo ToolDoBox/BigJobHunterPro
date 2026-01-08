@@ -15,7 +15,9 @@ export default function Toast({ type, message, points, onDismiss }: ToastProps) 
     : 'border-amber';
 
   return (
-    <div className={`metal-panel ${borderColor} border-l-4 flex items-center gap-4 min-w-[300px] animate-slide-in-right`}>
+    <div
+      className={`metal-panel ${borderColor} border-l-4 flex items-center gap-4 w-full max-w-full sm:min-w-[300px] sm:w-auto animate-slide-in-right`}
+    >
       <div className="flex-1">
         <p className="text-white font-medium">{message}</p>
         {points !== undefined && (

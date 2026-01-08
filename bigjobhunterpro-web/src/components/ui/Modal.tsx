@@ -69,7 +69,7 @@ export default function Modal({
   if (!isVisible) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto px-4 py-6 sm:items-center sm:py-8">
       {/* Backdrop */}
       <div
         className={`absolute inset-0 bg-black/70 backdrop-blur-sm ${
@@ -85,7 +85,7 @@ export default function Modal({
         aria-modal="true"
         aria-labelledby="modal-title"
         tabIndex={-1}
-        className={`relative metal-panel metal-panel-orange w-full max-w-md mx-4 ${
+        className={`relative metal-panel metal-panel-orange w-full max-w-md max-h-[90vh] overflow-y-auto ${
           isClosing ? 'animate-scale-out' : 'animate-scale-in'
         } motion-reduce:animate-none`}
       >

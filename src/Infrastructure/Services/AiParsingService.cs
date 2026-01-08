@@ -1,4 +1,7 @@
 using System.Net.Http.Json;
+using System.Security.Cryptography;
+using System.Text;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Application.DTOs.AiParsing;
@@ -15,6 +18,7 @@ public class AiParsingService : IAiParsingService
     private readonly string _model;
     private readonly int _maxTokens;
     private readonly bool _isApiKeyConfigured;
+    private readonly string _apiKeyState;
 
     public AiParsingService(
         IHttpClientFactory httpClientFactory,
@@ -25,14 +29,18 @@ public class AiParsingService : IAiParsingService
         _logger = logger;
         _model = configuration["AnthropicSettings:Model"] ?? "claude-haiku-4-5";
         _maxTokens = int.TryParse(configuration["AnthropicSettings:MaxTokens"], out var tokens) ? tokens : 1024;
-        var apiKey = configuration["AnthropicSettings:ApiKey"] ?? string.Empty;
+        var apiKey = configuration["AnthropicSettings:ApiKey"]
+            ?? configuration["AnthropicApiKey"]
+            ?? string.Empty;
         _isApiKeyConfigured = !string.IsNullOrWhiteSpace(apiKey)
             && !apiKey.Contains("PLACEHOLDER", StringComparison.OrdinalIgnoreCase)
             && !apiKey.Contains("LOADED FROM AZURE KEY VAULT", StringComparison.OrdinalIgnoreCase);
+        _apiKeyState = GetApiKeyState(apiKey, _isApiKeyConfigured);
 
         if (!_isApiKeyConfigured)
         {
-            _logger.LogWarning("Anthropic API key is not configured. AI parsing will be skipped.");
+            _logger.LogWarning("Anthropic API key is not configured. State={KeyState}. AI parsing will be skipped.",
+                _apiKeyState);
         }
     }
 
@@ -45,6 +53,7 @@ public class AiParsingService : IAiParsingService
 
         if (!_isApiKeyConfigured)
         {
+            _logger.LogWarning("Anthropic API key not configured. State={KeyState}.", _apiKeyState);
             return AiParsingResult.Failed("Anthropic API key not configured");
         }
 
@@ -54,16 +63,27 @@ public class AiParsingService : IAiParsingService
             var prompt = BuildPrompt(rawPageContent);
             var requestBody = BuildRequestBody(prompt);
 
-            _logger.LogInformation("Calling Anthropic API to parse job posting ({ContentLength} chars)",
-                rawPageContent.Length);
+            _logger.LogInformation(
+                "Calling Anthropic API to parse job posting (Model={Model}, MaxTokens={MaxTokens}, TimeoutSeconds={TimeoutSeconds}, ContentLength={ContentLength}, KeyState={KeyState})",
+                _model, _maxTokens, client.Timeout.TotalSeconds, rawPageContent.Length, _apiKeyState);
 
             var response = await client.PostAsJsonAsync("messages", requestBody);
 
             if (!response.IsSuccessStatusCode)
             {
                 var errorContent = await response.Content.ReadAsStringAsync();
-                _logger.LogWarning("Anthropic API returned {StatusCode}: {Error}",
-                    response.StatusCode, errorContent);
+                var requestId = TryGetHeader(response.Headers, "x-request-id")
+                    ?? TryGetHeader(response.Headers, "request-id");
+                var rateLimit = BuildRateLimitSummary(response);
+                var contentType = response.Content.Headers.ContentType?.ToString() ?? "unknown";
+
+                _logger.LogWarning(
+                    "Anthropic API error. Status={StatusCode}, RequestId={RequestId}, ContentType={ContentType}, RateLimit={RateLimit}, Error={Error}",
+                    response.StatusCode,
+                    requestId ?? "n/a",
+                    contentType,
+                    rateLimit,
+                    TrimForLog(errorContent, 2000));
                 return AiParsingResult.Failed($"API error: {response.StatusCode}");
             }
 
@@ -198,6 +218,58 @@ public class AiParsingService : IAiParsingService
                 responseContent.Length > 500 ? responseContent[..500] : responseContent);
             return AiParsingResult.Failed("Invalid JSON in API response");
         }
+    }
+
+    private static string GetApiKeyState(string apiKey, bool isConfigured)
+    {
+        if (string.IsNullOrWhiteSpace(apiKey))
+        {
+            return "missing";
+        }
+
+        if (!isConfigured)
+        {
+            return "placeholder";
+        }
+
+        return $"fingerprint:{ComputeFingerprint(apiKey)}";
+    }
+
+    private static string ComputeFingerprint(string apiKey)
+    {
+        var bytes = Encoding.UTF8.GetBytes(apiKey);
+        using var sha = SHA256.Create();
+        var hash = sha.ComputeHash(bytes);
+        return Convert.ToHexString(hash[..4]).ToLowerInvariant();
+    }
+
+    private static string? TryGetHeader(System.Net.Http.Headers.HttpResponseHeaders headers, string name)
+    {
+        return headers.TryGetValues(name, out var values) ? values.FirstOrDefault() : null;
+    }
+
+    private static string BuildRateLimitSummary(HttpResponseMessage response)
+    {
+        var headers = response.Headers;
+        var requestsLimit = TryGetHeader(headers, "anthropic-ratelimit-limit-requests") ?? "n/a";
+        var requestsRemaining = TryGetHeader(headers, "anthropic-ratelimit-remaining-requests") ?? "n/a";
+        var requestsReset = TryGetHeader(headers, "anthropic-ratelimit-reset-requests") ?? "n/a";
+        var tokensLimit = TryGetHeader(headers, "anthropic-ratelimit-limit-tokens") ?? "n/a";
+        var tokensRemaining = TryGetHeader(headers, "anthropic-ratelimit-remaining-tokens") ?? "n/a";
+        var tokensReset = TryGetHeader(headers, "anthropic-ratelimit-reset-tokens") ?? "n/a";
+
+        return $"requests {requestsRemaining}/{requestsLimit} reset={requestsReset}; tokens {tokensRemaining}/{tokensLimit} reset={tokensReset}";
+    }
+
+    private static string TrimForLog(string value, int maxChars)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return "<empty>";
+        }
+
+        var trimmed = value.Trim();
+        return trimmed.Length <= maxChars ? trimmed : $"{trimmed[..maxChars]}...[truncated]";
     }
 
     // Internal classes for Anthropic API response deserialization

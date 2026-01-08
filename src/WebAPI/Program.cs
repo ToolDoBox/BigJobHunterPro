@@ -5,9 +5,11 @@ using Infrastructure.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using WebAPI.Hubs;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -103,6 +105,45 @@ builder.Services.AddAuthorization();
 // Add HTTP Context Accessor for CurrentUserService
 builder.Services.AddHttpContextAccessor();
 
+// Add rate limiting
+builder.Services.AddRateLimiter(options =>
+{
+    var permitLimit = int.TryParse(builder.Configuration["RateLimiting:QuickCapture:PermitLimit"], out var parsedPermit)
+        ? parsedPermit
+        : 10;
+    var windowSeconds = int.TryParse(builder.Configuration["RateLimiting:QuickCapture:WindowSeconds"], out var parsedWindow)
+        ? parsedWindow
+        : 60;
+    var queueLimit = int.TryParse(builder.Configuration["RateLimiting:QuickCapture:QueueLimit"], out var parsedQueue)
+        ? parsedQueue
+        : 0;
+
+    options.AddPolicy("QuickCapture", context =>
+    {
+        var userId = context.User.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)?.Value;
+        var partitionKey = string.IsNullOrWhiteSpace(userId)
+            ? context.Connection.RemoteIpAddress?.ToString() ?? "anonymous"
+            : userId;
+
+        return RateLimitPartition.GetFixedWindowLimiter(partitionKey, _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = permitLimit,
+            Window = TimeSpan.FromSeconds(windowSeconds),
+            QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+            QueueLimit = queueLimit
+        });
+    });
+
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.OnRejected = async (context, token) =>
+    {
+        context.HttpContext.Response.ContentType = "application/json";
+        await context.HttpContext.Response.WriteAsync(
+            "{\"error\":\"Rate limit exceeded. Please wait before creating more applications.\"}",
+            token);
+    };
+});
+
 // Add Application Insights telemetry
 builder.Services.AddApplicationInsightsTelemetry();
 
@@ -119,6 +160,7 @@ builder.Services.AddScoped<Application.Interfaces.ITimelineEventService, Infrast
 builder.Services.AddHttpClient("Anthropic", client =>
 {
     var apiKey = builder.Configuration["AnthropicSettings:ApiKey"]
+        ?? builder.Configuration["AnthropicApiKey"]
         ?? throw new InvalidOperationException("Anthropic API key not configured");
 
     client.BaseAddress = new Uri("https://api.anthropic.com/v1/");
@@ -214,6 +256,7 @@ app.UseCors("AllowFrontend");
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 
 app.MapControllers();
 

@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Application.DTOs.Applications;
 using Application.DTOs.Auth;
+using Application.Exceptions;
 using Application.Interfaces;
 
 namespace WebAPI.Controllers;
@@ -22,6 +24,8 @@ public class ApplicationsController : ControllerBase
     /// Creates a new job application (Quick Capture)
     /// </summary>
     [HttpPost]
+    [EnableRateLimiting("QuickCapture")]
+    [RequestSizeLimit(100_000)]
     [ProducesResponseType(typeof(CreateApplicationResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -40,6 +44,14 @@ public class ApplicationsController : ControllerBase
         catch (UnauthorizedAccessException)
         {
             return Unauthorized(new { error = "Your session expired. Please log in again." });
+        }
+        catch (RateLimitExceededException ex)
+        {
+            return StatusCode(StatusCodes.Status429TooManyRequests, new { error = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new ErrorResponse("Validation failed", new List<string> { ex.Message }));
         }
     }
 

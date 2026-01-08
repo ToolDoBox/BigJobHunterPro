@@ -1,4 +1,5 @@
 using Application.DTOs.Applications;
+using Application.Exceptions;
 using Application.DTOs.TimelineEvents;
 using Application.Interfaces;
 using Application.Scoring;
@@ -14,21 +15,31 @@ public class ApplicationService : IApplicationService
     private readonly ApplicationDbContext _context;
     private readonly ICurrentUserService _currentUser;
     private readonly IPointsService _pointsService;
+    private readonly IConfiguration _configuration;
 
     public ApplicationService(
         ApplicationDbContext context,
         ICurrentUserService currentUser,
-        IPointsService pointsService)
+        IPointsService pointsService,
+        IConfiguration configuration)
     {
         _context = context;
         _currentUser = currentUser;
         _pointsService = pointsService;
+        _configuration = configuration;
     }
 
     public async Task<CreateApplicationResponse> CreateApplicationAsync(CreateApplicationRequest request)
     {
         var userId = _currentUser.GetUserId()
             ?? throw new UnauthorizedAccessException("User not authenticated");
+
+        if (string.IsNullOrWhiteSpace(request.RawPageContent))
+        {
+            throw new InvalidOperationException("Job page content is required.");
+        }
+
+        await EnforceDailyAiLimitAsync(userId);
 
         var normalizedSourceUrl = string.IsNullOrWhiteSpace(request.SourceUrl)
             ? null
@@ -299,5 +310,72 @@ public class ApplicationService : IApplicationService
         }
 
         return host;
+    }
+
+    private async Task EnforceDailyAiLimitAsync(string userId)
+    {
+        var limit = CalculateDailyAiLimitPerUser();
+        if (limit <= 0)
+        {
+            return;
+        }
+
+        var todayUtc = DateTime.UtcNow.Date;
+        var tomorrowUtc = todayUtc.AddDays(1);
+
+        var usageCount = await _context.Applications
+            .AsNoTracking()
+            .Where(application => application.UserId == userId
+                && application.CreatedDate >= todayUtc
+                && application.CreatedDate < tomorrowUtc)
+            .CountAsync();
+
+        if (usageCount >= limit)
+        {
+            throw new RateLimitExceededException(
+                $"Daily AI limit reached ({limit} quick captures per day). Please try again tomorrow.");
+        }
+    }
+
+    private int CalculateDailyAiLimitPerUser()
+    {
+        var monthlyBudget = GetDoubleSetting("AiBudget:MonthlyBudgetUsd", 5);
+        var activeUsers = GetIntSetting("AiBudget:ActiveMonthlyUsers", 10);
+        var estimatedInputTokens = GetIntSetting("AiBudget:EstimatedInputTokensPerRequest", 3800);
+        var maxOutputTokens = GetIntSetting("AnthropicSettings:MaxTokens", 1024);
+        var inputCostPerMillion = GetDoubleSetting("AiBudget:CostPerMillionInputTokensUsd", 0.25);
+        var outputCostPerMillion = GetDoubleSetting("AiBudget:CostPerMillionOutputTokensUsd", 1.25);
+        var maxDailyLimit = GetIntSetting("AiBudget:MaxDailyPerUserLimit", 25);
+
+        if (monthlyBudget <= 0 || activeUsers <= 0 || estimatedInputTokens <= 0 || maxOutputTokens <= 0)
+        {
+            return 0;
+        }
+
+        var estimatedCostPerRequest =
+            (estimatedInputTokens / 1_000_000d) * inputCostPerMillion +
+            (maxOutputTokens / 1_000_000d) * outputCostPerMillion;
+
+        if (estimatedCostPerRequest <= 0)
+        {
+            return 0;
+        }
+
+        var monthlyRequests = monthlyBudget / estimatedCostPerRequest;
+        var perUserMonthly = monthlyRequests / activeUsers;
+        var perUserDaily = Math.Floor(perUserMonthly / 30d);
+
+        var clampedDaily = Math.Max(1, Math.Min(maxDailyLimit, (int)perUserDaily));
+        return clampedDaily;
+    }
+
+    private int GetIntSetting(string key, int fallback)
+    {
+        return int.TryParse(_configuration[key], out var parsed) ? parsed : fallback;
+    }
+
+    private double GetDoubleSetting(string key, double fallback)
+    {
+        return double.TryParse(_configuration[key], out var parsed) ? parsed : fallback;
     }
 }

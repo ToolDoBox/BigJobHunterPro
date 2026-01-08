@@ -9,5 +9,6 @@ public class CreateApplicationRequest
     public string? SourceUrl { get; set; }
 
     [Required(ErrorMessage = "Job page content is required")]
+    [MaxLength(20000, ErrorMessage = "Job page content cannot exceed 20000 characters")]
     public string RawPageContent { get; set; } = string.Empty;
 }

@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import FormInput from '@/components/forms/FormInput';
 import PasswordInput from '@/components/forms/PasswordInput';
+import ServerStatusIndicator from '@/components/ui/ServerStatusIndicator';
 
 interface FormErrors {
   email?: string;
@@ -91,6 +92,7 @@ export default function Login() {
           <p className="font-arcade text-xs text-terminal">
             // HUNTER LOGIN //
           </p>
+          <ServerStatusIndicator />
         </div>
 
         {/* Login form - Metal panel with screws */}

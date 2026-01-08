@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import FormInput from '@/components/forms/FormInput';
 import PasswordInput, { type PasswordRequirement } from '@/components/forms/PasswordInput';
+import ServerStatusIndicator from '@/components/ui/ServerStatusIndicator';
 
 interface FormErrors {
   displayName?: string;
@@ -120,6 +121,7 @@ export default function Register() {
           <p className="font-arcade text-xs text-terminal">
             // NEW HUNTER REGISTRATION //
           </p>
+          <ServerStatusIndicator />
         </div>
 
         {/* Register form - Metal panel with screws */}

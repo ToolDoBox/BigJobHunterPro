@@ -277,16 +277,8 @@ app.MapHub<ActivityHub>("/hubs/activity").RequireCors("AllowFrontend");
 // Ensure database is created and seed data in development environment
 if (app.Environment.IsDevelopment())
 {
-    using (var scope = app.Services.CreateScope())
-    {
-        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-
-        // Tables are created via EF migrations, no need for manual SQL
-        // Commented out SQLite-specific SQL that breaks on SQL Server
-        // await context.Database.ExecuteSqlRawAsync(@"CREATE TABLE IF NOT EXISTS HuntingParties...");
-
-        await Infrastructure.Data.SeedData.InitializeAsync(scope.ServiceProvider);
-    }
+    // SeedData.InitializeAsync handles database creation internally
+    await Infrastructure.Data.SeedData.InitializeAsync(app.Services);
 }
 
 app.Run();

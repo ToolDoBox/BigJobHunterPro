@@ -80,58 +80,72 @@ public class ActivityEventService : IActivityEventService
 
     public async Task<ActivityFeedResponse?> GetPartyActivityAsync(Guid partyId, int limit)
     {
-        var userId = _currentUserService.GetUserId()
-            ?? throw new UnauthorizedAccessException("User not authenticated");
-
-        var isMember = await _context.HuntingPartyMemberships
-            .AsNoTracking()
-            .AnyAsync(m => m.HuntingPartyId == partyId && m.UserId == userId && m.IsActive);
-
-        if (!isMember)
+        try
         {
-            return null;
-        }
+            var userId = _currentUserService.GetUserId()
+                ?? throw new UnauthorizedAccessException("User not authenticated");
 
-        var events = await _context.ActivityEvents
-            .AsNoTracking()
-            .Include(e => e.User)
-            .Where(e => e.PartyId == partyId)
-            .OrderByDescending(e => e.CreatedDate)
-            .ThenByDescending(e => e.Id)
-            .Take(limit + 1)
-            .Select(e => new
+            var isMember = await _context.HuntingPartyMemberships
+                .AsNoTracking()
+                .AnyAsync(m => m.HuntingPartyId == partyId && m.UserId == userId && m.IsActive);
+
+            if (!isMember)
             {
-                Event = e,
-                DisplayName = e.User != null ? e.User.DisplayName : "Unknown Hunter"
-            })
-            .ToListAsync();
+                return null;
+            }
 
-        var hasMore = events.Count > limit;
-        if (hasMore)
-        {
-            events.RemoveAt(events.Count - 1);
+            var events = await _context.ActivityEvents
+                .AsNoTracking()
+                .Include(e => e.User)
+                .Where(e => e.PartyId == partyId)
+                .OrderByDescending(e => e.CreatedDate)
+                .ThenByDescending(e => e.Id)
+                .Take(limit + 1)
+                .Select(e => new
+                {
+                    Event = e,
+                    DisplayName = e.User != null ? e.User.DisplayName : "Unknown Hunter"
+                })
+                .ToListAsync();
+
+            var hasMore = events.Count > limit;
+            if (hasMore)
+            {
+                events.RemoveAt(events.Count - 1);
+            }
+
+            var mapped = events.Select(e => new ActivityEventDto
+            {
+                Id = e.Event.Id,
+                PartyId = e.Event.PartyId,
+                UserId = e.Event.UserId,
+                UserDisplayName = e.DisplayName,
+                EventType = e.Event.EventType.ToString(),
+                PointsDelta = e.Event.PointsDelta,
+                CreatedDate = e.Event.CreatedDate,
+                CompanyName = e.Event.CompanyName,
+                RoleTitle = e.Event.RoleTitle,
+                MilestoneLabel = e.Event.MilestoneLabel
+            }).ToList();
+
+            return new ActivityFeedResponse
+            {
+                PartyId = partyId,
+                Events = mapped,
+                HasMore = hasMore
+            };
         }
-
-        var mapped = events.Select(e => new ActivityEventDto
+        catch (Exception ex)
         {
-            Id = e.Event.Id,
-            PartyId = e.Event.PartyId,
-            UserId = e.Event.UserId,
-            UserDisplayName = e.DisplayName,
-            EventType = e.Event.EventType.ToString(),
-            PointsDelta = e.Event.PointsDelta,
-            CreatedDate = e.Event.CreatedDate,
-            CompanyName = e.Event.CompanyName,
-            RoleTitle = e.Event.RoleTitle,
-            MilestoneLabel = e.Event.MilestoneLabel
-        }).ToList();
-
-        return new ActivityFeedResponse
-        {
-            PartyId = partyId,
-            Events = mapped,
-            HasMore = hasMore
-        };
+            // Log the exception details to console for debugging
+            Console.WriteLine($"ERROR in GetPartyActivityAsync: {ex.GetType().Name}: {ex.Message}");
+            Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+            if (ex.InnerException != null)
+            {
+                Console.WriteLine($"Inner Exception: {ex.InnerException.GetType().Name}: {ex.InnerException.Message}");
+            }
+            throw; // Re-throw to maintain error behavior
+        }
     }
 
     private async Task<ActivityEventDto> MapToDtoAsync(ActivityEvent activityEvent, string? milestoneLabel)

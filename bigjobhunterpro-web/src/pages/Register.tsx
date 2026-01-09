@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import FormInput from '@/components/forms/FormInput';
@@ -24,10 +24,11 @@ export default function Register() {
   const [errors, setErrors] = useState<FormErrors>({});
 
   // Redirect if already authenticated
-  if (isAuthenticated) {
-    navigate('/app', { replace: true });
-    return null;
-  }
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/app', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   // Password requirements for real-time validation
   const passwordRequirements: PasswordRequirement[] = [

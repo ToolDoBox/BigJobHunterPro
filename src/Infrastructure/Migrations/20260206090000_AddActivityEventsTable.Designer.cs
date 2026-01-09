@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260121090000_AddActivityEventsTable")]
+    [Migration("20260206090000_AddActivityEventsTable")]
     partial class AddActivityEventsTable
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

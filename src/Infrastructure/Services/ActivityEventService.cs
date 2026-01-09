@@ -101,7 +101,7 @@ public class ActivityEventService : IActivityEventService
             .Select(e => new
             {
                 Event = e,
-                DisplayName = e.User.DisplayName
+                DisplayName = e.User != null ? e.User.DisplayName : "Unknown Hunter"
             })
             .ToListAsync();
 

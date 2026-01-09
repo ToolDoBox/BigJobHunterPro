@@ -493,3 +493,8 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# SQLite database files (development only)
+bigjobhunterpro.db
+bigjobhunterpro.db-shm
+bigjobhunterpro.db-wal

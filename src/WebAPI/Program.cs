@@ -157,6 +157,7 @@ builder.Services.AddApplicationInsightsTelemetry();
 // Add Application Services
 builder.Services.AddScoped<Application.Interfaces.IJwtTokenService, Infrastructure.Services.JwtTokenService>();
 builder.Services.AddScoped<Application.Interfaces.ICurrentUserService, Infrastructure.Services.CurrentUserService>();
+builder.Services.AddScoped<Application.Interfaces.IHealthCheckService, Infrastructure.Services.HealthCheckService>();
 
 // Add after other service registrations
 builder.Services.AddScoped<Application.Interfaces.IPointsService, Infrastructure.Services.PointsService>();

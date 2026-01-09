@@ -339,9 +339,11 @@ VITE_APP_NAME=Big Job Hunter Pro
 - **Always On**: On (prevents cold starts)
 - **HTTPS Only**: On
 - **Minimum TLS Version**: 1.2
-- **Health check path**: /api/health
+- **Health check path**: /api/health/ready
 
 **Click "Save"**.
+
+**Note**: The `/api/health/ready` endpoint performs comprehensive health checks of all critical components (database, JWT, migrations, config) and returns 200 OK only when the system is fully ready. See `COMPREHENSIVE-HEALTH-CHECK-DEPLOYMENT.md` for details.
 
 ---
 

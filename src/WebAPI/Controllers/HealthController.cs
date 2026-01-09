@@ -1,3 +1,5 @@
+using Application.DTOs.Health;
+using Application.Interfaces;
 using Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -10,10 +12,14 @@ namespace WebAPI.Controllers;
 public class HealthController : ControllerBase
 {
     private readonly ApplicationDbContext _dbContext;
+    private readonly IHealthCheckService _healthCheckService;
 
-    public HealthController(ApplicationDbContext dbContext)
+    public HealthController(
+        ApplicationDbContext dbContext,
+        IHealthCheckService healthCheckService)
     {
         _dbContext = dbContext;
+        _healthCheckService = healthCheckService;
     }
 
     [HttpGet]
@@ -46,5 +52,36 @@ public class HealthController : ControllerBase
         }
 
         return Ok(response);
+    }
+
+    /// <summary>
+    /// Comprehensive readiness check that validates all critical system components.
+    /// Returns 200 OK only when the system is fully ready to handle requests.
+    /// </summary>
+    /// <remarks>
+    /// This endpoint should be used by:
+    /// - Azure App Service health check configuration
+    /// - Frontend status indicators
+    /// - Load balancers and monitoring systems
+    ///
+    /// Status codes:
+    /// - 200 OK: System is healthy and ready
+    /// - 503 Service Unavailable: System is unhealthy or degraded
+    /// </remarks>
+    [HttpGet("ready")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(HealthCheckResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(HealthCheckResult), StatusCodes.Status503ServiceUnavailable)]
+    public async Task<IActionResult> GetReadiness(CancellationToken cancellationToken)
+    {
+        var healthResult = await _healthCheckService.CheckHealthAsync(cancellationToken);
+
+        // Return 503 if system is unhealthy or degraded
+        if (healthResult.Status == HealthStatus.Unhealthy || healthResult.Status == HealthStatus.Degraded)
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, healthResult);
+        }
+
+        return Ok(healthResult);
     }
 }

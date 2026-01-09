@@ -94,6 +94,7 @@ public class ActivityEventService : IActivityEventService
 
         var events = await _context.ActivityEvents
             .AsNoTracking()
+            .Include(e => e.User)
             .Where(e => e.PartyId == partyId)
             .OrderByDescending(e => e.CreatedDate)
             .ThenByDescending(e => e.Id)

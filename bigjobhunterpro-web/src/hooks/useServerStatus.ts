@@ -28,7 +28,7 @@ export function useServerStatus() {
                 // Use the comprehensive readiness endpoint
                 // This returns 200 OK only when all critical systems are healthy
                 // Returns 503 if degraded or unhealthy
-                const response = await api.get('/api/health/ready', {
+                await api.get('/api/health/ready', {
                     timeout: REQUEST_TIMEOUT_MS
                 });
 

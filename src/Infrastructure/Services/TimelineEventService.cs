@@ -12,15 +12,21 @@ public class TimelineEventService : ITimelineEventService
     private readonly ApplicationDbContext _context;
     private readonly ICurrentUserService _currentUser;
     private readonly IPointsService _pointsService;
+    private readonly IActivityEventService _activityEventService;
+    private readonly IHuntingPartyService _huntingPartyService;
 
     public TimelineEventService(
         ApplicationDbContext context,
         ICurrentUserService currentUser,
-        IPointsService pointsService)
+        IPointsService pointsService,
+        IActivityEventService activityEventService,
+        IHuntingPartyService huntingPartyService)
     {
         _context = context;
         _currentUser = currentUser;
         _pointsService = pointsService;
+        _activityEventService = activityEventService;
+        _huntingPartyService = huntingPartyService;
     }
 
     public async Task<TimelineEventDto> CreateTimelineEventAsync(Guid applicationId, CreateTimelineEventRequest request)
@@ -54,13 +60,8 @@ public class TimelineEventService : ITimelineEventService
 
         // Recalculate application points and status
         var oldPoints = application.Points;
-        var totalPoints = application.TimelineEvents.Sum(e => e.Points);
-        if (!application.TimelineEvents.Any(e => e.Id == timelineEvent.Id))
-        {
-            totalPoints += points;
-        }
-        application.Points = totalPoints;
         application.Status = application.ComputeCurrentStatus();
+        application.Points = PointsRules.GetPoints(application.Status);
         application.UpdatedDate = DateTime.UtcNow;
 
         // Update user total points
@@ -71,6 +72,21 @@ public class TimelineEventService : ITimelineEventService
         }
 
         await _context.SaveChangesAsync();
+
+        var partyId = await _huntingPartyService.GetUserPartyIdAsync(userId);
+        if (partyId.HasValue)
+        {
+            await _activityEventService.CreateEventAsync(new Application.DTOs.ActivityEvents.CreateActivityEventRequest
+            {
+                PartyId = partyId.Value,
+                UserId = userId,
+                EventType = MapActivityEventType(request.EventType),
+                PointsDelta = pointsDelta,
+                CreatedDate = DateTime.UtcNow,
+                CompanyName = application.CompanyName,
+                RoleTitle = application.RoleTitle
+            });
+        }
 
         // Leaderboard notification handled by PointsService
         return MapToDto(timelineEvent);
@@ -129,8 +145,8 @@ public class TimelineEventService : ITimelineEventService
 
         // Recalculate application points and status
         var previousAppPoints = application.Points;
-        application.Points = application.ComputeTotalPoints();
         application.Status = application.ComputeCurrentStatus();
+        application.Points = PointsRules.GetPoints(application.Status);
         application.UpdatedDate = DateTime.UtcNow;
 
         // Update user total points
@@ -141,6 +157,21 @@ public class TimelineEventService : ITimelineEventService
         }
 
         await _context.SaveChangesAsync();
+
+        var partyId = await _huntingPartyService.GetUserPartyIdAsync(userId);
+        if (partyId.HasValue)
+        {
+            await _activityEventService.CreateEventAsync(new Application.DTOs.ActivityEvents.CreateActivityEventRequest
+            {
+                PartyId = partyId.Value,
+                UserId = userId,
+                EventType = MapActivityEventType(request.EventType),
+                PointsDelta = pointsDelta,
+                CreatedDate = DateTime.UtcNow,
+                CompanyName = application.CompanyName,
+                RoleTitle = application.RoleTitle
+            });
+        }
 
         // Leaderboard notification handled by PointsService
         return MapToDto(timelineEvent);
@@ -167,8 +198,8 @@ public class TimelineEventService : ITimelineEventService
 
         // Recalculate application points and status
         var oldPoints = application.Points;
-        application.Points = application.ComputeTotalPoints();
         application.Status = application.ComputeCurrentStatus();
+        application.Points = PointsRules.GetPoints(application.Status);
         application.UpdatedDate = DateTime.UtcNow;
 
         // Update user total points
@@ -197,5 +228,12 @@ public class TimelineEventService : ITimelineEventService
             Points = entity.Points,
             CreatedDate = entity.CreatedDate
         };
+    }
+
+    private static Domain.Enums.ActivityEventType MapActivityEventType(Domain.Enums.EventType eventType)
+    {
+        return eventType == Domain.Enums.EventType.Offer
+            ? Domain.Enums.ActivityEventType.OfferReceived
+            : Domain.Enums.ActivityEventType.StatusUpdated;
     }
 }

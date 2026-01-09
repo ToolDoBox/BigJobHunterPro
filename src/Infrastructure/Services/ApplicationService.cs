@@ -17,17 +17,26 @@ public class ApplicationService : IApplicationService
     private readonly ICurrentUserService _currentUser;
     private readonly IPointsService _pointsService;
     private readonly IConfiguration _configuration;
+    private readonly IActivityEventService _activityEventService;
+    private readonly IHuntingPartyService _huntingPartyService;
+    private readonly ITimelineEventService _timelineEventService;
 
     public ApplicationService(
         ApplicationDbContext context,
         ICurrentUserService currentUser,
         IPointsService pointsService,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        IActivityEventService activityEventService,
+        IHuntingPartyService huntingPartyService,
+        ITimelineEventService timelineEventService)
     {
         _context = context;
         _currentUser = currentUser;
         _pointsService = pointsService;
         _configuration = configuration;
+        _activityEventService = activityEventService;
+        _huntingPartyService = huntingPartyService;
+        _timelineEventService = timelineEventService;
     }
 
     public async Task<CreateApplicationResponse> CreateApplicationAsync(CreateApplicationRequest request)
@@ -88,6 +97,21 @@ public class ApplicationService : IApplicationService
         var totalPoints = await _pointsService.UpdateUserTotalPointsAsync(userId, initialPoints);
 
         await _context.SaveChangesAsync();
+
+        var partyId = await _huntingPartyService.GetUserPartyIdAsync(userId);
+        if (partyId.HasValue)
+        {
+            await _activityEventService.CreateEventAsync(new Application.DTOs.ActivityEvents.CreateActivityEventRequest
+            {
+                PartyId = partyId.Value,
+                UserId = userId,
+                EventType = Domain.Enums.ActivityEventType.ApplicationLogged,
+                PointsDelta = initialPoints,
+                CreatedDate = createdDate,
+                CompanyName = application.CompanyName,
+                RoleTitle = application.RoleTitle
+            });
+        }
 
         return new CreateApplicationResponse
         {
@@ -170,6 +194,21 @@ public class ApplicationService : IApplicationService
             return null;
         }
 
+        if (!Enum.TryParse<ApplicationStatus>(request.Status.Trim(), true, out var parsedStatus))
+        {
+            throw new InvalidOperationException("Status must be a valid option");
+        }
+
+        if (application.Status != parsedStatus)
+        {
+            await _timelineEventService.CreateTimelineEventAsync(id, new CreateTimelineEventRequest
+            {
+                EventType = MapStatusToEventType(parsedStatus),
+                Timestamp = DateTime.UtcNow,
+                Notes = $"Status updated to {parsedStatus}"
+            });
+        }
+
         application.CompanyName = request.CompanyName.Trim();
         application.RoleTitle = request.RoleTitle.Trim();
         application.SourceName = request.SourceName.Trim();
@@ -222,6 +261,42 @@ public class ApplicationService : IApplicationService
         await _context.SaveChangesAsync();
 
         return MapToDetailDto(application);
+    }
+
+    public async Task<ApplicationDto?> UpdateApplicationStatusAsync(Guid id, UpdateStatusRequest request)
+    {
+        var userId = _currentUser.GetUserId()
+            ?? throw new UnauthorizedAccessException("User not authenticated");
+
+        var application = await _context.Applications
+            .Include(a => a.TimelineEvents)
+            .FirstOrDefaultAsync(item => item.Id == id && item.UserId == userId);
+
+        if (application == null)
+        {
+            return null;
+        }
+
+        var currentStatus = application.ComputeCurrentStatus();
+        if (currentStatus == request.Status)
+        {
+            application.Status = currentStatus;
+            return MapToDetailDto(application);
+        }
+
+        await _timelineEventService.CreateTimelineEventAsync(id, new CreateTimelineEventRequest
+        {
+            EventType = MapStatusToEventType(request.Status),
+            Timestamp = DateTime.UtcNow,
+            Notes = $"Status updated to {request.Status}"
+        });
+
+        var updated = await _context.Applications
+            .AsNoTracking()
+            .Include(a => a.TimelineEvents)
+            .FirstOrDefaultAsync(item => item.Id == id && item.UserId == userId);
+
+        return updated == null ? null : MapToDetailDto(updated);
     }
 
     public async Task<bool> DeleteApplicationAsync(Guid id)
@@ -378,5 +453,19 @@ public class ApplicationService : IApplicationService
     private double GetDoubleSetting(string key, double fallback)
     {
         return double.TryParse(_configuration[key], out var parsed) ? parsed : fallback;
+    }
+
+    private static EventType MapStatusToEventType(ApplicationStatus status)
+    {
+        return status switch
+        {
+            ApplicationStatus.Applied => EventType.Applied,
+            ApplicationStatus.Screening => EventType.Screening,
+            ApplicationStatus.Interview => EventType.Interview,
+            ApplicationStatus.Offer => EventType.Offer,
+            ApplicationStatus.Rejected => EventType.Rejected,
+            ApplicationStatus.Withdrawn => EventType.Withdrawn,
+            _ => EventType.Applied
+        };
     }
 }

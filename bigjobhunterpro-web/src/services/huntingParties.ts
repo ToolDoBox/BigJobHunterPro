@@ -8,6 +8,7 @@ import type {
   LeaderboardEntry,
   RivalryData,
 } from '@/types/huntingParty';
+import type { ActivityFeedResponse } from '@/types/activity';
 
 const parseError = (error: unknown): string => {
   if (axios.isAxiosError(error)) {
@@ -120,6 +121,17 @@ export const huntingPartiesService = {
   async getRivalry(partyId: string): Promise<RivalryData> {
     try {
       const response = await api.get<RivalryData>(`/api/parties/${partyId}/rivalry`);
+      return response.data;
+    } catch (error) {
+      throw new Error(parseError(error));
+    }
+  },
+
+  async getActivityFeed(partyId: string, limit = 50): Promise<ActivityFeedResponse> {
+    try {
+      const response = await api.get<ActivityFeedResponse>(`/api/parties/${partyId}/activity`, {
+        params: { limit },
+      });
       return response.data;
     } catch (error) {
       throw new Error(parseError(error));

@@ -16,6 +16,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     // DbSets
     public DbSet<Domain.Entities.Application> Applications => Set<Domain.Entities.Application>();
     public DbSet<TimelineEvent> TimelineEvents => Set<TimelineEvent>();
+    public DbSet<ActivityEvent> ActivityEvents => Set<ActivityEvent>();
     public DbSet<HuntingParty> HuntingParties => Set<HuntingParty>();
     public DbSet<HuntingPartyMembership> HuntingPartyMemberships => Set<HuntingPartyMembership>();
 
@@ -61,6 +62,25 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             entity.Property(e => e.Notes).HasMaxLength(1000);
             entity.HasIndex(e => e.ApplicationId);
             entity.HasIndex(e => e.Timestamp);
+        });
+
+        // Configure ActivityEvent entity
+        builder.Entity<ActivityEvent>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.CompanyName).HasMaxLength(200);
+            entity.Property(e => e.RoleTitle).HasMaxLength(200);
+            entity.Property(e => e.MilestoneLabel).HasMaxLength(200);
+            entity.HasIndex(e => e.PartyId);
+            entity.HasIndex(e => e.CreatedDate);
+            entity.HasOne(e => e.Party)
+                  .WithMany()
+                  .HasForeignKey(e => e.PartyId)
+                  .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.User)
+                  .WithMany()
+                  .HasForeignKey(e => e.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
         });
 
         // Configure HuntingParty entity

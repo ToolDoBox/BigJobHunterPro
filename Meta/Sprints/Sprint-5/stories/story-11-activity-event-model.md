@@ -10,7 +10,7 @@
 - **Priority:** High
 - **Sprint:** 5
 - **Assignee(s):** cadleta
-- **Status:** Not Started
+- **Status:** Completed
 
 **Status Legend:** Not Started | In Progress | Completed | Blocked | Moved to Next Sprint
 
@@ -25,23 +25,23 @@ Core user actions create consistent, queryable activity events tied to a hunting
 ## Acceptance Criteria (Definition of Done)
 
 ### Functional Requirements
-- [ ] ActivityEvent entity supports core types (application logged, status updated, offer received, milestone hit)
-- [ ] Events include PartyId, UserId, pointsDelta, and created timestamp
-- [ ] Scoring actions create a corresponding ActivityEvent
+- [x] ActivityEvent entity supports core types (application logged, status updated, offer received, milestone hit)
+- [x] Events include PartyId, UserId, pointsDelta, and created timestamp
+- [x] Scoring actions create a corresponding ActivityEvent
 
 ### Non-Functional Requirements
-- [ ] Event creation adds no more than 200ms to write paths
-- [ ] Event payloads avoid sensitive fields (company name optional)
-- [ ] Works on mobile, tablet, and desktop clients
+- [x] Event creation adds no more than 200ms to write paths
+- [x] Event payloads avoid sensitive fields (company name optional)
+- [x] Works on mobile, tablet, and desktop clients
 
 ### Technical Requirements
-- [ ] Unit tests cover event creation rules
-- [ ] Integration test validates event creation on status update
-- [ ] No console or server errors
+- [x] Unit tests cover event creation rules
+- [x] Integration test validates event creation on status update
+- [x] No console or server errors
 
 ### Content/UX Requirements
-- [ ] Event type labels are consistent with UI copy
-- [ ] Timestamps are stored in UTC
+- [x] Event type labels are consistent with UI copy
+- [x] Timestamps are stored in UTC
 
 ---
 
@@ -63,16 +63,16 @@ Core user actions create consistent, queryable activity events tied to a hunting
 ## Task Breakdown
 
 ### Design and Planning
-- [ ] Confirm core event types with product goals - **Est:** 1h - **Assignee:** cadleta
+- [x] Confirm core event types with product goals - **Est:** 1h - **Assignee:** cadleta
 
 ### Backend Tasks
-- [ ] Add ActivityEvent entity and enum - **Est:** 3h - **Assignee:** cadleta
-- [ ] Add persistence and indexes - **Est:** 2h - **Assignee:** cadleta
-- [ ] Hook event creation into scoring paths - **Est:** 3h - **Assignee:** cadleta
-- [ ] Write unit and integration tests - **Est:** 3h - **Assignee:** cadleta
+- [x] Add ActivityEvent entity and enum - **Est:** 3h - **Assignee:** cadleta
+- [x] Add persistence and indexes - **Est:** 2h - **Assignee:** cadleta
+- [x] Hook event creation into scoring paths - **Est:** 3h - **Assignee:** cadleta
+- [x] Write unit and integration tests - **Est:** 3h - **Assignee:** cadleta
 
 ### QA and Polish
-- [ ] Verify event creation latency is acceptable - **Est:** 1h - **Assignee:** cadleta
+- [x] Verify event creation latency is acceptable - **Est:** 1h - **Assignee:** cadleta
 
 **Total Estimated Hours:** 10h
 

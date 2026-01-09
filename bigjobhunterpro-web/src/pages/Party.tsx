@@ -5,12 +5,14 @@ import { useToast } from '@/context/ToastContext';
 import { huntingPartiesService } from '@/services/huntingParties';
 import { useSignalR } from '@/hooks/useSignalR';
 import type { HuntingParty, LeaderboardEntry, RivalryData } from '@/types/huntingParty';
+import type { ActivityEvent } from '@/types/activity';
 
 import CreatePartyModal from '@/components/party/CreatePartyModal';
 import JoinPartyModal from '@/components/party/JoinPartyModal';
 import PartyCard from '@/components/party/PartyCard';
 import Leaderboard from '@/components/party/Leaderboard';
 import RivalryPanel from '@/components/party/RivalryPanel';
+import ActivityFeed from '@/components/party/ActivityFeed';
 
 export default function Party() {
   const { user } = useAuthContext();
@@ -19,8 +21,12 @@ export default function Party() {
   const [party, setParty] = useState<HuntingParty | null>(null);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [rivalry, setRivalry] = useState<RivalryData | null>(null);
+  const [activityEvents, setActivityEvents] = useState<ActivityEvent[]>([]);
+  const [activityHasMore, setActivityHasMore] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isLeaderboardLoading, setIsLeaderboardLoading] = useState(false);
+  const [isActivityLoading, setIsActivityLoading] = useState(false);
+  const activityLimit = 50;
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
@@ -35,6 +41,20 @@ export default function Party() {
     },
   });
 
+  const {
+    connectionState: activityConnectionState,
+    on: onActivity,
+    off: offActivity,
+    invoke: invokeActivity,
+  } = useSignalR({
+    hubPath: '/hubs/activity',
+    onConnected: () => {
+      if (party) {
+        invokeActivity('JoinPartyGroup', party.id);
+      }
+    },
+  });
+
   // Fetch initial party data
   const fetchPartyData = useCallback(async () => {
     try {
@@ -43,16 +63,26 @@ export default function Party() {
 
       if (userParty) {
         setIsLeaderboardLoading(true);
-        const [leaderboardData, rivalryData] = await Promise.all([
+        setIsActivityLoading(true);
+        const [leaderboardData, rivalryData, activityFeed] = await Promise.all([
           huntingPartiesService.getLeaderboard(userParty.id),
           huntingPartiesService.getRivalry(userParty.id),
+          huntingPartiesService.getActivityFeed(userParty.id, activityLimit),
         ]);
         setLeaderboard(leaderboardData);
         setRivalry(rivalryData);
+        setActivityEvents(activityFeed.events);
+        setActivityHasMore(activityFeed.hasMore);
         setIsLeaderboardLoading(false);
+        setIsActivityLoading(false);
+      } else {
+        setActivityEvents([]);
+        setActivityHasMore(false);
       }
     } catch (error) {
       showToast('error', error instanceof Error ? error.message : 'Failed to load party data');
+      setIsActivityLoading(false);
+      setIsLeaderboardLoading(false);
     } finally {
       setIsLoading(false);
     }
@@ -85,6 +115,26 @@ export default function Party() {
     };
   }, [connectionState, on, off, user?.userId]);
 
+  useEffect(() => {
+    if (activityConnectionState !== HubConnectionState.Connected) return;
+
+    const handleActivityEvent = (event: ActivityEvent) => {
+      setActivityEvents((prev) => {
+        if (prev.some((existing) => existing.id === event.id)) {
+          return prev;
+        }
+        const updated = [event, ...prev];
+        return updated.slice(0, activityLimit);
+      });
+    };
+
+    onActivity('ActivityEventCreated', handleActivityEvent);
+
+    return () => {
+      offActivity('ActivityEventCreated');
+    };
+  }, [activityConnectionState, onActivity, offActivity, activityLimit]);
+
   // Join SignalR group when party changes
   useEffect(() => {
     if (party && connectionState === HubConnectionState.Connected) {
@@ -92,10 +142,18 @@ export default function Party() {
     }
   }, [party, connectionState, invoke]);
 
+  useEffect(() => {
+    if (party && activityConnectionState === HubConnectionState.Connected) {
+      invokeActivity('JoinPartyGroup', party.id);
+    }
+  }, [party, activityConnectionState, invokeActivity]);
+
   const handlePartyCreated = (newParty: HuntingParty) => {
     setParty(newParty);
     setLeaderboard([]);
     setRivalry(null);
+    setActivityEvents([]);
+    setActivityHasMore(false);
     showToast('success', `Created party "${newParty.name}"!`);
   };
 
@@ -104,6 +162,11 @@ export default function Party() {
     // Fetch leaderboard for the newly joined party
     huntingPartiesService.getLeaderboard(joinedParty.id).then(setLeaderboard);
     huntingPartiesService.getRivalry(joinedParty.id).then(setRivalry);
+    huntingPartiesService.getActivityFeed(joinedParty.id, activityLimit)
+      .then((feed) => {
+        setActivityEvents(feed.events);
+        setActivityHasMore(feed.hasMore);
+      });
     showToast('success', `Joined "${joinedParty.name}"!`);
   };
 
@@ -113,9 +176,12 @@ export default function Party() {
     try {
       await huntingPartiesService.leaveParty(party.id);
       invoke('LeavePartyGroup', party.id);
+      invokeActivity('LeavePartyGroup', party.id);
       setParty(null);
       setLeaderboard([]);
       setRivalry(null);
+      setActivityEvents([]);
+      setActivityHasMore(false);
       showToast('info', 'Left the party');
     } catch (error) {
       showToast('error', error instanceof Error ? error.message : 'Failed to leave party');
@@ -227,11 +293,17 @@ export default function Party() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column - Leaderboard */}
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 space-y-6">
           <Leaderboard
             entries={leaderboard}
             isLoading={isLeaderboardLoading}
             currentUserId={user?.userId}
+          />
+          <ActivityFeed
+            events={activityEvents}
+            isLoading={isActivityLoading}
+            connectionState={activityConnectionState}
+            hasMore={activityHasMore}
           />
         </div>
 

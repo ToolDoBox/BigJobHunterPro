@@ -108,15 +108,22 @@ builder.Services.AddHttpContextAccessor();
 // Add rate limiting
 builder.Services.AddRateLimiter(options =>
 {
-    var permitLimit = int.TryParse(builder.Configuration["RateLimiting:QuickCapture:PermitLimit"], out var parsedPermit)
-        ? parsedPermit
-        : 10;
-    var windowSeconds = int.TryParse(builder.Configuration["RateLimiting:QuickCapture:WindowSeconds"], out var parsedWindow)
-        ? parsedWindow
-        : 60;
-    var queueLimit = int.TryParse(builder.Configuration["RateLimiting:QuickCapture:QueueLimit"], out var parsedQueue)
-        ? parsedQueue
-        : 0;
+    var isTestEnvironment = builder.Environment.IsEnvironment("Test");
+    var permitLimit = isTestEnvironment
+        ? int.MaxValue
+        : int.TryParse(builder.Configuration["RateLimiting:QuickCapture:PermitLimit"], out var parsedPermit)
+            ? parsedPermit
+            : 10;
+    var windowSeconds = isTestEnvironment
+        ? 1
+        : int.TryParse(builder.Configuration["RateLimiting:QuickCapture:WindowSeconds"], out var parsedWindow)
+            ? parsedWindow
+            : 60;
+    var queueLimit = isTestEnvironment
+        ? 0
+        : int.TryParse(builder.Configuration["RateLimiting:QuickCapture:QueueLimit"], out var parsedQueue)
+            ? parsedQueue
+            : 0;
 
     options.AddPolicy("QuickCapture", context =>
     {
@@ -155,6 +162,7 @@ builder.Services.AddScoped<Application.Interfaces.ICurrentUserService, Infrastru
 builder.Services.AddScoped<Application.Interfaces.IPointsService, Infrastructure.Services.PointsService>();
 builder.Services.AddScoped<Application.Interfaces.IApplicationService, Infrastructure.Services.ApplicationService>();
 builder.Services.AddScoped<Application.Interfaces.ITimelineEventService, Infrastructure.Services.TimelineEventService>();
+builder.Services.AddScoped<Application.Interfaces.IActivityEventService, Infrastructure.Services.ActivityEventService>();
 
 // Add HttpClient for Anthropic API
 builder.Services.AddHttpClient("Anthropic", client =>
@@ -180,6 +188,7 @@ builder.Services.AddHostedService<Infrastructure.Services.AiParsingBackgroundSer
 // Add Hunting Party Services
 builder.Services.AddScoped<Application.Interfaces.IHuntingPartyService, Infrastructure.Services.HuntingPartyService>();
 builder.Services.AddScoped<Application.Interfaces.ILeaderboardNotifier, WebAPI.Services.LeaderboardNotifier>();
+builder.Services.AddScoped<Application.Interfaces.IActivityNotifier, WebAPI.Services.ActivityNotifier>();
 
 // Add SignalR
 builder.Services.AddSignalR();
@@ -262,6 +271,7 @@ app.MapControllers();
 
 // Map SignalR hub with CORS
 app.MapHub<LeaderboardHub>("/hubs/leaderboard").RequireCors("AllowFrontend");
+app.MapHub<ActivityHub>("/hubs/activity").RequireCors("AllowFrontend");
 
 // Ensure database is created and seed data in development environment
 if (app.Environment.IsDevelopment())

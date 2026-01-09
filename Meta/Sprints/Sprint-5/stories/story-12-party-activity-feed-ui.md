@@ -10,7 +10,7 @@
 - **Priority:** High
 - **Sprint:** 5
 - **Assignee(s):** cadleta + realemmetts
-- **Status:** Not Started
+- **Status:** Completed
 
 **Status Legend:** Not Started | In Progress | Completed | Blocked | Moved to Next Sprint
 
@@ -25,23 +25,23 @@ Party members can view a chronological feed of recent activity events.
 ## Acceptance Criteria (Definition of Done)
 
 ### Functional Requirements
-- [ ] API returns recent events for a party in reverse-chronological order
-- [ ] UI renders an activity list with avatar, label, points, and timestamp
-- [ ] Feed supports pagination or a limit parameter
+- [x] API returns recent events for a party in reverse-chronological order
+- [x] UI renders an activity list with avatar, label, points, and timestamp
+- [x] Feed supports pagination or a limit parameter
 
 ### Non-Functional Requirements
-- [ ] Feed loads in under 800ms for 50 events
-- [ ] Empty state explains how to generate activity
-- [ ] Accessible list semantics and focus states are present
+- [x] Feed loads in under 800ms for 50 events
+- [x] Empty state explains how to generate activity
+- [x] Accessible list semantics and focus states are present
 
 ### Technical Requirements
-- [ ] Integration test for GET /api/parties/{id}/activity
-- [ ] Frontend unit test for list rendering
-- [ ] No console errors or warnings
+- [x] Integration test for GET /api/parties/{id}/activity
+- [x] Frontend unit test for list rendering
+- [x] No console errors or warnings
 
 ### Content/UX Requirements
-- [ ] Copy is aligned with the hunting party tone
-- [ ] Timestamps render as relative time (e.g., 2h ago)
+- [x] Copy is aligned with the hunting party tone
+- [x] Timestamps render as relative time (e.g., 2h ago)
 
 ---
 
@@ -67,20 +67,20 @@ Party members can view a chronological feed of recent activity events.
 ## Task Breakdown
 
 ### Design and Planning
-- [ ] Define event card layout and fields - **Est:** 2h - **Assignee:** realemmetts
+- [x] Define event card layout and fields - **Est:** 2h - **Assignee:** realemmetts
 
 ### Backend Tasks
-- [ ] Implement activity feed query and endpoint - **Est:** 3h - **Assignee:** cadleta
-- [ ] Add pagination parameters - **Est:** 1h - **Assignee:** cadleta
-- [ ] Write integration tests - **Est:** 2h - **Assignee:** cadleta
+- [x] Implement activity feed query and endpoint - **Est:** 3h - **Assignee:** cadleta
+- [x] Add pagination parameters - **Est:** 1h - **Assignee:** cadleta
+- [x] Write integration tests - **Est:** 2h - **Assignee:** cadleta
 
 ### Frontend Tasks
-- [ ] Build feed list and card components - **Est:** 4h - **Assignee:** realemmetts
-- [ ] Wire data fetching and loading states - **Est:** 2h - **Assignee:** realemmetts
-- [ ] Add empty state and relative timestamps - **Est:** 2h - **Assignee:** realemmetts
+- [x] Build feed list and card components - **Est:** 4h - **Assignee:** realemmetts
+- [x] Wire data fetching and loading states - **Est:** 2h - **Assignee:** realemmetts
+- [x] Add empty state and relative timestamps - **Est:** 2h - **Assignee:** realemmetts
 
 ### QA and Polish
-- [ ] Verify mobile layout and scroll behavior - **Est:** 1h - **Assignee:** realemmetts
+- [x] Verify mobile layout and scroll behavior - **Est:** 1h - **Assignee:** realemmetts
 
 **Total Estimated Hours:** 17h
 

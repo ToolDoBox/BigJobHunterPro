@@ -11,10 +11,14 @@ namespace WebAPI.Controllers;
 public class HuntingPartiesController : ControllerBase
 {
     private readonly IHuntingPartyService _huntingPartyService;
+    private readonly IActivityEventService _activityEventService;
 
-    public HuntingPartiesController(IHuntingPartyService huntingPartyService)
+    public HuntingPartiesController(
+        IHuntingPartyService huntingPartyService,
+        IActivityEventService activityEventService)
     {
         _huntingPartyService = huntingPartyService;
+        _activityEventService = activityEventService;
     }
 
     /// <summary>
@@ -177,5 +181,35 @@ public class HuntingPartiesController : ControllerBase
         }
 
         return Ok(result);
+    }
+
+    /// <summary>
+    /// Gets recent activity events for a party
+    /// </summary>
+    [HttpGet("{id:guid}/activity")]
+    [ProducesResponseType(typeof(Application.DTOs.ActivityEvents.ActivityFeedResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetActivityFeed(Guid id, [FromQuery] int limit = 50)
+    {
+        if (limit < 1 || limit > 100)
+        {
+            return BadRequest(new { error = "Limit must be between 1 and 100." });
+        }
+
+        try
+        {
+            var result = await _activityEventService.GetPartyActivityAsync(id, limit);
+            if (result == null)
+            {
+                return Forbid();
+            }
+
+            return Ok(result);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Unauthorized(new { error = "Your session expired. Please log in again." });
+        }
     }
 }

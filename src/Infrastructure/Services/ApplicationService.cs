@@ -144,7 +144,7 @@ public class ApplicationService : IApplicationService
                 CompanyName = application.CompanyName,
                 RoleTitle = application.RoleTitle,
                 Status = application.Status.ToString(),
-                CreatedDate = application.CreatedDate
+                CreatedDate = DateTime.SpecifyKind(application.CreatedDate, DateTimeKind.Utc)
             })
             .ToListAsync();
 

@@ -16,8 +16,8 @@ export const formatRelativeDate = (isoDate: string): string => {
   }
 
   const diffMinutes = Math.round(diffSeconds / 60);
-  const diffHours = Math.round(diffMinutes / 60);
-  const diffDays = Math.round(diffHours / 24);
+  const diffHours = Math.round(diffSeconds / 3600);    // Calculate from seconds, not minutes
+  const diffDays = Math.round(diffSeconds / 86400);    // Calculate from seconds, not hours
 
   if (Math.abs(diffDays) >= 730) {
     return parsed.toLocaleDateString('en-US', {

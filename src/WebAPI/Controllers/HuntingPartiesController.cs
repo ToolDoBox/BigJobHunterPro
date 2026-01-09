@@ -211,5 +211,20 @@ public class HuntingPartiesController : ControllerBase
         {
             return Unauthorized(new { error = "Your session expired. Please log in again." });
         }
+        catch (Exception ex)
+        {
+            // TEMPORARY: Return exception details for debugging
+            return StatusCode(500, new
+            {
+                error = ex.Message,
+                type = ex.GetType().Name,
+                stackTrace = ex.StackTrace?.Split('\n').Take(10).ToArray(),
+                innerException = ex.InnerException != null ? new
+                {
+                    message = ex.InnerException.Message,
+                    type = ex.InnerException.GetType().Name
+                } : null
+            });
+        }
     }
 }

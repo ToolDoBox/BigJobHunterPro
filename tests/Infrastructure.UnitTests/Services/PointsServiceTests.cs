@@ -16,8 +16,9 @@ public class PointsServiceTests
             .Options;
 
         var context = new ApplicationDbContext(options);
+        var streakService = new StreakService(context);
 
-        return new PointsService(context);
+        return new PointsService(context, streakService);
     }
 
     [Theory]

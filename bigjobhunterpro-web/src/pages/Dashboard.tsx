@@ -48,7 +48,9 @@ export default function Dashboard() {
         <div className="metal-panel text-center">
           <div className="metal-panel-screws" />
           <div className="stat-display inline-block mb-3">
-            <span className="stat-display-value text-3xl text-amber">0</span>
+            <span className="stat-display-value text-3xl text-amber">
+              {user?.applicationCount ?? 0}
+            </span>
           </div>
           <div className="font-arcade text-xs text-gray-500 tracking-wider">
             APPLICATIONS
@@ -59,7 +61,9 @@ export default function Dashboard() {
         <div className="metal-panel text-center">
           <div className="metal-panel-screws" />
           <div className="stat-display inline-block mb-3">
-            <span className="stat-display-value text-3xl text-blaze">0</span>
+            <span className="stat-display-value text-3xl text-blaze">
+              {user?.currentStreak ?? 0}
+            </span>
           </div>
           <div className="font-arcade text-xs text-gray-500 tracking-wider">
             DAY STREAK

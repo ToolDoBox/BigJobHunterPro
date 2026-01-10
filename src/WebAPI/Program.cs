@@ -160,6 +160,7 @@ builder.Services.AddScoped<Application.Interfaces.ICurrentUserService, Infrastru
 builder.Services.AddScoped<Application.Interfaces.IHealthCheckService, Infrastructure.Services.HealthCheckService>();
 
 // Add after other service registrations
+builder.Services.AddScoped<Application.Interfaces.IStreakService, Infrastructure.Services.StreakService>();
 builder.Services.AddScoped<Application.Interfaces.IPointsService, Infrastructure.Services.PointsService>();
 builder.Services.AddScoped<Application.Interfaces.IApplicationService, Infrastructure.Services.ApplicationService>();
 builder.Services.AddScoped<Application.Interfaces.ITimelineEventService, Infrastructure.Services.TimelineEventService>();

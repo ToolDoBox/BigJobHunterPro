@@ -1,9 +1,11 @@
 using Application.DTOs.Auth;
 using Application.Interfaces;
 using Domain.Entities;
+using Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace WebAPI.Controllers;
 
@@ -15,6 +17,7 @@ public class AuthController : ControllerBase
     private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly IJwtTokenService _jwtTokenService;
     private readonly ICurrentUserService _currentUserService;
+    private readonly ApplicationDbContext _context;
     private readonly ILogger<AuthController> _logger;
 
     public AuthController(
@@ -22,12 +25,14 @@ public class AuthController : ControllerBase
         SignInManager<ApplicationUser> signInManager,
         IJwtTokenService jwtTokenService,
         ICurrentUserService currentUserService,
+        ApplicationDbContext context,
         ILogger<AuthController> logger)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _jwtTokenService = jwtTokenService;
         _currentUserService = currentUserService;
+        _context = context;
         _logger = logger;
     }
 
@@ -183,7 +188,7 @@ public class AuthController : ControllerBase
     /// <summary>
     /// Get current authenticated user's information
     /// </summary>
-    /// <returns>User ID, email, display name, and points</returns>
+    /// <returns>User ID, email, display name, points, and statistics</returns>
     [HttpGet("me")]
     [Authorize]
     [ProducesResponseType(typeof(GetMeResponse), StatusCodes.Status200OK)]
@@ -191,11 +196,34 @@ public class AuthController : ControllerBase
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<GetMeResponse>> GetMe()
     {
-        // Get current user via CurrentUserService
-        var user = await _currentUserService.GetCurrentUserAsync();
+        var userId = _currentUserService.GetUserId();
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Unauthorized(new ErrorResponse(
+                "Unauthorized",
+                new List<string> { "Unable to identify authenticated user" }
+            ));
+        }
+
+        // Use projection to avoid N+1 query and improve performance
+        var response = await _context.Users
+            .Where(u => u.Id == userId)
+            .Select(u => new GetMeResponse
+            {
+                UserId = u.Id,
+                Email = u.Email ?? string.Empty,
+                DisplayName = u.DisplayName,
+                Points = u.Points,
+                TotalPoints = u.TotalPoints,
+                ApplicationCount = u.Applications.Count, // DB-side count
+                CurrentStreak = u.CurrentStreak,
+                LongestStreak = u.LongestStreak,
+                LastActivityDate = u.LastActivityDate
+            })
+            .FirstOrDefaultAsync();
 
         // Handle edge case: user deleted after JWT issued
-        if (user == null)
+        if (response == null)
         {
             _logger.LogWarning("GetMe failed: User not found for authenticated request");
             return NotFound(new ErrorResponse(
@@ -204,17 +232,7 @@ public class AuthController : ControllerBase
             ));
         }
 
-        // Map to response DTO
-        var response = new GetMeResponse
-        {
-            UserId = user.Id,
-            Email = user.Email ?? string.Empty,
-            DisplayName = user.DisplayName,
-            Points = user.Points,
-            TotalPoints = user.TotalPoints
-        };
-
-        _logger.LogInformation("User retrieved own profile: {UserId}", user.Id);
+        _logger.LogInformation("User retrieved own profile: {UserId}", userId);
 
         return Ok(response);
     }

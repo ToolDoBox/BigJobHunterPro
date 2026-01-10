@@ -381,13 +381,13 @@ public class ApplicationsControllerTests : IClassFixture<CustomWebApplicationFac
         result.RoleTitle.Should().Be("Backend Engineer");
         result.SourceName.Should().Be("LinkedIn");
         result.Status.Should().Be("Interview");
-        result.Points.Should().Be(5);
+        result.Points.Should().Be(6); // Applied (1) + Interview (5) = 6 points
         result.WorkMode.Should().Be("Remote");
 
         var meResponse = await client.GetAsync("/api/auth/me");
         var meResult = await meResponse.Content.ReadFromJsonAsync<GetMeResponse>();
-        meResult!.Points.Should().Be(5);
-        meResult.TotalPoints.Should().Be(5);
+        meResult!.Points.Should().Be(6);
+        meResult.TotalPoints.Should().Be(6);
     }
 
     [Fact]

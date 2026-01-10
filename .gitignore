@@ -498,3 +498,6 @@ $RECYCLE.BIN/
 bigjobhunterpro.db
 bigjobhunterpro.db-shm
 bigjobhunterpro.db-wal
+
+# Claude Code local settings
+.claude/settings.local.json

@@ -61,7 +61,7 @@ public class TimelineEventService : ITimelineEventService
         // Recalculate application points and status
         var oldPoints = application.Points;
         application.Status = application.ComputeCurrentStatus();
-        application.Points = PointsRules.GetPoints(application.Status);
+        application.Points = application.ComputeTotalPoints();
         application.UpdatedDate = DateTime.UtcNow;
 
         // Update user total points
@@ -146,7 +146,7 @@ public class TimelineEventService : ITimelineEventService
         // Recalculate application points and status
         var previousAppPoints = application.Points;
         application.Status = application.ComputeCurrentStatus();
-        application.Points = PointsRules.GetPoints(application.Status);
+        application.Points = application.ComputeTotalPoints();
         application.UpdatedDate = DateTime.UtcNow;
 
         // Update user total points
@@ -199,7 +199,7 @@ public class TimelineEventService : ITimelineEventService
         // Recalculate application points and status
         var oldPoints = application.Points;
         application.Status = application.ComputeCurrentStatus();
-        application.Points = PointsRules.GetPoints(application.Status);
+        application.Points = application.ComputeTotalPoints();
         application.UpdatedDate = DateTime.UtcNow;
 
         // Update user total points

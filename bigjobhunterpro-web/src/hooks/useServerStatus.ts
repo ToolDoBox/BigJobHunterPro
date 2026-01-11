@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import api from '@/services/api';
+import { initiateWarmup } from '@/services/warmup';
 
 type ServerStatus = 'checking' | 'online' | 'offline';
 
@@ -16,9 +17,11 @@ const REQUEST_TIMEOUT_MS = 5000; // 5 seconds (increased for comprehensive check
  * - Critical configuration
  *
  * Returns 'online' only when all critical components are healthy.
+ * Automatically attempts warmup when server is detected as offline.
  */
 export function useServerStatus() {
     const [status, setStatus] = useState<ServerStatus>('checking');
+    const previousStatusRef = useRef<ServerStatus>('checking');
 
     useEffect(() => {
         let isMounted = true;
@@ -52,6 +55,15 @@ export function useServerStatus() {
             window.clearInterval(intervalId);
         };
     }, []);
+
+    // Trigger warmup when transitioning from online to offline
+    useEffect(() => {
+        if (previousStatusRef.current === 'online' && status === 'offline') {
+            console.log('[ServerStatus] Server went offline, initiating warmup...');
+            initiateWarmup();
+        }
+        previousStatusRef.current = status;
+    }, [status]);
 
     return status;
 }

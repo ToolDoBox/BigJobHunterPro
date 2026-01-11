@@ -29,6 +29,43 @@ jobs:
       - name: Run tests
         run: dotnet test --configuration Release --no-build --verbosity normal
 
+      - name: Validate EF Core Migrations
+        shell: pwsh
+        run: |
+          Write-Host "Checking for dangerous migration patterns..." -ForegroundColor Cyan
+
+          $migrationFiles = Get-ChildItem -Path src/Infrastructure/Migrations -Filter "*.cs" -Recurse
+          $hasDangerousPatterns = $false
+
+          foreach ($file in $migrationFiles) {
+            $content = Get-Content $file.FullName -Raw
+
+            # Check for SQLite type conversions
+            if ($content -match 'type:\s*"TEXT".*oldType:\s*"nvarchar' -or
+                $content -match 'type:\s*"TEXT".*oldType:\s*"datetime2' -or
+                $content -match 'type:\s*"TEXT".*oldType:\s*"uniqueidentifier') {
+
+              Write-Host "ERROR: Dangerous migration detected in $($file.Name)" -ForegroundColor Red
+              Write-Host "This migration contains SQLite type conversions that will corrupt SQL Server!" -ForegroundColor Red
+              $hasDangerousPatterns = $true
+            }
+
+            # Check for excessive AlterColumn (sign of full schema conversion)
+            $alterCount = ([regex]::Matches($content, "AlterColumn")).Count
+            if ($alterCount -gt 50) {
+              Write-Host "WARNING: $($file.Name) has $alterCount AlterColumn operations" -ForegroundColor Yellow
+              Write-Host "This suggests a full schema conversion rather than a targeted change." -ForegroundColor Yellow
+              $hasDangerousPatterns = $true
+            }
+          }
+
+          if ($hasDangerousPatterns) {
+            Write-Host "`nDeployment blocked! Fix migrations before deploying." -ForegroundColor Red
+            exit 1
+          }
+
+          Write-Host "✓ Migration validation passed" -ForegroundColor Green
+
       - name: dotnet publish
         run: dotnet publish src/WebAPI/WebAPI.csproj -c Release -o "${{env.DOTNET_ROOT}}/myapp"
 

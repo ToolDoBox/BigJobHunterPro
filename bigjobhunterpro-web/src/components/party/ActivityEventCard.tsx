@@ -13,11 +13,21 @@ const getInitials = (name: string): string => {
 };
 
 const getEventMeta = (event: ActivityEvent) => {
+  const companyName = event.companyName || 'a company';
+
   switch (event.eventType) {
     case 'ApplicationLogged':
       return { label: 'logged an application', accent: 'border-amber', icon: '📝' };
     case 'OfferReceived':
-      return { label: 'received an offer', accent: 'border-blaze', icon: '🎉' };
+      return { label: `received an offer from ${companyName}`, accent: 'border-blaze', icon: '🎉' };
+    case 'Screening':
+      return { label: `went through screening with ${companyName}`, accent: 'border-terminal', icon: '📞' };
+    case 'Interview':
+      return { label: `had an interview with ${companyName}`, accent: 'border-terminal', icon: '💼' };
+    case 'Rejected':
+      return { label: `was rejected from ${companyName}`, accent: 'border-red-500', icon: '❌' };
+    case 'Withdrawn':
+      return { label: `withdrew from ${companyName}`, accent: 'border-gray-500', icon: '🚫' };
     case 'MilestoneHit':
       return { label: event.milestoneLabel ?? 'hit a milestone', accent: 'border-terminal', icon: '🏁' };
     case 'StatusUpdated':
@@ -32,7 +42,12 @@ export default function ActivityEventCard({ event }: ActivityEventCardProps) {
   const pointsText =
     event.pointsDelta > 0 ? `+${event.pointsDelta}` : event.pointsDelta.toString();
   const pointsColor = event.pointsDelta >= 0 ? 'text-terminal' : 'text-blaze';
-  const detailParts = [event.roleTitle, event.companyName].filter(Boolean);
+
+  // For events that mention company in the label, only show role title in detail
+  const showCompanyInDetail = event.eventType === 'ApplicationLogged' || event.eventType === 'StatusUpdated' || event.eventType === 'MilestoneHit';
+  const detailParts = showCompanyInDetail
+    ? [event.roleTitle, event.companyName].filter(Boolean)
+    : [event.roleTitle].filter(Boolean);
   const detail = detailParts.join(' · ');
 
   return (

@@ -168,7 +168,7 @@ export default function ApplicationDetail() {
   const [formData, setFormData] = useState<FormState>(emptyFormState);
   const [initialFormData, setInitialFormData] = useState<FormState>(emptyFormState);
   const [errors, setErrors] = useState<FormErrors>({});
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -198,7 +198,7 @@ export default function ApplicationDetail() {
       const nextFormState = buildFormState(result);
       setFormData(nextFormState);
       setInitialFormData(nextFormState);
-      setIsEditing(false);
+      setIsEditing(true);
     } catch (error) {
       const err = error as Error & { code?: string };
       if (err.code === 'NOT_FOUND' || err.message === 'NOT_FOUND') {
@@ -283,7 +283,7 @@ export default function ApplicationDetail() {
       const nextFormState = buildFormState(updated);
       setFormData(nextFormState);
       setInitialFormData(nextFormState);
-      setIsEditing(false);
+      setIsEditing(true);
       await refreshUser();
       showToast('success', 'Application updated successfully!');
     } catch (error) {
@@ -474,17 +474,39 @@ export default function ApplicationDetail() {
               error={errors.sourceName}
               disabled={!isEditing || isSaving}
             />
-            <FormInput
-              id="sourceUrl"
-              name="sourceUrl"
-              label="SOURCE URL"
-              placeholder="https://..."
-              type="url"
-              value={formData.sourceUrl}
-              onChange={handleChange}
-              error={errors.sourceUrl}
-              disabled={!isEditing || isSaving}
-            />
+            <div className="mb-4">
+              <label htmlFor="sourceUrl" className="block font-arcade text-xs text-amber mb-2">
+                SOURCE URL
+              </label>
+              <div className="flex gap-2">
+                <input
+                  id="sourceUrl"
+                  name="sourceUrl"
+                  type="url"
+                  placeholder="https://..."
+                  className={`input-arcade flex-1 ${errors.sourceUrl ? 'input-arcade-error' : ''}`}
+                  value={formData.sourceUrl}
+                  onChange={handleChange}
+                  disabled={!isEditing || isSaving}
+                />
+                {formData.sourceUrl && (
+                  <a
+                    href={formData.sourceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-metal whitespace-nowrap"
+                    title="Open job listing in new tab"
+                  >
+                    🔗 OPEN
+                  </a>
+                )}
+              </div>
+              {errors.sourceUrl && (
+                <p className="mt-1 text-sm text-red-400 font-medium" role="alert">
+                  {errors.sourceUrl}
+                </p>
+              )}
+            </div>
 
             {/* Status is now computed from timeline events */}
             <div className="mb-4">

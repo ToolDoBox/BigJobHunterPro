@@ -74,7 +74,7 @@ public class ApplicationsControllerPatchTests : IClassFixture<CustomWebApplicati
         var result = await response.Content.ReadFromJsonAsync<ApplicationDto>();
         result.Should().NotBeNull();
         result!.Status.Should().Be("Interview");
-        result.Points.Should().Be(5); // Interview = 5 points
+        result.Points.Should().Be(6); // Applied (1) + Interview (5) = 6 points
     }
 
     [Fact]
@@ -168,7 +168,7 @@ public class ApplicationsControllerPatchTests : IClassFixture<CustomWebApplicati
         var result = await response.Content.ReadFromJsonAsync<ApplicationDto>();
         result.Should().NotBeNull();
         result!.Status.Should().Be("Offer");
-        result.Points.Should().Be(50); // Offer = 50 points
+        result.Points.Should().Be(56); // Applied (1) + Interview (5) + Offer (50) = 56 points
     }
 
     [Fact]

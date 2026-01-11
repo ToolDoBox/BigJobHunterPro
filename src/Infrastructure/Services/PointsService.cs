@@ -10,10 +10,15 @@ public class PointsService : IPointsService
 {
     private readonly ApplicationDbContext _context;
     private readonly ILeaderboardNotifier? _leaderboardNotifier;
+    private readonly IStreakService _streakService;
 
-    public PointsService(ApplicationDbContext context, ILeaderboardNotifier? leaderboardNotifier = null)
+    public PointsService(
+        ApplicationDbContext context,
+        IStreakService streakService,
+        ILeaderboardNotifier? leaderboardNotifier = null)
     {
         _context = context;
+        _streakService = streakService;
         _leaderboardNotifier = leaderboardNotifier;
     }
 
@@ -39,6 +44,12 @@ public class PointsService : IPointsService
 
         user.Points = Math.Max(0, user.Points + pointsToAdd);
         user.TotalPoints = Math.Max(0, user.TotalPoints + pointsToAdd);
+
+        // Update streak whenever points are earned
+        if (pointsToAdd > 0)
+        {
+            await _streakService.UpdateStreakAsync(userId, DateTime.UtcNow);
+        }
 
         // Notify leaderboard if user is in a party
         if (_leaderboardNotifier != null)

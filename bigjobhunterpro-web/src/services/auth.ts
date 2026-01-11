@@ -7,6 +7,11 @@ export interface User {
   email: string;
   displayName: string;
   points: number;
+  totalPoints: number;
+  applicationCount: number;
+  currentStreak: number;
+  longestStreak: number;
+  lastActivityDate?: string; // ISO 8601 UTC
 }
 
 export interface LoginRequest {

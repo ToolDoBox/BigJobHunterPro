@@ -14,9 +14,6 @@ export interface ConversionBySource {
   conversionRate: number;
 }
 
-// Explicit type exports for better compatibility
-export type { KeywordFrequency, ConversionBySource };
-
 /**
  * Get top keywords from successful applications (those that reached interview stage or beyond)
  * Results are cached for 10 minutes on the server

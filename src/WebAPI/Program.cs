@@ -154,6 +154,9 @@ builder.Services.AddRateLimiter(options =>
 // Add Application Insights telemetry
 builder.Services.AddApplicationInsightsTelemetry();
 
+// Add Memory Cache for statistics caching
+builder.Services.AddMemoryCache();
+
 // Add Application Services
 builder.Services.AddScoped<Application.Interfaces.IJwtTokenService, Infrastructure.Services.JwtTokenService>();
 builder.Services.AddScoped<Application.Interfaces.ICurrentUserService, Infrastructure.Services.CurrentUserService>();
@@ -162,6 +165,8 @@ builder.Services.AddScoped<Application.Interfaces.IHealthCheckService, Infrastru
 // Add after other service registrations
 builder.Services.AddScoped<Application.Interfaces.IStreakService, Infrastructure.Services.StreakService>();
 builder.Services.AddScoped<Application.Interfaces.IPointsService, Infrastructure.Services.PointsService>();
+builder.Services.AddScoped<Application.Interfaces.IStatisticsService, Infrastructure.Services.StatisticsService>();
+builder.Services.AddScoped<Application.Interfaces.IAnalyticsService, Infrastructure.Services.AnalyticsService>();
 builder.Services.AddScoped<Application.Interfaces.IApplicationService, Infrastructure.Services.ApplicationService>();
 builder.Services.AddScoped<Application.Interfaces.ITimelineEventService, Infrastructure.Services.TimelineEventService>();
 builder.Services.AddScoped<Application.Interfaces.IActivityEventService, Infrastructure.Services.ActivityEventService>();

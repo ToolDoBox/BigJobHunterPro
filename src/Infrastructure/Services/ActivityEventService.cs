@@ -122,7 +122,7 @@ public class ActivityEventService : IActivityEventService
                 UserDisplayName = e.DisplayName,
                 EventType = e.Event.EventType.ToString(),
                 PointsDelta = e.Event.PointsDelta,
-                CreatedDate = e.Event.CreatedDate,
+                CreatedDate = DateTime.SpecifyKind(e.Event.CreatedDate, DateTimeKind.Utc),
                 CompanyName = e.Event.CompanyName,
                 RoleTitle = e.Event.RoleTitle,
                 MilestoneLabel = e.Event.MilestoneLabel
@@ -164,7 +164,7 @@ public class ActivityEventService : IActivityEventService
             UserDisplayName = displayName,
             EventType = activityEvent.EventType.ToString(),
             PointsDelta = activityEvent.PointsDelta,
-            CreatedDate = activityEvent.CreatedDate,
+            CreatedDate = DateTime.SpecifyKind(activityEvent.CreatedDate, DateTimeKind.Utc),
             CompanyName = activityEvent.CompanyName,
             RoleTitle = activityEvent.RoleTitle,
             MilestoneLabel = milestoneLabel ?? activityEvent.MilestoneLabel

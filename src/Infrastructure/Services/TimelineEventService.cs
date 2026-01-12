@@ -232,8 +232,14 @@ public class TimelineEventService : ITimelineEventService
 
     private static Domain.Enums.ActivityEventType MapActivityEventType(Domain.Enums.EventType eventType)
     {
-        return eventType == Domain.Enums.EventType.Offer
-            ? Domain.Enums.ActivityEventType.OfferReceived
-            : Domain.Enums.ActivityEventType.StatusUpdated;
+        return eventType switch
+        {
+            Domain.Enums.EventType.Offer => Domain.Enums.ActivityEventType.OfferReceived,
+            Domain.Enums.EventType.Screening => Domain.Enums.ActivityEventType.Screening,
+            Domain.Enums.EventType.Interview => Domain.Enums.ActivityEventType.Interview,
+            Domain.Enums.EventType.Rejected => Domain.Enums.ActivityEventType.Rejected,
+            Domain.Enums.EventType.Withdrawn => Domain.Enums.ActivityEventType.Withdrawn,
+            _ => Domain.Enums.ActivityEventType.StatusUpdated
+        };
     }
 }

@@ -7,4 +7,8 @@ public class GetMeResponse
     public string DisplayName { get; set; } = string.Empty;
     public int Points { get; set; }
     public int TotalPoints { get; set; }
+    public int ApplicationCount { get; set; }
+    public int CurrentStreak { get; set; }
+    public int LongestStreak { get; set; }
+    public DateTime? LastActivityDate { get; set; }
 }

@@ -82,4 +82,180 @@ public class StatisticsService : IStatisticsService
 
         return stats;
     }
+
+    public async Task<StatusDistributionResponse> GetStatusDistributionAsync(string userId, CancellationToken cancellationToken = default)
+    {
+        // Generate cache key
+        var cacheKey = $"status-distribution-{userId}";
+
+        // Try to get from cache
+        if (_cache.TryGetValue(cacheKey, out StatusDistributionResponse? cachedData) && cachedData != null)
+        {
+            return cachedData;
+        }
+
+        // Get all applications with their current status
+        var statusCounts = await _context.Applications
+            .Where(a => a.UserId == userId)
+            .GroupBy(a => a.Status)
+            .Select(g => new { Status = g.Key, Count = g.Count() })
+            .ToListAsync(cancellationToken);
+
+        var totalApplications = statusCounts.Sum(s => s.Count);
+
+        var distributions = statusCounts
+            .Select(s => new StatusDistribution
+            {
+                Status = s.Status.ToString(),
+                Count = s.Count,
+                Percentage = totalApplications > 0 ? Math.Round((decimal)s.Count / totalApplications * 100, 1) : 0
+            })
+            .OrderByDescending(s => s.Count)
+            .ToList();
+
+        var response = new StatusDistributionResponse
+        {
+            Statuses = distributions,
+            TotalApplications = totalApplications
+        };
+
+        // Cache for 5 minutes
+        var cacheOptions = new MemoryCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(CacheExpirationMinutes)
+        };
+
+        _cache.Set(cacheKey, response, cacheOptions);
+
+        return response;
+    }
+
+    public async Task<SourceDistributionResponse> GetSourceDistributionAsync(string userId, CancellationToken cancellationToken = default)
+    {
+        // Generate cache key
+        var cacheKey = $"source-distribution-{userId}";
+
+        // Try to get from cache
+        if (_cache.TryGetValue(cacheKey, out SourceDistributionResponse? cachedData) && cachedData != null)
+        {
+            return cachedData;
+        }
+
+        // Get all applications grouped by source
+        var sourceCounts = await _context.Applications
+            .Where(a => a.UserId == userId)
+            .GroupBy(a => a.SourceName)
+            .Select(g => new { SourceName = g.Key, Count = g.Count() })
+            .ToListAsync(cancellationToken);
+
+        var totalApplications = sourceCounts.Sum(s => s.Count);
+
+        var distributions = sourceCounts
+            .Select(s => new SourceDistribution
+            {
+                SourceName = s.SourceName,
+                Count = s.Count,
+                Percentage = totalApplications > 0 ? Math.Round((decimal)s.Count / totalApplications * 100, 1) : 0
+            })
+            .OrderByDescending(s => s.Count)
+            .ToList();
+
+        var response = new SourceDistributionResponse
+        {
+            Sources = distributions,
+            TotalApplications = totalApplications
+        };
+
+        // Cache for 5 minutes
+        var cacheOptions = new MemoryCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(CacheExpirationMinutes)
+        };
+
+        _cache.Set(cacheKey, response, cacheOptions);
+
+        return response;
+    }
+
+    public async Task<AverageTimeResponse> GetAverageTimeToMilestonesAsync(string userId, CancellationToken cancellationToken = default)
+    {
+        // Generate cache key
+        var cacheKey = $"average-time-{userId}";
+
+        // Try to get from cache
+        if (_cache.TryGetValue(cacheKey, out AverageTimeResponse? cachedData) && cachedData != null)
+        {
+            return cachedData;
+        }
+
+        // Get all applications with their timeline events
+        var applications = await _context.Applications
+            .Where(a => a.UserId == userId)
+            .Include(a => a.TimelineEvents)
+            .ToListAsync(cancellationToken);
+
+        var milestones = new List<AverageTimeToMilestone>();
+
+        // Calculate average time to each milestone type
+        var milestoneTypes = new[]
+        {
+            Domain.Enums.EventType.Screening,
+            Domain.Enums.EventType.Interview,
+            Domain.Enums.EventType.Rejected,
+            Domain.Enums.EventType.Offer
+        };
+
+        foreach (var milestoneType in milestoneTypes)
+        {
+            var applicationsWithMilestone = applications
+                .Select(app => new
+                {
+                    Application = app,
+                    MilestoneEvent = app.TimelineEvents
+                        .Where(e => e.EventType == milestoneType)
+                        .OrderBy(e => e.Timestamp)
+                        .FirstOrDefault()
+                })
+                .Where(x => x.MilestoneEvent != null)
+                .ToList();
+
+            if (applicationsWithMilestone.Any())
+            {
+                var averageDays = applicationsWithMilestone
+                    .Select(x => (x.MilestoneEvent!.Timestamp - x.Application.CreatedDate).TotalDays)
+                    .Average();
+
+                milestones.Add(new AverageTimeToMilestone
+                {
+                    Milestone = milestoneType.ToString(),
+                    AverageDays = Math.Round((decimal)averageDays, 1),
+                    SampleSize = applicationsWithMilestone.Count
+                });
+            }
+            else
+            {
+                milestones.Add(new AverageTimeToMilestone
+                {
+                    Milestone = milestoneType.ToString(),
+                    AverageDays = null,
+                    SampleSize = 0
+                });
+            }
+        }
+
+        var response = new AverageTimeResponse
+        {
+            Milestones = milestones
+        };
+
+        // Cache for 5 minutes
+        var cacheOptions = new MemoryCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(CacheExpirationMinutes)
+        };
+
+        _cache.Set(cacheKey, response, cacheOptions);
+
+        return response;
+    }
 }

@@ -4,6 +4,7 @@ using Domain.Entities;
 using Domain.Enums;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace Infrastructure.Services;
 
@@ -11,13 +12,17 @@ public class HuntingPartyService : IHuntingPartyService
 {
     private readonly ApplicationDbContext _context;
     private readonly ICurrentUserService _currentUserService;
+    private readonly IMemoryCache _cache;
+    private const int CacheExpirationMinutes = 10;
 
     public HuntingPartyService(
         ApplicationDbContext context,
-        ICurrentUserService currentUserService)
+        ICurrentUserService currentUserService,
+        IMemoryCache cache)
     {
         _context = context;
         _currentUserService = currentUserService;
+        _cache = cache;
     }
 
     public async Task<HuntingPartyDto> CreatePartyAsync(CreateHuntingPartyRequest request)
@@ -79,6 +84,9 @@ public class HuntingPartyService : IHuntingPartyService
             throw new InvalidOperationException(
                 "Unable to create party. Please try again later.");
         }
+
+        // Invalidate cache for this user
+        _cache.Remove($"user-party-id-{userId}");
 
         return new HuntingPartyDto
         {
@@ -217,6 +225,9 @@ public class HuntingPartyService : IHuntingPartyService
                 "Unable to join party. Please try again later.");
         }
 
+        // Invalidate cache for this user
+        _cache.Remove($"user-party-id-{userId}");
+
         return new HuntingPartyDto
         {
             Id = party.Id,
@@ -245,6 +256,9 @@ public class HuntingPartyService : IHuntingPartyService
         membership.IsActive = false;
         await _context.SaveChangesAsync();
 
+        // Invalidate cache for this user
+        _cache.Remove($"user-party-id-{userId}");
+
         return true;
     }
 
@@ -264,14 +278,12 @@ public class HuntingPartyService : IHuntingPartyService
 
         var members = await _context.HuntingPartyMemberships
             .Where(m => m.HuntingPartyId == partyId && m.IsActive)
-            .Include(m => m.User)
-            .ThenInclude(u => u.Applications)
             .Select(m => new
             {
                 m.UserId,
-                m.User.DisplayName,
-                m.User.TotalPoints,
-                ApplicationCount = m.User.Applications.Count
+                DisplayName = m.User.DisplayName,
+                TotalPoints = m.User.TotalPoints,
+                ApplicationCount = _context.Applications.Count(a => a.UserId == m.UserId)
             })
             .OrderByDescending(m => m.TotalPoints)
             .ToListAsync();
@@ -330,10 +342,30 @@ public class HuntingPartyService : IHuntingPartyService
 
     public async Task<Guid?> GetUserPartyIdAsync(string userId)
     {
+        // Generate cache key
+        var cacheKey = $"user-party-id-{userId}";
+
+        // Try to get from cache
+        if (_cache.TryGetValue(cacheKey, out Guid? cachedPartyId))
+        {
+            return cachedPartyId;
+        }
+
         var membership = await _context.HuntingPartyMemberships
+            .AsNoTracking()
             .FirstOrDefaultAsync(m => m.UserId == userId && m.IsActive);
 
-        return membership?.HuntingPartyId;
+        var partyId = membership?.HuntingPartyId;
+
+        // Cache for 10 minutes
+        var cacheOptions = new MemoryCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(CacheExpirationMinutes)
+        };
+
+        _cache.Set(cacheKey, partyId, cacheOptions);
+
+        return partyId;
     }
 
     private async Task<string> GenerateUniqueInviteCodeAsync()

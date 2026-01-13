@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useKeyboardShortcut } from '@/hooks/useKeyboardShortcut';
 import QuickCaptureModal from '@/components/applications/QuickCaptureModal';
-import { getWeeklyStats } from '@/services/statistics';
-import type { WeeklyStats } from '@/services/statistics';
+import PieChart from '@/components/charts/PieChart';
+import { getWeeklyStats, getStatusDistribution, getSourceDistribution, getAverageTime } from '@/services/statistics';
+import type { WeeklyStats, StatusDistributionResponse, SourceDistributionResponse, AverageTimeResponse } from '@/services/statistics';
 import { getTopKeywords, getConversionBySource } from '@/services/analytics';
 import type { KeywordFrequency, ConversionBySource } from '@/services/analytics';
 
@@ -15,6 +16,10 @@ export default function Dashboard() {
   const [keywords, setKeywords] = useState<KeywordFrequency[]>([]);
   const [conversions, setConversions] = useState<ConversionBySource[]>([]);
   const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(false);
+  const [statusDistribution, setStatusDistribution] = useState<StatusDistributionResponse | null>(null);
+  const [sourceDistribution, setSourceDistribution] = useState<SourceDistributionResponse | null>(null);
+  const [averageTime, setAverageTime] = useState<AverageTimeResponse | null>(null);
+  const [isLoadingDistributions, setIsLoadingDistributions] = useState(false);
 
   // Ctrl+K / Cmd+K shortcut to open Quick Capture
   useKeyboardShortcut('k', () => setIsQuickCaptureOpen(true), {
@@ -64,6 +69,32 @@ export default function Dashboard() {
     };
 
     fetchAnalytics();
+  }, [user]);
+
+  // Fetch distribution and average time data
+  useEffect(() => {
+    const fetchDistributions = async () => {
+      if (!user) return;
+
+      setIsLoadingDistributions(true);
+      try {
+        const [statusData, sourceData, timeData] = await Promise.all([
+          getStatusDistribution(),
+          getSourceDistribution(),
+          getAverageTime()
+        ]);
+        setStatusDistribution(statusData);
+        setSourceDistribution(sourceData);
+        setAverageTime(timeData);
+      } catch (error) {
+        console.error('Failed to fetch distribution data:', error);
+        // Fail silently - distributions are nice-to-have
+      } finally {
+        setIsLoadingDistributions(false);
+      }
+    };
+
+    fetchDistributions();
   }, [user]);
 
   return (
@@ -258,6 +289,74 @@ export default function Dashboard() {
               Keep applying! Analytics will appear once you have successful applications.
             </p>
           )}
+        </div>
+      )}
+
+      {/* Application Distribution - Pie Charts */}
+      {!isLoadingDistributions && (statusDistribution || sourceDistribution) && (
+        <div className="metal-panel">
+          <div className="metal-panel-screws" />
+          <h2 className="font-arcade text-base text-amber mb-6">APPLICATION BREAKDOWN</h2>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* By Status */}
+            {statusDistribution && statusDistribution.statuses.length > 0 && (
+              <PieChart
+                title="BY STATUS"
+                data={statusDistribution.statuses.map(s => ({
+                  label: s.status,
+                  value: s.count,
+                  percentage: s.percentage
+                }))}
+                size={220}
+              />
+            )}
+
+            {/* By Source */}
+            {sourceDistribution && sourceDistribution.sources.length > 0 && (
+              <PieChart
+                title="BY SOURCE"
+                data={sourceDistribution.sources.map(s => ({
+                  label: s.sourceName,
+                  value: s.count,
+                  percentage: s.percentage
+                }))}
+                size={220}
+              />
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Average Time to Milestones */}
+      {!isLoadingDistributions && averageTime && averageTime.milestones.length > 0 && (
+        <div className="metal-panel">
+          <div className="metal-panel-screws" />
+          <h2 className="font-arcade text-base text-amber mb-4">AVERAGE TIME TO MILESTONE</h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {averageTime.milestones.map((milestone) => (
+              <div key={milestone.milestone} className="bg-gray-800/50 rounded p-4">
+                <div className="text-xs text-gray-400 mb-1">{milestone.milestone}</div>
+                {milestone.averageDays !== null ? (
+                  <>
+                    <div className="text-2xl font-bold text-terminal-green">
+                      {milestone.averageDays}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      days (n={milestone.sampleSize})
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-sm text-gray-600 py-2">No data</div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <p className="text-xs text-gray-500 mt-4">
+            * Average days from application submission to milestone
+          </p>
         </div>
       )}
 

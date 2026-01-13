@@ -13,6 +13,6 @@ public class UpdateTimelineEventRequest
     [Required]
     public DateTime Timestamp { get; set; }
 
-    [MaxLength(1000)]
+    [MaxLength(5000)]
     public string? Notes { get; set; }
 }

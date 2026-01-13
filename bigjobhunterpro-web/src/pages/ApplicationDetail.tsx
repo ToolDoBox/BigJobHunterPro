@@ -323,6 +323,61 @@ export default function ApplicationDetail() {
     }
   };
 
+  const handleExportJSON = () => {
+    if (!application) return;
+
+    // Create a comprehensive export object
+    const exportData = {
+      id: application.id,
+      companyName: application.companyName,
+      roleTitle: application.roleTitle,
+      sourceName: application.sourceName,
+      sourceUrl: application.sourceUrl,
+      status: application.status,
+      workMode: application.workMode,
+      location: application.location,
+      salaryMin: application.salaryMin,
+      salaryMax: application.salaryMax,
+      jobDescription: application.jobDescription,
+      requiredSkills: application.requiredSkills,
+      niceToHaveSkills: application.niceToHaveSkills,
+      rawPageContent: application.rawPageContent,
+      points: application.points,
+      createdDate: application.createdDate,
+      updatedDate: application.updatedDate,
+      aiParsingStatus: application.aiParsingStatus,
+      timelineEvents: application.timelineEvents?.map(event => ({
+        id: event.id,
+        eventType: event.eventType,
+        notes: event.notes,
+        timestamp: event.timestamp,
+        createdDate: event.createdDate,
+      })) || [],
+    };
+
+    // Convert to JSON string with formatting
+    const jsonString = JSON.stringify(exportData, null, 2);
+
+    // Create a blob and download link
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+
+    // Generate filename with company and role
+    const sanitize = (str: string) => str.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    const filename = `application_${sanitize(application.companyName)}_${sanitize(application.roleTitle)}_${new Date().toISOString().split('T')[0]}.json`;
+    link.download = filename;
+
+    // Trigger download
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    showToast('success', 'Application exported successfully!');
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-6 animate-fade-in motion-reduce:animate-none">
@@ -433,6 +488,13 @@ export default function ApplicationDetail() {
             )}
             <button
               className="btn-metal"
+              onClick={handleExportJSON}
+              title="Export application data as JSON"
+            >
+              EXPORT JSON
+            </button>
+            <button
+              className="btn-metal"
               onClick={() => setShowDeleteConfirm(true)}
               disabled={isDeleting}
             >
@@ -441,7 +503,7 @@ export default function ApplicationDetail() {
           </div>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="space-y-6">
           <div>
             <h3 className="font-arcade text-xs text-amber mb-3">CORE INTEL</h3>
             <FormInput
@@ -594,7 +656,7 @@ export default function ApplicationDetail() {
 
         <div className="divider-metal my-6" />
 
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="space-y-6">
           <div>
             <h3 className="font-arcade text-xs text-amber mb-3">JOB DESCRIPTION</h3>
             <textarea

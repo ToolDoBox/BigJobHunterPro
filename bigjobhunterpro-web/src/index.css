@@ -35,6 +35,9 @@
     --font-arcade: "Press Start 2P", monospace;
     --font-body: "Oxanium", "Segoe UI", system-ui, sans-serif;
 
+    /* Layout */
+    --side-panel-width: clamp(600px, 45vw, 800px);
+
     /* Metal shadows */
     --shadow-metal-inset: inset 0 2px 6px rgba(0, 0, 0, 0.7), inset 0 -1px 0 rgba(255, 255, 255, 0.05);
     --shadow-metal-raised: 0 6px 14px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.12);
@@ -128,6 +131,17 @@
     }
 }
 
+@keyframes slide-out-right {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+}
+
 .animate-scale-in {
     animation: scale-in 0.2s ease-out;
 }
@@ -146,6 +160,10 @@
 
 .animate-slide-in-right {
     animation: slide-in-right 0.3s ease-out;
+}
+
+.animate-slide-out-right {
+    animation: slide-out-right 0.3s ease-in;
 }
 
 /* Base layer customizations */
@@ -717,9 +735,40 @@
     .animate-fade-in,
     .animate-fade-out,
     .animate-slide-in-right,
+    .animate-slide-out-right,
     .btn-metal,
     .btn-metal-primary,
-    .nav-link {
-        transition: none;
+    .nav-link,
+    main {
+        transition: none !important;
+    }
+}
+
+/* Side panel split-view layout */
+.side-panel {
+    width: var(--side-panel-width);
+    max-width: 100%;
+}
+
+body.side-panel-open main {
+    margin-right: var(--side-panel-width);
+    margin-left: auto;
+    transition: margin-right 0.3s ease-out;
+}
+
+body:not(.side-panel-open) main {
+    margin-right: auto;
+    margin-left: auto;
+    transition: margin-right 0.3s ease-in;
+}
+
+@media (max-width: 1024px) {
+    .side-panel {
+        width: 100%;
+        max-width: none;
+    }
+
+    body.side-panel-open main {
+        margin-right: 0;
     }
 }

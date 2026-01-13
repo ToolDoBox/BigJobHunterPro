@@ -322,7 +322,7 @@ namespace Infrastructure.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Notes")
-                        .HasMaxLength(1000)
+                        .HasMaxLength(5000)
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Points")

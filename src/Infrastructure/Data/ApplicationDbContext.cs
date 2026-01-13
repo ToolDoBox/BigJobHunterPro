@@ -59,7 +59,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         builder.Entity<TimelineEvent>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.Notes).HasMaxLength(1000);
+            entity.Property(e => e.Notes).HasMaxLength(5000);
             entity.HasIndex(e => e.ApplicationId);
             entity.HasIndex(e => e.Timestamp);
         });

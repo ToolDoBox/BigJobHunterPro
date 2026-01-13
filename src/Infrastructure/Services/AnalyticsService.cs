@@ -46,16 +46,18 @@ public class AnalyticsService : IAnalyticsService
             return cachedKeywords;
         }
 
-        // Get successful applications (reached interview stage or offer)
-        var successfulApplications = await _context.Applications
-            .Include(a => a.TimelineEvents)
+        // Get successful applications (reached interview stage or offer) using projection
+        var applicationsWithSuccess = await _context.Applications
             .Where(a => a.UserId == userId)
-            .ToListAsync(cancellationToken);
-
-        // Filter to only those with interview or offer events
-        var applicationsWithSuccess = successfulApplications
             .Where(a => a.TimelineEvents.Any(e => e.EventType == EventType.Interview || e.EventType == EventType.Offer))
-            .ToList();
+            .Select(a => new
+            {
+                a.RoleTitle,
+                a.JobDescription,
+                a.RequiredSkills,
+                a.NiceToHaveSkills
+            })
+            .ToListAsync(cancellationToken);
 
         if (applicationsWithSuccess.Count == 0)
         {
@@ -125,10 +127,14 @@ public class AnalyticsService : IAnalyticsService
             return cachedConversions;
         }
 
-        // Get all applications with their timeline events
+        // Get applications with projection - only load what we need
         var applications = await _context.Applications
-            .Include(a => a.TimelineEvents)
             .Where(a => a.UserId == userId)
+            .Select(a => new
+            {
+                SourceName = string.IsNullOrWhiteSpace(a.SourceName) ? "Unknown" : a.SourceName,
+                HasSuccess = a.TimelineEvents.Any(e => e.EventType == EventType.Interview || e.EventType == EventType.Offer)
+            })
             .ToListAsync(cancellationToken);
 
         if (applications.Count == 0)
@@ -138,15 +144,15 @@ public class AnalyticsService : IAnalyticsService
 
         // Group by source and calculate conversion rates
         var conversionData = applications
-            .GroupBy(a => string.IsNullOrWhiteSpace(a.SourceName) ? "Unknown" : a.SourceName)
+            .GroupBy(a => a.SourceName)
             .Select(g => new ConversionBySource
             {
                 SourceName = g.Key,
                 TotalApplications = g.Count(),
-                InterviewCount = g.Count(a => a.TimelineEvents.Any(e => e.EventType == EventType.Interview || e.EventType == EventType.Offer)),
+                InterviewCount = g.Count(a => a.HasSuccess),
                 ConversionRate = g.Count() == 0
                     ? 0
-                    : Math.Round((decimal)g.Count(a => a.TimelineEvents.Any(e => e.EventType == EventType.Interview || e.EventType == EventType.Offer)) / g.Count() * 100, 1)
+                    : Math.Round((decimal)g.Count(a => a.HasSuccess) / g.Count() * 100, 1)
             })
             .OrderByDescending(c => c.ConversionRate)
             .ThenByDescending(c => c.TotalApplications)

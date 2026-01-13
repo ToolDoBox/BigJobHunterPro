@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import Modal from '../ui/Modal';
+import SidePanel from '../ui/SidePanel';
 import type { EventType, TimelineEvent } from '../../types/timelineEvent';
 
 interface EditTimelineEventModalProps {
@@ -71,7 +71,7 @@ export function EditTimelineEventModal({ isOpen, onClose, onSubmit, event }: Edi
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Edit Timeline Event">
+    <SidePanel isOpen={isOpen} onClose={onClose} title="Edit Timeline Event">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="editEventType" className="block text-sm font-semibold text-gray-300 mb-2">
@@ -129,14 +129,14 @@ export function EditTimelineEventModal({ isOpen, onClose, onSubmit, event }: Edi
           </label>
           <textarea
             id="editNotes"
-            rows={3}
-            maxLength={1000}
+            rows={10}
+            maxLength={5000}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             className="input-arcade"
             placeholder="Add any notes about this event..."
           />
-          <div className="text-xs text-gray-400 mt-1">{notes.length}/1000 characters</div>
+          <div className="text-xs text-gray-400 mt-1">{notes.length}/5000 characters</div>
         </div>
 
         <div className="bg-metal-dark p-3 rounded border border-gray-700">
@@ -157,6 +157,6 @@ export function EditTimelineEventModal({ isOpen, onClose, onSubmit, event }: Edi
           </button>
         </div>
       </form>
-    </Modal>
+    </SidePanel>
   );
 }

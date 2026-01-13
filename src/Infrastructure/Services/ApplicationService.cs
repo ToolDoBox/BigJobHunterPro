@@ -8,6 +8,7 @@ using Domain.Enums;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace Infrastructure.Services;
 
@@ -20,6 +21,8 @@ public class ApplicationService : IApplicationService
     private readonly IActivityEventService _activityEventService;
     private readonly IHuntingPartyService _huntingPartyService;
     private readonly ITimelineEventService _timelineEventService;
+    private readonly IMemoryCache _cache;
+    private const int CacheExpirationMinutes = 2;
 
     public ApplicationService(
         ApplicationDbContext context,
@@ -28,7 +31,8 @@ public class ApplicationService : IApplicationService
         IConfiguration configuration,
         IActivityEventService activityEventService,
         IHuntingPartyService huntingPartyService,
-        ITimelineEventService timelineEventService)
+        ITimelineEventService timelineEventService,
+        IMemoryCache cache)
     {
         _context = context;
         _currentUser = currentUser;
@@ -37,6 +41,7 @@ public class ApplicationService : IApplicationService
         _activityEventService = activityEventService;
         _huntingPartyService = huntingPartyService;
         _timelineEventService = timelineEventService;
+        _cache = cache;
     }
 
     public async Task<CreateApplicationResponse> CreateApplicationAsync(CreateApplicationRequest request)
@@ -98,6 +103,9 @@ public class ApplicationService : IApplicationService
 
         await _context.SaveChangesAsync();
 
+        // Invalidate application list cache
+        InvalidateApplicationListCache(userId);
+
         var partyId = await _huntingPartyService.GetUserPartyIdAsync(userId);
         if (partyId.HasValue)
         {
@@ -130,6 +138,15 @@ public class ApplicationService : IApplicationService
         var userId = _currentUser.GetUserId()
             ?? throw new UnauthorizedAccessException("User not authenticated");
 
+        // Generate cache key
+        var cacheKey = $"applications-list-{userId}-{page}-{pageSize}";
+
+        // Try to get from cache
+        if (_cache.TryGetValue(cacheKey, out ApplicationsListResponse? cachedResponse) && cachedResponse != null)
+        {
+            return cachedResponse;
+        }
+
         var query = _context.Applications
             .AsNoTracking()
             .Where(application => application.UserId == userId)
@@ -154,13 +171,23 @@ public class ApplicationService : IApplicationService
             items.RemoveAt(items.Count - 1);
         }
 
-        return new ApplicationsListResponse
+        var response = new ApplicationsListResponse
         {
             Items = items,
             Page = page,
             PageSize = pageSize,
             HasMore = hasMore
         };
+
+        // Cache for 2 minutes
+        var cacheOptions = new MemoryCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(CacheExpirationMinutes)
+        };
+
+        _cache.Set(cacheKey, response, cacheOptions);
+
+        return response;
     }
 
     public async Task<ApplicationDto?> GetApplicationAsync(Guid id)
@@ -260,6 +287,9 @@ public class ApplicationService : IApplicationService
 
         await _context.SaveChangesAsync();
 
+        // Invalidate application list cache
+        InvalidateApplicationListCache(userId);
+
         return MapToDetailDto(application);
     }
 
@@ -291,12 +321,11 @@ public class ApplicationService : IApplicationService
             Notes = $"Status updated to {request.Status}"
         });
 
-        var updated = await _context.Applications
-            .AsNoTracking()
-            .Include(a => a.TimelineEvents)
-            .FirstOrDefaultAsync(item => item.Id == id && item.UserId == userId);
+        // Reload timeline events from database (CreateTimelineEventAsync already saved changes)
+        // This avoids a second full query for the application
+        await _context.Entry(application).Collection(a => a.TimelineEvents).LoadAsync();
 
-        return updated == null ? null : MapToDetailDto(updated);
+        return MapToDetailDto(application);
     }
 
     public async Task<bool> DeleteApplicationAsync(Guid id)
@@ -320,6 +349,9 @@ public class ApplicationService : IApplicationService
         }
 
         await _context.SaveChangesAsync();
+
+        // Invalidate application list cache
+        InvalidateApplicationListCache(userId);
 
         return true;
     }
@@ -467,5 +499,26 @@ public class ApplicationService : IApplicationService
             ApplicationStatus.Withdrawn => EventType.Withdrawn,
             _ => EventType.Applied
         };
+    }
+
+    /// <summary>
+    /// Invalidates all cached application list pages for a user
+    /// </summary>
+    private void InvalidateApplicationListCache(string userId)
+    {
+        // Since we cache by page and pageSize, we need to remove all possible combinations
+        // Common page sizes: 25, 50, 100
+        // Max reasonable pages: 20 (500 applications)
+        var commonPageSizes = new[] { 25, 50, 100 };
+        var maxPages = 20;
+
+        foreach (var pageSize in commonPageSizes)
+        {
+            for (var page = 1; page <= maxPages; page++)
+            {
+                var cacheKey = $"applications-list-{userId}-{page}-{pageSize}";
+                _cache.Remove(cacheKey);
+            }
+        }
     }
 }

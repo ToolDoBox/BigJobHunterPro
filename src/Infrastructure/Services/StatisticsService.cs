@@ -1,7 +1,6 @@
 using Application.Interfaces;
+using Application.Interfaces.Data;
 using BigJobHunterPro.Application.DTOs.Statistics;
-using Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace Infrastructure.Services;
@@ -12,13 +11,13 @@ namespace Infrastructure.Services;
 /// </summary>
 public class StatisticsService : IStatisticsService
 {
-    private readonly ApplicationDbContext _context;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IMemoryCache _cache;
     private const int CacheExpirationMinutes = 5;
 
-    public StatisticsService(ApplicationDbContext context, IMemoryCache cache)
+    public StatisticsService(IUnitOfWork unitOfWork, IMemoryCache cache)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _cache = cache;
     }
 
@@ -39,34 +38,42 @@ public class StatisticsService : IStatisticsService
         var twoWeeksAgo = now.AddDays(-14);
 
         // Get applications for this week (last 7 days)
-        var applicationsThisWeek = await _context.Applications
-            .Where(a => a.UserId == userId && a.CreatedDate >= oneWeekAgo)
-            .ToListAsync(cancellationToken);
+        var applicationsThisWeek = await _unitOfWork.Applications.CountByUserIdInRangeAsync(
+            userId,
+            oneWeekAgo,
+            now,
+            cancellationToken);
 
         // Get applications for last week (7-14 days ago)
-        var applicationsLastWeek = await _context.Applications
-            .Where(a => a.UserId == userId && a.CreatedDate >= twoWeeksAgo && a.CreatedDate < oneWeekAgo)
-            .ToListAsync(cancellationToken);
+        var applicationsLastWeek = await _unitOfWork.Applications.CountByUserIdInRangeAsync(
+            userId,
+            twoWeeksAgo,
+            oneWeekAgo,
+            cancellationToken);
 
         // Calculate points for this week (sum all timeline events)
-        var pointsThisWeek = await _context.TimelineEvents
-            .Where(e => e.Application.UserId == userId && e.Timestamp >= oneWeekAgo)
-            .SumAsync(e => e.Points, cancellationToken);
+        var pointsThisWeek = await _unitOfWork.TimelineEvents.SumPointsByUserIdInRangeAsync(
+            userId,
+            oneWeekAgo,
+            now,
+            cancellationToken);
 
         // Calculate points for last week
-        var pointsLastWeek = await _context.TimelineEvents
-            .Where(e => e.Application.UserId == userId && e.Timestamp >= twoWeeksAgo && e.Timestamp < oneWeekAgo)
-            .SumAsync(e => e.Points, cancellationToken);
+        var pointsLastWeek = await _unitOfWork.TimelineEvents.SumPointsByUserIdInRangeAsync(
+            userId,
+            twoWeeksAgo,
+            oneWeekAgo,
+            cancellationToken);
 
         // Calculate percentage change
-        var percentageChange = applicationsLastWeek.Count == 0
-            ? (applicationsThisWeek.Count > 0 ? 100m : 0m)
-            : ((applicationsThisWeek.Count - applicationsLastWeek.Count) / (decimal)applicationsLastWeek.Count * 100);
+        var percentageChange = applicationsLastWeek == 0
+            ? (applicationsThisWeek > 0 ? 100m : 0m)
+            : ((applicationsThisWeek - applicationsLastWeek) / (decimal)applicationsLastWeek * 100);
 
         var stats = new WeeklyStatsResponse
         {
-            ApplicationsThisWeek = applicationsThisWeek.Count,
-            ApplicationsLastWeek = applicationsLastWeek.Count,
+            ApplicationsThisWeek = applicationsThisWeek,
+            ApplicationsLastWeek = applicationsLastWeek,
             PercentageChange = Math.Round(percentageChange, 1),
             PointsThisWeek = pointsThisWeek,
             PointsLastWeek = pointsLastWeek
@@ -95,11 +102,11 @@ public class StatisticsService : IStatisticsService
         }
 
         // Get all applications with their current status
-        var statusCounts = await _context.Applications
-            .Where(a => a.UserId == userId)
+        var applications = await _unitOfWork.Applications.GetByUserIdAsync(userId, cancellationToken);
+        var statusCounts = applications
             .GroupBy(a => a.Status)
             .Select(g => new { Status = g.Key, Count = g.Count() })
-            .ToListAsync(cancellationToken);
+            .ToList();
 
         var totalApplications = statusCounts.Sum(s => s.Count);
 
@@ -142,11 +149,9 @@ public class StatisticsService : IStatisticsService
         }
 
         // Prefer the parsed/entered source name, fall back to URL host when missing
-        var sourceEntries = await _context.Applications
-            .AsNoTracking()
-            .Where(a => a.UserId == userId)
+        var sourceEntries = (await _unitOfWork.Applications.GetByUserIdAsync(userId, cancellationToken))
             .Select(a => new { a.SourceName, a.SourceUrl })
-            .ToListAsync(cancellationToken);
+            .ToList();
 
         var sourceCounts = sourceEntries
             .Select(entry => NormalizeSourceName(entry.SourceName, entry.SourceUrl))
@@ -196,10 +201,9 @@ public class StatisticsService : IStatisticsService
         }
 
         // Get all applications with their timeline events
-        var applications = await _context.Applications
-            .Where(a => a.UserId == userId)
-            .Include(a => a.TimelineEvents)
-            .ToListAsync(cancellationToken);
+        var applications = (await _unitOfWork.Applications
+            .GetWithTimelineEventsAsync(userId, cancellationToken))
+            .ToList();
 
         var milestones = new List<AverageTimeToMilestone>();
 

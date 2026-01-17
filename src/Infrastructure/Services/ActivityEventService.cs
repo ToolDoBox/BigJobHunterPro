@@ -1,9 +1,8 @@
 using Application.DTOs.ActivityEvents;
+using Application.Interfaces.Data;
 using Application.Interfaces;
 using Domain.Entities;
 using Domain.Enums;
-using Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Services;
 
@@ -11,16 +10,16 @@ public class ActivityEventService : IActivityEventService
 {
     private static readonly int[] MilestoneThresholds = { 10, 25, 50, 100 };
 
-    private readonly ApplicationDbContext _context;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IActivityNotifier? _activityNotifier;
     private readonly ICurrentUserService _currentUserService;
 
     public ActivityEventService(
-        ApplicationDbContext context,
+        IUnitOfWork unitOfWork,
         ICurrentUserService currentUserService,
         IActivityNotifier? activityNotifier = null)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _currentUserService = currentUserService;
         _activityNotifier = activityNotifier;
     }
@@ -32,13 +31,11 @@ public class ActivityEventService : IActivityEventService
             return null;
         }
 
-        var membership = await _context.HuntingPartyMemberships
-            .AsNoTracking()
-            .FirstOrDefaultAsync(m => m.UserId == request.UserId
-                && m.HuntingPartyId == request.PartyId
-                && m.IsActive);
+        var isMember = await _unitOfWork.HuntingPartyMemberships.IsMemberAsync(
+            request.PartyId,
+            request.UserId);
 
-        if (membership == null)
+        if (!isMember)
         {
             return null;
         }
@@ -60,8 +57,8 @@ public class ActivityEventService : IActivityEventService
             MilestoneLabel = string.IsNullOrWhiteSpace(request.MilestoneLabel) ? null : request.MilestoneLabel.Trim()
         };
 
-        _context.ActivityEvents.Add(activityEvent);
-        await _context.SaveChangesAsync();
+        await _unitOfWork.ActivityEvents.AddAsync(activityEvent);
+        await _unitOfWork.SaveChangesAsync();
 
         var dto = await MapToDtoAsync(activityEvent, request.MilestoneLabel);
 
@@ -85,47 +82,39 @@ public class ActivityEventService : IActivityEventService
             var userId = _currentUserService.GetUserId()
                 ?? throw new UnauthorizedAccessException("User not authenticated");
 
-            var isMember = await _context.HuntingPartyMemberships
-                .AsNoTracking()
-                .AnyAsync(m => m.HuntingPartyId == partyId && m.UserId == userId && m.IsActive);
+            var isMember = await _unitOfWork.HuntingPartyMemberships.IsMemberAsync(
+                partyId,
+                userId);
 
             if (!isMember)
             {
                 return null;
             }
 
-            var events = await _context.ActivityEvents
-                .AsNoTracking()
-                .Include(e => e.User)
-                .Where(e => e.PartyId == partyId)
+            var events = await _unitOfWork.ActivityEvents.GetByPartyIdAsync(partyId, limit + 1);
+            var orderedEvents = events
                 .OrderByDescending(e => e.CreatedDate)
                 .ThenByDescending(e => e.Id)
-                .Take(limit + 1)
-                .Select(e => new
-                {
-                    Event = e,
-                    DisplayName = e.User != null ? e.User.DisplayName : "Unknown Hunter"
-                })
-                .ToListAsync();
+                .ToList();
 
-            var hasMore = events.Count > limit;
+            var hasMore = orderedEvents.Count > limit;
             if (hasMore)
             {
-                events.RemoveAt(events.Count - 1);
+                orderedEvents.RemoveAt(orderedEvents.Count - 1);
             }
 
-            var mapped = events.Select(e => new ActivityEventDto
+            var mapped = orderedEvents.Select(e => new ActivityEventDto
             {
-                Id = e.Event.Id,
-                PartyId = e.Event.PartyId,
-                UserId = e.Event.UserId,
-                UserDisplayName = e.DisplayName,
-                EventType = e.Event.EventType.ToString(),
-                PointsDelta = e.Event.PointsDelta,
-                CreatedDate = DateTime.SpecifyKind(e.Event.CreatedDate, DateTimeKind.Utc),
-                CompanyName = e.Event.CompanyName,
-                RoleTitle = e.Event.RoleTitle,
-                MilestoneLabel = e.Event.MilestoneLabel
+                Id = e.Id,
+                PartyId = e.PartyId,
+                UserId = e.UserId,
+                UserDisplayName = e.User?.DisplayName ?? "Unknown Hunter",
+                EventType = e.EventType.ToString(),
+                PointsDelta = e.PointsDelta,
+                CreatedDate = DateTime.SpecifyKind(e.CreatedDate, DateTimeKind.Utc),
+                CompanyName = e.CompanyName,
+                RoleTitle = e.RoleTitle,
+                MilestoneLabel = e.MilestoneLabel
             }).ToList();
 
             return new ActivityFeedResponse
@@ -150,11 +139,8 @@ public class ActivityEventService : IActivityEventService
 
     private async Task<ActivityEventDto> MapToDtoAsync(ActivityEvent activityEvent, string? milestoneLabel)
     {
-        var displayName = await _context.Users
-            .AsNoTracking()
-            .Where(user => user.Id == activityEvent.UserId)
-            .Select(user => user.DisplayName)
-            .FirstOrDefaultAsync() ?? "Unknown Hunter";
+        var displayName = await _unitOfWork.Users.GetDisplayNameAsync(activityEvent.UserId)
+            ?? "Unknown Hunter";
 
         return new ActivityEventDto
         {
@@ -173,9 +159,7 @@ public class ActivityEventService : IActivityEventService
 
     private async Task TryCreateMilestoneAsync(Guid partyId, string userId)
     {
-        var applicationCount = await _context.Applications
-            .AsNoTracking()
-            .CountAsync(application => application.UserId == userId);
+        var applicationCount = await _unitOfWork.Applications.CountByUserIdAsync(userId);
 
         var hitThreshold = MilestoneThresholds.FirstOrDefault(threshold => threshold == applicationCount);
         if (hitThreshold == 0)
@@ -185,12 +169,10 @@ public class ActivityEventService : IActivityEventService
 
         var milestoneLabel = $"{hitThreshold} applications logged";
 
-        var existingMilestone = await _context.ActivityEvents
-            .AsNoTracking()
-            .AnyAsync(e => e.PartyId == partyId
-                && e.UserId == userId
-                && e.EventType == ActivityEventType.MilestoneHit
-                && e.RoleTitle == milestoneLabel);
+        var existingMilestone = await _unitOfWork.ActivityEvents.MilestoneExistsAsync(
+            partyId,
+            userId,
+            milestoneLabel);
 
         if (existingMilestone)
         {
@@ -208,8 +190,8 @@ public class ActivityEventService : IActivityEventService
             MilestoneLabel = milestoneLabel
         };
 
-        _context.ActivityEvents.Add(milestoneEvent);
-        await _context.SaveChangesAsync();
+        await _unitOfWork.ActivityEvents.AddAsync(milestoneEvent);
+        await _unitOfWork.SaveChangesAsync();
 
         var dto = await MapToDtoAsync(milestoneEvent, milestoneLabel);
         if (_activityNotifier != null)

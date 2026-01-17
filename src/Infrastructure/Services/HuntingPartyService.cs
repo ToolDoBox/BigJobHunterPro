@@ -1,8 +1,8 @@
 using Application.DTOs.HuntingParty;
+using Application.Interfaces.Data;
 using Application.Interfaces;
 using Domain.Entities;
 using Domain.Enums;
-using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 
@@ -10,17 +10,17 @@ namespace Infrastructure.Services;
 
 public class HuntingPartyService : IHuntingPartyService
 {
-    private readonly ApplicationDbContext _context;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUserService;
     private readonly IMemoryCache _cache;
     private const int CacheExpirationMinutes = 10;
 
     public HuntingPartyService(
-        ApplicationDbContext context,
+        IUnitOfWork unitOfWork,
         ICurrentUserService currentUserService,
         IMemoryCache cache)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _currentUserService = currentUserService;
         _cache = cache;
     }
@@ -31,10 +31,10 @@ public class HuntingPartyService : IHuntingPartyService
             ?? throw new UnauthorizedAccessException("User not authenticated");
 
         // Check if user already has a party (one party per user for MVP)
-        var existingMembership = await _context.HuntingPartyMemberships
-            .FirstOrDefaultAsync(m => m.UserId == userId && m.IsActive);
+        var existingMemberships = await _unitOfWork.HuntingPartyMemberships
+            .GetActiveByUserIdAsync(userId);
 
-        if (existingMembership != null)
+        if (existingMemberships.Any())
         {
             throw new InvalidOperationException("You can only belong to one hunting party at a time. Leave your current party first.");
         }
@@ -60,12 +60,12 @@ public class HuntingPartyService : IHuntingPartyService
             IsActive = true
         };
 
-        _context.HuntingParties.Add(party);
-        _context.HuntingPartyMemberships.Add(membership);
+        await _unitOfWork.HuntingParties.AddAsync(party);
+        await _unitOfWork.HuntingPartyMemberships.AddAsync(membership);
 
         try
         {
-            await _context.SaveChangesAsync();
+            await _unitOfWork.SaveChangesAsync();
         }
         catch (DbUpdateException ex)
         {
@@ -104,17 +104,21 @@ public class HuntingPartyService : IHuntingPartyService
         var userId = _currentUserService.GetUserId()
             ?? throw new UnauthorizedAccessException("User not authenticated");
 
-        var membership = await _context.HuntingPartyMemberships
-            .Include(m => m.HuntingParty)
-            .ThenInclude(p => p.Memberships.Where(m => m.IsActive))
-            .FirstOrDefaultAsync(m => m.UserId == userId && m.IsActive);
+        var membership = (await _unitOfWork.HuntingPartyMemberships
+            .GetActiveByUserIdAsync(userId))
+            .FirstOrDefault();
 
         if (membership == null)
         {
             return null;
         }
 
-        var party = membership.HuntingParty;
+        var party = await _unitOfWork.HuntingParties.GetWithMembershipsAsync(membership.HuntingPartyId);
+        if (party == null)
+        {
+            return null;
+        }
+
         return new HuntingPartyDto
         {
             Id = party.Id,
@@ -132,18 +136,15 @@ public class HuntingPartyService : IHuntingPartyService
             ?? throw new UnauthorizedAccessException("User not authenticated");
 
         // Verify user is a member of this party
-        var userMembership = await _context.HuntingPartyMemberships
-            .FirstOrDefaultAsync(m => m.HuntingPartyId == partyId && m.UserId == userId && m.IsActive);
+        var userMembership = await _unitOfWork.HuntingPartyMemberships
+            .GetByPartyAndUserAsync(partyId, userId);
 
-        if (userMembership == null)
+        if (userMembership == null || !userMembership.IsActive)
         {
             return null;
         }
 
-        var party = await _context.HuntingParties
-            .Include(p => p.Memberships.Where(m => m.IsActive))
-            .ThenInclude(m => m.User)
-            .FirstOrDefaultAsync(p => p.Id == partyId);
+        var party = await _unitOfWork.HuntingParties.GetWithMembershipsAsync(partyId);
 
         if (party == null)
         {
@@ -180,17 +181,16 @@ public class HuntingPartyService : IHuntingPartyService
             ?? throw new UnauthorizedAccessException("User not authenticated");
 
         // Check if user already has a party
-        var existingMembership = await _context.HuntingPartyMemberships
-            .FirstOrDefaultAsync(m => m.UserId == userId && m.IsActive);
+        var existingMemberships = await _unitOfWork.HuntingPartyMemberships
+            .GetActiveByUserIdAsync(userId);
 
-        if (existingMembership != null)
+        if (existingMemberships.Any())
         {
             throw new InvalidOperationException("You can only belong to one hunting party at a time. Leave your current party first.");
         }
 
-        var party = await _context.HuntingParties
-            .Include(p => p.Memberships.Where(m => m.IsActive))
-            .FirstOrDefaultAsync(p => p.InviteCode == request.InviteCode.Trim().ToUpperInvariant());
+        var party = await _unitOfWork.HuntingParties.GetByInviteCodeAsync(
+            request.InviteCode.Trim().ToUpperInvariant());
 
         if (party == null)
         {
@@ -207,11 +207,11 @@ public class HuntingPartyService : IHuntingPartyService
             IsActive = true
         };
 
-        _context.HuntingPartyMemberships.Add(membership);
+        await _unitOfWork.HuntingPartyMemberships.AddAsync(membership);
 
         try
         {
-            await _context.SaveChangesAsync();
+            await _unitOfWork.SaveChangesAsync();
         }
         catch (DbUpdateException ex)
         {
@@ -228,12 +228,16 @@ public class HuntingPartyService : IHuntingPartyService
         // Invalidate cache for this user
         _cache.Remove($"user-party-id-{userId}");
 
+        var memberCount = (await _unitOfWork.HuntingPartyMemberships
+            .GetByPartyIdAsync(party.Id))
+            .Count(m => m.IsActive);
+
         return new HuntingPartyDto
         {
             Id = party.Id,
             Name = party.Name,
             InviteCode = party.InviteCode,
-            MemberCount = party.Memberships.Count(m => m.IsActive) + 1,
+            MemberCount = memberCount,
             CreatedDate = party.CreatedDate,
             IsCreator = false
         };
@@ -244,17 +248,17 @@ public class HuntingPartyService : IHuntingPartyService
         var userId = _currentUserService.GetUserId()
             ?? throw new UnauthorizedAccessException("User not authenticated");
 
-        var membership = await _context.HuntingPartyMemberships
-            .FirstOrDefaultAsync(m => m.HuntingPartyId == partyId && m.UserId == userId && m.IsActive);
+        var membership = await _unitOfWork.HuntingPartyMemberships
+            .GetByPartyAndUserAsync(partyId, userId);
 
-        if (membership == null)
+        if (membership == null || !membership.IsActive)
         {
             return false;
         }
 
         // Soft delete - set IsActive to false
         membership.IsActive = false;
-        await _context.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
 
         // Invalidate cache for this user
         _cache.Remove($"user-party-id-{userId}");
@@ -268,25 +272,29 @@ public class HuntingPartyService : IHuntingPartyService
             ?? throw new UnauthorizedAccessException("User not authenticated");
 
         // Verify user is a member of this party
-        var userMembership = await _context.HuntingPartyMemberships
-            .AnyAsync(m => m.HuntingPartyId == partyId && m.UserId == userId && m.IsActive);
+        var userMembership = await _unitOfWork.HuntingPartyMemberships
+            .IsMemberAsync(partyId, userId);
 
         if (!userMembership)
         {
             return new List<LeaderboardEntryDto>();
         }
 
-        var members = await _context.HuntingPartyMemberships
-            .Where(m => m.HuntingPartyId == partyId && m.IsActive)
+        var memberships = await _unitOfWork.HuntingPartyMemberships.GetByPartyIdAsync(partyId);
+        var activeMemberships = memberships.Where(m => m.IsActive).ToList();
+        var userIds = activeMemberships.Select(m => m.UserId).Distinct(StringComparer.Ordinal).ToList();
+        var applicationCounts = await _unitOfWork.Applications.GetCountsByUserIdsAsync(userIds);
+
+        var members = activeMemberships
             .Select(m => new
             {
                 m.UserId,
                 DisplayName = m.User.DisplayName,
                 TotalPoints = m.User.TotalPoints,
-                ApplicationCount = _context.Applications.Count(a => a.UserId == m.UserId)
+                ApplicationCount = applicationCounts.TryGetValue(m.UserId, out var count) ? count : 0
             })
             .OrderByDescending(m => m.TotalPoints)
-            .ToListAsync();
+            .ToList();
 
         return members.Select((m, index) => new LeaderboardEntryDto
         {
@@ -351,9 +359,9 @@ public class HuntingPartyService : IHuntingPartyService
             return cachedPartyId;
         }
 
-        var membership = await _context.HuntingPartyMemberships
-            .AsNoTracking()
-            .FirstOrDefaultAsync(m => m.UserId == userId && m.IsActive);
+        var membership = (await _unitOfWork.HuntingPartyMemberships
+            .GetActiveByUserIdAsync(userId))
+            .FirstOrDefault();
 
         var partyId = membership?.HuntingPartyId;
 
@@ -379,8 +387,7 @@ public class HuntingPartyService : IHuntingPartyService
                 .Select(_ => chars[Random.Shared.Next(chars.Length)])
                 .ToArray());
 
-            var exists = await _context.HuntingParties
-                .AnyAsync(p => p.InviteCode == code);
+            var exists = await _unitOfWork.HuntingParties.InviteCodeExistsAsync(code);
 
             if (!exists)
             {

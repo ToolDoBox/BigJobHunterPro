@@ -1,22 +1,21 @@
 using Application.Interfaces;
+using Application.Interfaces.Data;
 using Domain.Entities;
-using Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Services;
 
 public class StreakService : IStreakService
 {
-    private readonly ApplicationDbContext _context;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public StreakService(ApplicationDbContext context)
+    public StreakService(IUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<StreakUpdateResult> UpdateStreakAsync(string userId, DateTime activityTimestamp)
     {
-        var user = await _context.Users.FindAsync(userId);
+        var user = await _unitOfWork.Users.GetByIdAsync(userId);
         if (user == null)
         {
             throw new InvalidOperationException($"User not found: {userId}");

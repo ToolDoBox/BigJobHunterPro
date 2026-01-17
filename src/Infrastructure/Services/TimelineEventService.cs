@@ -1,28 +1,27 @@
 using Application.DTOs.TimelineEvents;
+using Application.Interfaces.Data;
 using Application.Interfaces;
 using Application.Scoring;
 using Domain.Entities;
-using Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Services;
 
 public class TimelineEventService : ITimelineEventService
 {
-    private readonly ApplicationDbContext _context;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUser;
     private readonly IPointsService _pointsService;
     private readonly IActivityEventService _activityEventService;
     private readonly IHuntingPartyService _huntingPartyService;
 
     public TimelineEventService(
-        ApplicationDbContext context,
+        IUnitOfWork unitOfWork,
         ICurrentUserService currentUser,
         IPointsService pointsService,
         IActivityEventService activityEventService,
         IHuntingPartyService huntingPartyService)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _currentUser = currentUser;
         _pointsService = pointsService;
         _activityEventService = activityEventService;
@@ -35,10 +34,11 @@ public class TimelineEventService : ITimelineEventService
             ?? throw new UnauthorizedAccessException("User not authenticated");
 
         // Verify application belongs to user
-        var application = await _context.Applications
-            .Include(a => a.TimelineEvents)
-            .FirstOrDefaultAsync(a => a.Id == applicationId && a.UserId == userId)
-            ?? throw new KeyNotFoundException($"Application {applicationId} not found");
+        var application = await _unitOfWork.Applications.GetByIdWithTimelineAsync(applicationId);
+        if (application == null || application.UserId != userId)
+        {
+            throw new KeyNotFoundException($"Application {applicationId} not found");
+        }
 
         // Calculate points for this event
         var points = PointsRules.GetPoints(request.EventType, request.InterviewRound);
@@ -56,7 +56,7 @@ public class TimelineEventService : ITimelineEventService
             CreatedDate = DateTime.UtcNow
         };
 
-        _context.TimelineEvents.Add(timelineEvent);
+        await _unitOfWork.TimelineEvents.AddAsync(timelineEvent);
 
         // Recalculate application points and status
         var oldPoints = application.Points;
@@ -71,7 +71,7 @@ public class TimelineEventService : ITimelineEventService
             await _pointsService.UpdateUserTotalPointsAsync(userId, pointsDelta);
         }
 
-        await _context.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
 
         var partyId = await _huntingPartyService.GetUserPartyIdAsync(userId);
         if (partyId.HasValue)
@@ -98,10 +98,11 @@ public class TimelineEventService : ITimelineEventService
             ?? throw new UnauthorizedAccessException("User not authenticated");
 
         // Verify application belongs to user
-        var application = await _context.Applications
-            .Include(a => a.TimelineEvents)
-            .FirstOrDefaultAsync(a => a.Id == applicationId && a.UserId == userId)
-            ?? throw new KeyNotFoundException($"Application {applicationId} not found");
+        var application = await _unitOfWork.Applications.GetByIdWithTimelineAsync(applicationId);
+        if (application == null || application.UserId != userId)
+        {
+            throw new KeyNotFoundException($"Application {applicationId} not found");
+        }
 
         var events = application.TimelineEvents
             .OrderByDescending(e => e.Timestamp)
@@ -125,10 +126,11 @@ public class TimelineEventService : ITimelineEventService
             ?? throw new UnauthorizedAccessException("User not authenticated");
 
         // Verify application belongs to user
-        var application = await _context.Applications
-            .Include(a => a.TimelineEvents)
-            .FirstOrDefaultAsync(a => a.Id == applicationId && a.UserId == userId)
-            ?? throw new KeyNotFoundException($"Application {applicationId} not found");
+        var application = await _unitOfWork.Applications.GetByIdWithTimelineAsync(applicationId);
+        if (application == null || application.UserId != userId)
+        {
+            throw new KeyNotFoundException($"Application {applicationId} not found");
+        }
 
         var timelineEvent = application.TimelineEvents.FirstOrDefault(e => e.Id == eventId);
         if (timelineEvent == null)
@@ -156,7 +158,7 @@ public class TimelineEventService : ITimelineEventService
             await _pointsService.UpdateUserTotalPointsAsync(userId, pointsDelta);
         }
 
-        await _context.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
 
         var partyId = await _huntingPartyService.GetUserPartyIdAsync(userId);
         if (partyId.HasValue)
@@ -183,17 +185,18 @@ public class TimelineEventService : ITimelineEventService
             ?? throw new UnauthorizedAccessException("User not authenticated");
 
         // Verify application belongs to user
-        var application = await _context.Applications
-            .Include(a => a.TimelineEvents)
-            .FirstOrDefaultAsync(a => a.Id == applicationId && a.UserId == userId)
-            ?? throw new KeyNotFoundException($"Application {applicationId} not found");
+        var application = await _unitOfWork.Applications.GetByIdWithTimelineAsync(applicationId);
+        if (application == null || application.UserId != userId)
+        {
+            throw new KeyNotFoundException($"Application {applicationId} not found");
+        }
 
         var timelineEvent = application.TimelineEvents.FirstOrDefault(e => e.Id == eventId);
         if (timelineEvent == null)
             return false;
 
         // Remove event
-        _context.TimelineEvents.Remove(timelineEvent);
+        _unitOfWork.TimelineEvents.Delete(timelineEvent);
         application.TimelineEvents.Remove(timelineEvent);
 
         // Recalculate application points and status
@@ -209,7 +212,7 @@ public class TimelineEventService : ITimelineEventService
             await _pointsService.UpdateUserTotalPointsAsync(userId, pointsDelta);
         }
 
-        await _context.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
 
         // Leaderboard notification handled by PointsService
         return true;

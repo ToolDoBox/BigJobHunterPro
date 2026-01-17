@@ -1,12 +1,11 @@
 using Application.DTOs.Applications;
 using Application.Exceptions;
 using Application.DTOs.TimelineEvents;
+using Application.Interfaces.Data;
 using Application.Interfaces;
 using Application.Scoring;
 using Domain.Entities;
 using Domain.Enums;
-using Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Caching.Memory;
 
@@ -14,7 +13,7 @@ namespace Infrastructure.Services;
 
 public class ApplicationService : IApplicationService
 {
-    private readonly ApplicationDbContext _context;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUser;
     private readonly IPointsService _pointsService;
     private readonly IConfiguration _configuration;
@@ -25,7 +24,7 @@ public class ApplicationService : IApplicationService
     private const int CacheExpirationMinutes = 2;
 
     public ApplicationService(
-        ApplicationDbContext context,
+        IUnitOfWork unitOfWork,
         ICurrentUserService currentUser,
         IPointsService pointsService,
         IConfiguration configuration,
@@ -34,7 +33,7 @@ public class ApplicationService : IApplicationService
         ITimelineEventService timelineEventService,
         IMemoryCache cache)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _currentUser = currentUser;
         _pointsService = pointsService;
         _configuration = configuration;
@@ -96,12 +95,12 @@ public class ApplicationService : IApplicationService
         };
 
         application.TimelineEvents.Add(timelineEvent);
-        _context.Applications.Add(application);
-        _context.TimelineEvents.Add(timelineEvent);
+        await _unitOfWork.Applications.AddAsync(application);
+        await _unitOfWork.TimelineEvents.AddAsync(timelineEvent);
 
         var totalPoints = await _pointsService.UpdateUserTotalPointsAsync(userId, initialPoints);
 
-        await _context.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
 
         // Invalidate application list cache
         InvalidateApplicationListCache(userId);
@@ -147,33 +146,29 @@ public class ApplicationService : IApplicationService
             return cachedResponse;
         }
 
-        var query = _context.Applications
-            .AsNoTracking()
-            .Where(application => application.UserId == userId)
-            .OrderByDescending(application => application.CreatedDate);
+        var items = await _unitOfWork.Applications.GetPageByUserIdAsync(
+            userId,
+            (page - 1) * pageSize,
+            pageSize + 1);
 
-        var items = await query
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize + 1)
-            .Select(application => new ApplicationListDto
-            {
-                Id = application.Id,
-                CompanyName = application.CompanyName,
-                RoleTitle = application.RoleTitle,
-                Status = application.Status.ToString(),
-                CreatedDate = DateTime.SpecifyKind(application.CreatedDate, DateTimeKind.Utc)
-            })
-            .ToListAsync();
+        var mappedItems = items.Select(application => new ApplicationListDto
+        {
+            Id = application.Id,
+            CompanyName = application.CompanyName,
+            RoleTitle = application.RoleTitle,
+            Status = application.Status.ToString(),
+            CreatedDate = DateTime.SpecifyKind(application.CreatedDate, DateTimeKind.Utc)
+        }).ToList();
 
-        var hasMore = items.Count > pageSize;
+        var hasMore = mappedItems.Count > pageSize;
         if (hasMore)
         {
-            items.RemoveAt(items.Count - 1);
+            mappedItems.RemoveAt(mappedItems.Count - 1);
         }
 
         var response = new ApplicationsListResponse
         {
-            Items = items,
+            Items = mappedItems,
             Page = page,
             PageSize = pageSize,
             HasMore = hasMore
@@ -195,12 +190,10 @@ public class ApplicationService : IApplicationService
         var userId = _currentUser.GetUserId()
             ?? throw new UnauthorizedAccessException("User not authenticated");
 
-        var application = await _context.Applications
-            .AsNoTracking()
-            .Include(a => a.TimelineEvents)
-            .FirstOrDefaultAsync(item => item.Id == id && item.UserId == userId);
+        var application = await _unitOfWork.Applications
+            .GetByIdWithTimelineAsync(id);
 
-        if (application == null)
+        if (application == null || application.UserId != userId)
         {
             return null;
         }
@@ -213,10 +206,9 @@ public class ApplicationService : IApplicationService
         var userId = _currentUser.GetUserId()
             ?? throw new UnauthorizedAccessException("User not authenticated");
 
-        var application = await _context.Applications
-            .FirstOrDefaultAsync(item => item.Id == id && item.UserId == userId);
+        var application = await _unitOfWork.Applications.GetByIdAsync(id);
 
-        if (application == null)
+        if (application == null || application.UserId != userId)
         {
             return null;
         }
@@ -285,7 +277,7 @@ public class ApplicationService : IApplicationService
         application.SalaryMax = request.SalaryMax;
         application.UpdatedDate = DateTime.UtcNow;
 
-        await _context.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
 
         // Invalidate application list cache
         InvalidateApplicationListCache(userId);
@@ -298,11 +290,10 @@ public class ApplicationService : IApplicationService
         var userId = _currentUser.GetUserId()
             ?? throw new UnauthorizedAccessException("User not authenticated");
 
-        var application = await _context.Applications
-            .Include(a => a.TimelineEvents)
-            .FirstOrDefaultAsync(item => item.Id == id && item.UserId == userId);
+        var application = await _unitOfWork.Applications
+            .GetByIdWithTimelineAsync(id);
 
-        if (application == null)
+        if (application == null || application.UserId != userId)
         {
             return null;
         }
@@ -321,11 +312,13 @@ public class ApplicationService : IApplicationService
             Notes = $"Status updated to {request.Status}"
         });
 
-        // Reload timeline events from database (CreateTimelineEventAsync already saved changes)
-        // This avoids a second full query for the application
-        await _context.Entry(application).Collection(a => a.TimelineEvents).LoadAsync();
+        var updatedApplication = await _unitOfWork.Applications.GetByIdWithTimelineAsync(id);
+        if (updatedApplication == null || updatedApplication.UserId != userId)
+        {
+            return MapToDetailDto(application);
+        }
 
-        return MapToDetailDto(application);
+        return MapToDetailDto(updatedApplication);
     }
 
     public async Task<bool> DeleteApplicationAsync(Guid id)
@@ -333,22 +326,21 @@ public class ApplicationService : IApplicationService
         var userId = _currentUser.GetUserId()
             ?? throw new UnauthorizedAccessException("User not authenticated");
 
-        var application = await _context.Applications
-            .FirstOrDefaultAsync(item => item.Id == id && item.UserId == userId);
+        var application = await _unitOfWork.Applications.GetByIdAsync(id);
 
-        if (application == null)
+        if (application == null || application.UserId != userId)
         {
             return false;
         }
 
-        _context.Applications.Remove(application);
+        _unitOfWork.Applications.Delete(application);
 
         if (application.Points != 0)
         {
             await _pointsService.UpdateUserTotalPointsAsync(userId, -application.Points);
         }
 
-        await _context.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
 
         // Invalidate application list cache
         InvalidateApplicationListCache(userId);
@@ -431,12 +423,10 @@ public class ApplicationService : IApplicationService
         var todayUtc = DateTime.UtcNow.Date;
         var tomorrowUtc = todayUtc.AddDays(1);
 
-        var usageCount = await _context.Applications
-            .AsNoTracking()
-            .Where(application => application.UserId == userId
-                && application.CreatedDate >= todayUtc
-                && application.CreatedDate < tomorrowUtc)
-            .CountAsync();
+        var usageCount = await _unitOfWork.Applications.CountByUserIdInRangeAsync(
+            userId,
+            todayUtc,
+            tomorrowUtc);
 
         if (usageCount >= limit)
         {

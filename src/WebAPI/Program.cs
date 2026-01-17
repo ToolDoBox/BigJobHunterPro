@@ -1,7 +1,9 @@
 using System.Text;
 using Application.DTOs.Auth;
+using Application.Interfaces.Data;
 using Domain.Entities;
 using Infrastructure.Data;
+using Infrastructure.Data.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -36,6 +38,15 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
         });
     }
 });
+
+// Register Unit of Work and Repositories
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<IApplicationRepository, ApplicationRepository>();
+builder.Services.AddScoped<ITimelineEventRepository, TimelineEventRepository>();
+builder.Services.AddScoped<IActivityEventRepository, ActivityEventRepository>();
+builder.Services.AddScoped<IHuntingPartyRepository, HuntingPartyRepository>();
+builder.Services.AddScoped<IHuntingPartyMembershipRepository, HuntingPartyMembershipRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
 
 // Add Identity with Password Policy
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>

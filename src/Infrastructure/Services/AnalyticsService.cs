@@ -1,8 +1,7 @@
 using Application.Interfaces;
+using Application.Interfaces.Data;
 using BigJobHunterPro.Application.DTOs.Analytics;
 using Domain.Enums;
-using Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace Infrastructure.Services;
@@ -13,7 +12,7 @@ namespace Infrastructure.Services;
 /// </summary>
 public class AnalyticsService : IAnalyticsService
 {
-    private readonly ApplicationDbContext _context;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IMemoryCache _cache;
     private const int CacheExpirationMinutes = 10;
 
@@ -29,9 +28,9 @@ public class AnalyticsService : IAnalyticsService
         "such", "no", "not", "only", "own", "same", "than", "too", "very", "just"
     };
 
-    public AnalyticsService(ApplicationDbContext context, IMemoryCache cache)
+    public AnalyticsService(IUnitOfWork unitOfWork, IMemoryCache cache)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _cache = cache;
     }
 
@@ -47,8 +46,8 @@ public class AnalyticsService : IAnalyticsService
         }
 
         // Get successful applications (reached interview stage or offer) using projection
-        var applicationsWithSuccess = await _context.Applications
-            .Where(a => a.UserId == userId)
+        var applicationsWithSuccess = (await _unitOfWork.Applications
+            .GetWithTimelineEventsAsync(userId, cancellationToken))
             .Where(a => a.TimelineEvents.Any(e => e.EventType == EventType.Interview || e.EventType == EventType.Offer))
             .Select(a => new
             {
@@ -57,7 +56,7 @@ public class AnalyticsService : IAnalyticsService
                 a.RequiredSkills,
                 a.NiceToHaveSkills
             })
-            .ToListAsync(cancellationToken);
+            .ToList();
 
         if (applicationsWithSuccess.Count == 0)
         {
@@ -128,14 +127,14 @@ public class AnalyticsService : IAnalyticsService
         }
 
         // Get applications with projection - only load what we need
-        var applications = await _context.Applications
-            .Where(a => a.UserId == userId)
+        var applications = (await _unitOfWork.Applications
+            .GetWithTimelineEventsAsync(userId, cancellationToken))
             .Select(a => new
             {
                 SourceName = string.IsNullOrWhiteSpace(a.SourceName) ? "Unknown" : a.SourceName,
                 HasSuccess = a.TimelineEvents.Any(e => e.EventType == EventType.Interview || e.EventType == EventType.Offer)
             })
-            .ToListAsync(cancellationToken);
+            .ToList();
 
         if (applications.Count == 0)
         {

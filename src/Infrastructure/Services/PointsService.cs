@@ -1,23 +1,22 @@
 using Application.Interfaces;
+using Application.Interfaces.Data;
 using Application.Scoring;
 using Domain.Enums;
-using Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Services;
 
 public class PointsService : IPointsService
 {
-    private readonly ApplicationDbContext _context;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly ILeaderboardNotifier? _leaderboardNotifier;
     private readonly IStreakService _streakService;
 
     public PointsService(
-        ApplicationDbContext context,
+        IUnitOfWork unitOfWork,
         IStreakService streakService,
         ILeaderboardNotifier? leaderboardNotifier = null)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _streakService = streakService;
         _leaderboardNotifier = leaderboardNotifier;
     }
@@ -34,7 +33,7 @@ public class PointsService : IPointsService
 
     public async Task<int> UpdateUserTotalPointsAsync(string userId, int pointsToAdd)
     {
-        var user = await _context.Users.FindAsync(userId);
+        var user = await _unitOfWork.Users.GetByIdAsync(userId);
         if (user == null) throw new UnauthorizedAccessException("User not found");
 
         if (user.TotalPoints == 0 && user.Points > 0)
@@ -54,8 +53,9 @@ public class PointsService : IPointsService
         // Notify leaderboard if user is in a party
         if (_leaderboardNotifier != null)
         {
-            var membership = await _context.HuntingPartyMemberships
-                .FirstOrDefaultAsync(m => m.UserId == userId && m.IsActive);
+            var membership = (await _unitOfWork.HuntingPartyMemberships
+                .GetActiveByUserIdAsync(userId))
+                .FirstOrDefault();
 
             if (membership != null)
             {

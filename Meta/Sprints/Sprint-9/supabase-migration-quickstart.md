@@ -541,7 +541,7 @@ SELECT count(*) FROM pg_stat_activity;
 
 ## Support
 
-- **Full Plan:** `Meta/Docs/supabase-migration-plan.md`
+- **Full Plan:** `supabase-migration-plan.md`
 - **PostgreSQL Docs:** [https://www.postgresql.org/docs/](https://www.postgresql.org/docs/)
 - **Supabase Docs:** [https://supabase.com/docs](https://supabase.com/docs)
 - **EF Core + PostgreSQL:** [https://www.npgsql.org/efcore/](https://www.npgsql.org/efcore/)

@@ -370,10 +370,10 @@ Before starting Phase 1, ensure:
 
 ## 📁 File Structure
 
-All migration documentation is organized in `Meta/Docs/`:
+All migration documentation is organized in `Meta/Sprints/Sprint-9/`:
 
 ```
-Meta/Docs/
+Meta/Sprints/Sprint-9/
 ├── SUPABASE-MIGRATION-README.md              (this file)
 ├── supabase-migration-implementation.md      (3-phase guide)
 ├── supabase-migration-plan.md                (full 30k-word plan)

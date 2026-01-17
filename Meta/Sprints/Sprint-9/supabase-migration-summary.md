@@ -464,8 +464,8 @@ ALTER TABLE "Applications" DISABLE ROW LEVEL SECURITY;
 
 ## Support & References
 
-**Migration Plan:** `Meta/Docs/supabase-migration-plan.md`
-**Quick-Start Guide:** `Meta/Docs/supabase-migration-quickstart.md`
+**Migration Plan:** `supabase-migration-plan.md`
+**Quick-Start Guide:** `supabase-migration-quickstart.md`
 **PostgreSQL Docs:** https://www.postgresql.org/docs/
 **Supabase Docs:** https://supabase.com/docs
 **Npgsql (EF Core):** https://www.npgsql.org/efcore/

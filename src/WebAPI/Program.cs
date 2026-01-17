@@ -29,12 +29,13 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     }
     else
     {
-        options.UseSqlServer(connectionString, sqlOptions =>
+        options.UseNpgsql(connectionString, npgsqlOptions =>
         {
-            sqlOptions.EnableRetryOnFailure(
-                maxRetryCount: 5,
+            npgsqlOptions.EnableRetryOnFailure(
+                maxRetryAttempts: 5,
                 maxRetryDelay: TimeSpan.FromSeconds(30),
-                errorNumbersToAdd: null);
+                errorCodesToAdd: null);
+            npgsqlOptions.MigrationsHistoryTable("__EFMigrationsHistory");
         });
     }
 });

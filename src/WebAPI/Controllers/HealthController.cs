@@ -65,8 +65,8 @@ public class HealthController : ControllerBase
     /// - Load balancers and monitoring systems
     ///
     /// Status codes:
-    /// - 200 OK: System is healthy and ready
-    /// - 503 Service Unavailable: System is unhealthy or degraded
+    /// - 200 OK: System is healthy or degraded (serving traffic with warnings)
+    /// - 503 Service Unavailable: System is unhealthy
     /// </remarks>
     [HttpGet("ready")]
     [AllowAnonymous]
@@ -76,8 +76,8 @@ public class HealthController : ControllerBase
     {
         var healthResult = await _healthCheckService.CheckHealthAsync(cancellationToken);
 
-        // Return 503 if system is unhealthy or degraded
-        if (healthResult.Status == HealthStatus.Unhealthy || healthResult.Status == HealthStatus.Degraded)
+        // Return 503 only when the system is unhealthy
+        if (healthResult.Status == HealthStatus.Unhealthy)
         {
             return StatusCode(StatusCodes.Status503ServiceUnavailable, healthResult);
         }

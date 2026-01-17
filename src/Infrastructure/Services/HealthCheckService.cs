@@ -192,7 +192,7 @@ public class HealthCheckService : IHealthCheckService
             if (result.Components.TryGetValue("Database", out var dbComponent) &&
                 dbComponent.Status == HealthStatus.Healthy)
             {
-                using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
                 using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
 
                 var pendingMigrations = await _dbContext.Database.GetPendingMigrationsAsync(linkedCts.Token);
@@ -229,7 +229,7 @@ public class HealthCheckService : IHealthCheckService
         {
             component.Status = HealthStatus.Degraded;
             component.Description = "Migration check timed out";
-            component.Error = "Could not verify migrations within 5 seconds";
+            component.Error = "Could not verify migrations within 15 seconds";
         }
         catch (Exception ex)
         {

@@ -19,6 +19,7 @@ public class HuntingPartyMembershipRepository : Repository<HuntingPartyMembershi
     {
         return await _dbSet
             .Include(m => m.HuntingParty)
+            .AsNoTracking()
             .Where(m => m.UserId == userId)
             .OrderByDescending(m => m.JoinedDate)
             .ToListAsync(cancellationToken);
@@ -30,6 +31,7 @@ public class HuntingPartyMembershipRepository : Repository<HuntingPartyMembershi
     {
         return await _dbSet
             .Include(m => m.HuntingParty)
+            .AsNoTracking()
             .Where(m => m.UserId == userId && m.IsActive)
             .OrderByDescending(m => m.JoinedDate)
             .ToListAsync(cancellationToken);
@@ -41,9 +43,19 @@ public class HuntingPartyMembershipRepository : Repository<HuntingPartyMembershi
     {
         return await _dbSet
             .Include(m => m.User)
+            .AsNoTracking()
             .Where(m => m.HuntingPartyId == partyId)
             .OrderBy(m => m.JoinedDate)
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<int> CountActiveByPartyIdAsync(
+        Guid partyId,
+        CancellationToken cancellationToken = default)
+    {
+        return await _dbSet
+            .AsNoTracking()
+            .CountAsync(m => m.HuntingPartyId == partyId && m.IsActive, cancellationToken);
     }
 
     public async Task<HuntingPartyMembership?> GetByPartyAndUserAsync(

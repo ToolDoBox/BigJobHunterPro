@@ -113,18 +113,21 @@ public class HuntingPartyService : IHuntingPartyService
             return null;
         }
 
-        var party = await _unitOfWork.HuntingParties.GetWithMembershipsAsync(membership.HuntingPartyId);
+        var party = membership.HuntingParty;
         if (party == null)
         {
             return null;
         }
+
+        var memberCount = await _unitOfWork.HuntingPartyMemberships
+            .CountActiveByPartyIdAsync(party.Id);
 
         return new HuntingPartyDto
         {
             Id = party.Id,
             Name = party.Name,
             InviteCode = party.InviteCode,
-            MemberCount = party.Memberships.Count(m => m.IsActive),
+            MemberCount = memberCount,
             CreatedDate = party.CreatedDate,
             IsCreator = party.CreatorId == userId
         };

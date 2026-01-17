@@ -29,6 +29,13 @@ public interface IHuntingPartyMembershipRepository : IRepository<HuntingPartyMem
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Counts active memberships for a party.
+    /// </summary>
+    Task<int> CountActiveByPartyIdAsync(
+        Guid partyId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Gets a specific membership by party and user.
     /// </summary>
     Task<HuntingPartyMembership?> GetByPartyAndUserAsync(

@@ -19,8 +19,9 @@ public class AnalyticsServiceTests
             .Options;
 
         var context = new ApplicationDbContext(options);
+        var unitOfWork = new UnitOfWork(context);
         var cache = new MemoryCache(new MemoryCacheOptions());
-        var service = new AnalyticsService(context, cache);
+        var service = new AnalyticsService(unitOfWork, cache);
 
         return (service, context, cache);
     }

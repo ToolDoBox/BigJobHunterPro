@@ -19,8 +19,9 @@ public class StatisticsServiceTests
             .Options;
 
         var context = new ApplicationDbContext(options);
+        var unitOfWork = new UnitOfWork(context);
         var cache = new MemoryCache(new MemoryCacheOptions());
-        var service = new StatisticsService(context, cache);
+        var service = new StatisticsService(unitOfWork, cache);
 
         return (service, context, cache);
     }

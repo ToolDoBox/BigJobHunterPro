@@ -16,7 +16,8 @@ public class StreakServiceTests
             .Options;
 
         var context = new ApplicationDbContext(options);
-        var service = new StreakService(context);
+        var unitOfWork = new UnitOfWork(context);
+        var service = new StreakService(unitOfWork);
 
         return (service, context);
     }

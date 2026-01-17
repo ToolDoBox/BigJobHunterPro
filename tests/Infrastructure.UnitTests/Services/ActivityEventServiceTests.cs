@@ -72,7 +72,8 @@ public class ActivityEventServiceTests
 
         context.SaveChanges();
 
-        var service = new ActivityEventService(context, new TestCurrentUserService(userId));
+        var unitOfWork = new UnitOfWork(context);
+        var service = new ActivityEventService(unitOfWork, new TestCurrentUserService(userId));
         return (context, service, userId, partyId);
     }
 

@@ -1,5 +1,11 @@
 import { useServerStatus } from '@/hooks/useServerStatus';
 
+type ServerStatus = 'checking' | 'online' | 'offline';
+
+interface ServerStatusIndicatorProps {
+    status?: ServerStatus;
+}
+
 const statusConfig = {
     checking: {
         label: 'Checking server',
@@ -24,8 +30,8 @@ const statusConfig = {
     },
 };
 
-export default function ServerStatusIndicator() {
-    const status = useServerStatus();
+export default function ServerStatusIndicator({ status: providedStatus }: ServerStatusIndicatorProps) {
+    const status = providedStatus ?? useServerStatus();
     const config = statusConfig[status];
 
     return (

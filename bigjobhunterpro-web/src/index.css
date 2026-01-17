@@ -648,6 +648,58 @@
     }
 
     /* ============================================
+       LOGIN - Warmup progress bar
+       ============================================ */
+    .login-warmup-track {
+        position: relative;
+        width: min(280px, 100%);
+        height: 10px;
+        border-radius: 999px;
+        border: 1px solid var(--color-metal-border);
+        background-image:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0.45)),
+            repeating-linear-gradient(
+                90deg,
+                rgba(255, 255, 255, 0.08) 0px,
+                rgba(255, 255, 255, 0.08) 6px,
+                rgba(0, 0, 0, 0.2) 6px,
+                rgba(0, 0, 0, 0.2) 12px
+            ),
+            linear-gradient(180deg, var(--color-metal-dark) 0%, var(--color-metal-edge) 100%);
+        box-shadow: var(--shadow-metal-inset);
+        overflow: hidden;
+    }
+
+    .login-warmup-fill {
+        position: relative;
+        height: 100%;
+        width: 0%;
+        border-radius: inherit;
+        background-image:
+            linear-gradient(90deg, rgba(255, 106, 0, 0.2) 0%, rgba(255, 179, 71, 0.95) 100%),
+            repeating-linear-gradient(
+                135deg,
+                rgba(255, 255, 255, 0.18) 0px,
+                rgba(255, 255, 255, 0.18) 8px,
+                rgba(0, 0, 0, 0.2) 8px,
+                rgba(0, 0, 0, 0.2) 16px
+            );
+        box-shadow: 0 0 10px rgba(255, 179, 71, 0.45);
+        transition: width 0.25s linear;
+        overflow: hidden;
+    }
+
+    .login-warmup-fill::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(120deg, transparent 0%, rgba(255, 255, 255, 0.45) 50%, transparent 100%);
+        animation: hud-scan 2.6s linear infinite;
+        opacity: 0.6;
+        pointer-events: none;
+    }
+
+    /* ============================================
        BACKGROUNDS
        ============================================ */
     .bg-metal {
@@ -741,6 +793,14 @@
     .nav-link,
     main {
         transition: none !important;
+    }
+
+    .login-warmup-fill {
+        transition: none !important;
+    }
+
+    .login-warmup-fill::after {
+        animation: none !important;
     }
 }
 

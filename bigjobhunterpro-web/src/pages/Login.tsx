@@ -1,6 +1,7 @@
-import { useState, useEffect, type FormEvent } from 'react';
+import { useState, useEffect, useRef, type FormEvent } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useServerStatus } from '@/hooks/useServerStatus';
 import FormInput from '@/components/forms/FormInput';
 import PasswordInput from '@/components/forms/PasswordInput';
 import ServerStatusIndicator from '@/components/ui/ServerStatusIndicator';
@@ -15,10 +16,78 @@ export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
   const { login, isLoading, isAuthenticated } = useAuth();
+  const serverStatus = useServerStatus();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<FormErrors>({});
+  const [warmupProgress, setWarmupProgress] = useState(0);
+  const warmupTimerRef = useRef<number | null>(null);
+  const warmupStartRef = useRef<number | null>(null);
+  const warmupCompleteRef = useRef(false);
+
+  useEffect(() => {
+    return () => {
+      if (warmupTimerRef.current !== null) {
+        window.clearInterval(warmupTimerRef.current);
+        warmupTimerRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches ?? false;
+
+    if (reduceMotion) {
+      if (warmupTimerRef.current !== null) {
+        window.clearInterval(warmupTimerRef.current);
+        warmupTimerRef.current = null;
+      }
+      if (!warmupCompleteRef.current) {
+        setWarmupProgress(100);
+        warmupCompleteRef.current = true;
+      }
+      return;
+    }
+
+    if (serverStatus === 'online') {
+      if (warmupTimerRef.current !== null) {
+        window.clearInterval(warmupTimerRef.current);
+        warmupTimerRef.current = null;
+      }
+      if (!warmupCompleteRef.current) {
+        setWarmupProgress(100);
+        warmupCompleteRef.current = true;
+      }
+      return;
+    }
+
+    if (warmupCompleteRef.current) {
+      return;
+    }
+
+    if (warmupStartRef.current === null) {
+      warmupStartRef.current = Date.now();
+    }
+
+    if (warmupTimerRef.current !== null) {
+      return;
+    }
+
+    const durationMs = 30000;
+    warmupTimerRef.current = window.setInterval(() => {
+      const startTime = warmupStartRef.current ?? Date.now();
+      const elapsed = Date.now() - startTime;
+      const nextProgress = Math.min(100, Math.round((elapsed / durationMs) * 100));
+      setWarmupProgress(nextProgress);
+
+      if (nextProgress >= 100 && warmupTimerRef.current !== null) {
+        window.clearInterval(warmupTimerRef.current);
+        warmupTimerRef.current = null;
+        warmupCompleteRef.current = true;
+      }
+    }, 250);
+  }, [serverStatus]);
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -93,7 +162,28 @@ export default function Login() {
           <p className="font-arcade text-xs text-terminal">
             // HUNTER LOGIN //
           </p>
-          <ServerStatusIndicator />
+          <ServerStatusIndicator status={serverStatus} />
+          <div className="mt-3 flex flex-col items-center gap-1">
+            <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-terminal">
+              WARMUP SEQUENCE
+            </div>
+            <div
+              className="login-warmup-track"
+              role="progressbar"
+              aria-label="Warmup progress"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={warmupProgress}
+            >
+              <div
+                className="login-warmup-fill"
+                style={{ width: `${warmupProgress}%` }}
+              />
+            </div>
+            <div className="text-[10px] text-gray-500">
+              Boot sync {warmupProgress}%
+            </div>
+          </div>
         </div>
 
         {/* Login form - Metal panel with screws */}

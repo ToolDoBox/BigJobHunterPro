@@ -35,8 +35,9 @@ dotnet test                           # Run all tests
 dotnet run --project src/WebAPI       # Run API locally
 
 # EF Core migrations
-dotnet ef migrations add <Name> -p src/Infrastructure -s src/WebAPI
-dotnet ef database update -p src/Infrastructure -s src/WebAPI
+dotnet ef migrations add <Name> --project src/Infrastructure --startup-project src/WebAPI
+dotnet ef database update --project src/Infrastructure --startup-project src/WebAPI
+dotnet ef database update <PreviousMigrationName> --project src/Infrastructure --startup-project src/WebAPI
 ```
 
 ### Frontend (React)
@@ -49,11 +50,23 @@ npm run lint                          # Run ESLint
 npm run build                         # Production build
 ```
 
-### Docker
+### Docker (Local PostgreSQL)
 ```bash
-docker-compose up -d db               # Start SQL Server only
-docker-compose up -d                  # Start all services
-docker-compose down -v                # Stop and remove volumes
+docker-compose up -d postgres         # Start PostgreSQL
+docker-compose logs -f postgres       # View logs
+docker-compose down                   # Stop PostgreSQL
+docker-compose down -v                # Stop and remove data volume
+```
+
+### PostgreSQL Client (via Docker)
+```bash
+# Connect to local PostgreSQL
+docker exec -it bigjobhunterpro-postgres psql -U postgres -d bigjobhunterpro_dev
+
+# Useful psql commands:
+# \dt                  - List tables
+# \d "TableName"       - Describe table structure
+# \q                   - Quit
 ```
 
 ## Key Concepts

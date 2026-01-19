@@ -14,6 +14,18 @@ export interface ConversionBySource {
   conversionRate: number;
 }
 
+export interface SkillFrequency {
+  skill: string;
+  count: number;
+  percentage: number;
+}
+
+export interface ApplicationsAnalysis {
+  roleKeywords: KeywordFrequency[];
+  topSkills: SkillFrequency[];
+  totalApplicationsAnalyzed: number;
+}
+
 /**
  * Get top keywords from successful applications (those that reached interview stage or beyond)
  * Results are cached for 10 minutes on the server
@@ -33,5 +45,22 @@ export const getTopKeywords = async (topCount: number = 20): Promise<KeywordFreq
  */
 export const getConversionBySource = async (): Promise<ConversionBySource[]> => {
   const response = await api.get<ConversionBySource[]>('/api/analytics/conversion-by-source');
+  return response.data;
+};
+
+/**
+ * Get comprehensive analysis of ALL applications including role keywords and skill frequencies
+ * Unlike getTopKeywords which only analyzes successful applications, this analyzes all applications
+ * Results are cached for 10 minutes on the server
+ * @param topRoleKeywords Number of top role keywords to return (default: 10, max: 20)
+ * @param topSkills Number of top skills to return (default: 15, max: 30)
+ */
+export const getApplicationsAnalysis = async (
+  topRoleKeywords: number = 10,
+  topSkills: number = 15
+): Promise<ApplicationsAnalysis> => {
+  const response = await api.get<ApplicationsAnalysis>('/api/analytics/applications-analysis', {
+    params: { topRoleKeywords, topSkills }
+  });
   return response.data;
 };

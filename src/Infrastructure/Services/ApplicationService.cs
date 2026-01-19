@@ -20,6 +20,7 @@ public class ApplicationService : IApplicationService
     private readonly IActivityEventService _activityEventService;
     private readonly IHuntingPartyService _huntingPartyService;
     private readonly ITimelineEventService _timelineEventService;
+    private readonly IAnalyticsService _analyticsService;
     private readonly IMemoryCache _cache;
     private const int CacheExpirationMinutes = 2;
 
@@ -31,6 +32,7 @@ public class ApplicationService : IApplicationService
         IActivityEventService activityEventService,
         IHuntingPartyService huntingPartyService,
         ITimelineEventService timelineEventService,
+        IAnalyticsService analyticsService,
         IMemoryCache cache)
     {
         _unitOfWork = unitOfWork;
@@ -40,6 +42,7 @@ public class ApplicationService : IApplicationService
         _activityEventService = activityEventService;
         _huntingPartyService = huntingPartyService;
         _timelineEventService = timelineEventService;
+        _analyticsService = analyticsService;
         _cache = cache;
     }
 
@@ -102,8 +105,9 @@ public class ApplicationService : IApplicationService
 
         await _unitOfWork.SaveChangesAsync();
 
-        // Invalidate application list cache
+        // Invalidate caches
         InvalidateApplicationListCache(userId);
+        _analyticsService.InvalidateUserCache(userId);
 
         var partyId = await _huntingPartyService.GetUserPartyIdAsync(userId);
         if (partyId.HasValue)
@@ -279,8 +283,9 @@ public class ApplicationService : IApplicationService
 
         await _unitOfWork.SaveChangesAsync();
 
-        // Invalidate application list cache
+        // Invalidate caches
         InvalidateApplicationListCache(userId);
+        _analyticsService.InvalidateUserCache(userId);
 
         return MapToDetailDto(application);
     }
@@ -342,8 +347,9 @@ public class ApplicationService : IApplicationService
 
         await _unitOfWork.SaveChangesAsync();
 
-        // Invalidate application list cache
+        // Invalidate caches
         InvalidateApplicationListCache(userId);
+        _analyticsService.InvalidateUserCache(userId);
 
         return true;
     }

@@ -100,4 +100,50 @@ public class AnalyticsController : ControllerBase
                 new ErrorResponse("An error occurred while retrieving conversion analytics"));
         }
     }
+
+    /// <summary>
+    /// Get comprehensive analysis of all applications including role keywords and skill frequencies
+    /// </summary>
+    /// <remarks>
+    /// Unlike the keywords endpoint which only analyzes successful applications,
+    /// this analyzes ALL applications to give users insights into their job search patterns.
+    /// Includes role keywords from job titles and aggregated skill frequencies.
+    /// Results are cached for 10 minutes.
+    /// </remarks>
+    /// <param name="topRoleKeywords">Number of top role keywords to return (default: 10, max: 20)</param>
+    /// <param name="topSkills">Number of top skills to return (default: 15, max: 30)</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Analysis containing role keywords, top skills, and total applications analyzed</returns>
+    [HttpGet("applications-analysis")]
+    [ProducesResponseType(typeof(ApplicationsAnalysis), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApplicationsAnalysis>> GetApplicationsAnalysis(
+        [FromQuery] int topRoleKeywords = 10,
+        [FromQuery] int topSkills = 15,
+        CancellationToken cancellationToken = default)
+    {
+        var userId = _currentUserService.GetUserId();
+        if (string.IsNullOrEmpty(userId))
+        {
+            _logger.LogWarning("Unauthorized access attempt to applications analysis");
+            return Unauthorized(new ErrorResponse("User not authenticated"));
+        }
+
+        // Limit parameters to reasonable range
+        topRoleKeywords = Math.Min(Math.Max(topRoleKeywords, 1), 20);
+        topSkills = Math.Min(Math.Max(topSkills, 1), 30);
+
+        try
+        {
+            var analysis = await _analyticsService.GetApplicationsAnalysisAsync(userId, topRoleKeywords, topSkills, cancellationToken);
+            return Ok(analysis);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving applications analysis for user {UserId}", userId);
+            return StatusCode(StatusCodes.Status500InternalServerError,
+                new ErrorResponse("An error occurred while retrieving applications analysis"));
+        }
+    }
 }

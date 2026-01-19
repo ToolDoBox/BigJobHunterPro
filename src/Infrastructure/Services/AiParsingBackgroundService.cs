@@ -15,6 +15,7 @@ public class AiParsingBackgroundService : BackgroundService
     private readonly ILogger<AiParsingBackgroundService> _logger;
     private readonly TimeSpan _pollingInterval;
     private readonly int _batchSize;
+    private readonly HashSet<string> _usersToInvalidate = new();
 
     public AiParsingBackgroundService(
         IServiceScopeFactory scopeFactory,
@@ -137,8 +138,27 @@ public class AiParsingBackgroundService : BackgroundService
                 application.LastAIParsedDate = DateTime.UtcNow;
                 application.UpdatedDate = DateTime.UtcNow;
             }
+
+            // Track user for cache invalidation if skills were extracted
+            if (application.AiParsingStatus == AiParsingStatus.Success &&
+                (application.RequiredSkills.Count > 0 || application.NiceToHaveSkills.Count > 0))
+            {
+                _usersToInvalidate.Add(application.UserId);
+            }
         }
 
         await dbContext.SaveChangesAsync(stoppingToken);
+
+        // Invalidate analytics cache for affected users
+        if (_usersToInvalidate.Count > 0)
+        {
+            var analyticsService = scope.ServiceProvider.GetRequiredService<IAnalyticsService>();
+            foreach (var userId in _usersToInvalidate)
+            {
+                analyticsService.InvalidateUserCache(userId);
+                _logger.LogDebug("Invalidated analytics cache for user {UserId} after AI parsing", userId);
+            }
+            _usersToInvalidate.Clear();
+        }
     }
 }

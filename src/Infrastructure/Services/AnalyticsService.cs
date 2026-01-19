@@ -168,6 +168,139 @@ public class AnalyticsService : IAnalyticsService
         return conversionData;
     }
 
+    public async Task<ApplicationsAnalysis> GetApplicationsAnalysisAsync(string userId, int topRoleKeywords = 10, int topSkills = 15, CancellationToken cancellationToken = default)
+    {
+        // Generate cache key
+        var cacheKey = $"applications-analysis-{userId}-{topRoleKeywords}-{topSkills}";
+
+        // Try to get from cache
+        if (_cache.TryGetValue(cacheKey, out ApplicationsAnalysis? cachedAnalysis) && cachedAnalysis != null)
+        {
+            return cachedAnalysis;
+        }
+
+        // Get ALL applications (not filtered by success)
+        var applications = (await _unitOfWork.Applications
+            .GetByUserIdAsync(userId, cancellationToken))
+            .Select(a => new
+            {
+                a.RoleTitle,
+                a.RequiredSkills,
+                a.NiceToHaveSkills
+            })
+            .ToList();
+
+        if (applications.Count == 0)
+        {
+            return new ApplicationsAnalysis
+            {
+                RoleKeywords = new List<KeywordFrequency>(),
+                TopSkills = new List<SkillFrequency>(),
+                TotalApplicationsAnalyzed = 0
+            };
+        }
+
+        // Extract role keywords from RoleTitle only
+        var roleWords = new List<string>();
+        foreach (var app in applications)
+        {
+            if (!string.IsNullOrWhiteSpace(app.RoleTitle))
+            {
+                roleWords.AddRange(ExtractWords(app.RoleTitle));
+            }
+        }
+
+        var roleKeywords = roleWords
+            .Where(word => !string.IsNullOrWhiteSpace(word))
+            .Where(word => word.Length >= 3)
+            .Where(word => !Stopwords.Contains(word))
+            .GroupBy(word => word.ToLower())
+            .Select(g => new { Word = g.Key, Count = g.Count() })
+            .OrderByDescending(x => x.Count)
+            .Take(topRoleKeywords)
+            .Select(wc => new KeywordFrequency
+            {
+                Keyword = FormatKeyword(wc.Word),
+                Frequency = wc.Count,
+                Percentage = Math.Round((decimal)wc.Count / applications.Count * 100, 1)
+            })
+            .ToList();
+
+        // Aggregate all skills (both required and nice-to-have)
+        var allSkills = new List<string>();
+        foreach (var app in applications)
+        {
+            allSkills.AddRange(app.RequiredSkills);
+            allSkills.AddRange(app.NiceToHaveSkills);
+        }
+
+        var topSkillsList = allSkills
+            .Where(skill => !string.IsNullOrWhiteSpace(skill))
+            .GroupBy(skill => skill.Trim().ToLower())
+            .Select(g => new { Skill = g.First().Trim(), Count = g.Count() }) // Preserve original casing from first occurrence
+            .OrderByDescending(x => x.Count)
+            .Take(topSkills)
+            .Select(sc => new SkillFrequency
+            {
+                Skill = sc.Skill,
+                Count = sc.Count,
+                Percentage = Math.Round((decimal)sc.Count / applications.Count * 100, 1)
+            })
+            .ToList();
+
+        var analysis = new ApplicationsAnalysis
+        {
+            RoleKeywords = roleKeywords,
+            TopSkills = topSkillsList,
+            TotalApplicationsAnalyzed = applications.Count
+        };
+
+        // Cache for 10 minutes
+        var cacheOptions = new MemoryCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(CacheExpirationMinutes)
+        };
+
+        _cache.Set(cacheKey, analysis, cacheOptions);
+
+        return analysis;
+    }
+
+    public void InvalidateUserCache(string userId)
+    {
+        // Remove all cached analytics data for this user
+        // We need to remove entries for all possible parameter combinations
+        // Using a simple approach: remove known cache key patterns
+
+        // Keywords cache - remove for common topCount values
+        for (int topCount = 1; topCount <= 50; topCount++)
+        {
+            _cache.Remove($"keywords-{userId}-{topCount}");
+        }
+
+        // Conversion by source cache
+        _cache.Remove($"conversion-by-source-{userId}");
+
+        // Applications analysis cache - remove for common parameter combinations
+        for (int roleKeywords = 1; roleKeywords <= 20; roleKeywords++)
+        {
+            for (int skills = 1; skills <= 30; skills++)
+            {
+                _cache.Remove($"applications-analysis-{userId}-{roleKeywords}-{skills}");
+            }
+        }
+    }
+
+    /// <summary>
+    /// Formats a keyword with proper capitalization (first letter uppercase)
+    /// </summary>
+    private static string FormatKeyword(string word)
+    {
+        if (string.IsNullOrEmpty(word))
+            return word;
+        return char.ToUpper(word[0]) + word.Substring(1);
+    }
+
     /// <summary>
     /// Extracts individual words from text, splitting on whitespace and common delimiters
     /// </summary>

@@ -3,10 +3,11 @@ import { useAuth } from '@/hooks/useAuth';
 import { useKeyboardShortcut } from '@/hooks/useKeyboardShortcut';
 import QuickCaptureModal from '@/components/applications/QuickCaptureModal';
 import PieChart from '@/components/charts/PieChart';
+import JobDescriptionAnalysis from '@/components/dashboard/JobDescriptionAnalysis';
 import { getWeeklyStats, getStatusDistribution, getSourceDistribution, getAverageTime } from '@/services/statistics';
 import type { WeeklyStats, StatusDistributionResponse, SourceDistributionResponse, AverageTimeResponse } from '@/services/statistics';
-import { getTopKeywords, getConversionBySource } from '@/services/analytics';
-import type { KeywordFrequency, ConversionBySource } from '@/services/analytics';
+import { getTopKeywords, getConversionBySource, getApplicationsAnalysis } from '@/services/analytics';
+import type { KeywordFrequency, ConversionBySource, ApplicationsAnalysis } from '@/services/analytics';
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -20,6 +21,8 @@ export default function Dashboard() {
   const [sourceDistribution, setSourceDistribution] = useState<SourceDistributionResponse | null>(null);
   const [averageTime, setAverageTime] = useState<AverageTimeResponse | null>(null);
   const [isLoadingDistributions, setIsLoadingDistributions] = useState(false);
+  const [applicationsAnalysis, setApplicationsAnalysis] = useState<ApplicationsAnalysis | null>(null);
+  const [isLoadingApplicationsAnalysis, setIsLoadingApplicationsAnalysis] = useState(false);
 
   // Ctrl+K / Cmd+K shortcut to open Quick Capture
   useKeyboardShortcut('k', () => setIsQuickCaptureOpen(true), {
@@ -97,6 +100,26 @@ export default function Dashboard() {
     fetchDistributions();
   }, [user]);
 
+  // Fetch applications analysis (job description insights)
+  useEffect(() => {
+    const fetchApplicationsAnalysis = async () => {
+      if (!user) return;
+
+      setIsLoadingApplicationsAnalysis(true);
+      try {
+        const analysis = await getApplicationsAnalysis(10, 15);
+        setApplicationsAnalysis(analysis);
+      } catch (error) {
+        console.error('Failed to fetch applications analysis:', error);
+        // Fail silently - analysis is nice-to-have
+      } finally {
+        setIsLoadingApplicationsAnalysis(false);
+      }
+    };
+
+    fetchApplicationsAnalysis();
+  }, [user]);
+
   return (
     <div className="space-y-8">
       {/* Welcome banner - Metal panel with orange border */}
@@ -111,6 +134,18 @@ export default function Dashboard() {
         <p className="text-gray-400 mt-2">
           Your personal hunting command center. Track applications, earn points, and climb the leaderboards.
         </p>
+      </div>
+
+      {/* Quick actions - Moved to top */}
+      <div className="metal-panel">
+        <div className="metal-panel-screws" />
+        <h2 className="font-arcade text-base text-amber mb-4">QUICK ACTIONS</h2>
+        <button
+          className="btn-metal-primary"
+          onClick={() => setIsQuickCaptureOpen(true)}
+        >
+          + QUICK CAPTURE
+        </button>
       </div>
 
       {/* Stats - Industrial gauge/readout style */}
@@ -292,6 +327,12 @@ export default function Dashboard() {
         </div>
       )}
 
+      {/* Job Description Insights - NEW */}
+      <JobDescriptionAnalysis
+        analysis={applicationsAnalysis}
+        isLoading={isLoadingApplicationsAnalysis}
+      />
+
       {/* Application Distribution - Pie Charts */}
       {!isLoadingDistributions && (statusDistribution || sourceDistribution) && (
         <div className="metal-panel">
@@ -359,18 +400,6 @@ export default function Dashboard() {
           </p>
         </div>
       )}
-
-      {/* Quick actions - Metal panel */}
-      <div className="metal-panel">
-        <div className="metal-panel-screws" />
-        <h2 className="font-arcade text-base text-amber mb-4">QUICK ACTIONS</h2>
-        <button
-          className="btn-metal-primary"
-          onClick={() => setIsQuickCaptureOpen(true)}
-        >
-          + QUICK CAPTURE
-        </button>
-      </div>
 
       {/* Quick Capture Modal */}
       <QuickCaptureModal

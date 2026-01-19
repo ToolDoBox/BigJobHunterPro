@@ -17,6 +17,7 @@ public class AuthController : ControllerBase
     private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly IJwtTokenService _jwtTokenService;
     private readonly ICurrentUserService _currentUserService;
+    private readonly IStreakService _streakService;
     private readonly ApplicationDbContext _context;
     private readonly ILogger<AuthController> _logger;
 
@@ -25,6 +26,7 @@ public class AuthController : ControllerBase
         SignInManager<ApplicationUser> signInManager,
         IJwtTokenService jwtTokenService,
         ICurrentUserService currentUserService,
+        IStreakService streakService,
         ApplicationDbContext context,
         ILogger<AuthController> logger)
     {
@@ -32,6 +34,7 @@ public class AuthController : ControllerBase
         _signInManager = signInManager;
         _jwtTokenService = jwtTokenService;
         _currentUserService = currentUserService;
+        _streakService = streakService;
         _context = context;
         _logger = logger;
     }
@@ -230,6 +233,13 @@ public class AuthController : ControllerBase
                 "User not found",
                 new List<string> { "The authenticated user no longer exists in the system" }
             ));
+        }
+
+        // Check if streak is still active (within 48-hour window)
+        // If not active, display 0 to show the streak was broken
+        if (!_streakService.IsStreakActive(response.LastActivityDate, DateTime.UtcNow))
+        {
+            response.CurrentStreak = 0;
         }
 
         _logger.LogInformation("User retrieved own profile: {UserId}", userId);

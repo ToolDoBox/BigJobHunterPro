@@ -17,9 +17,9 @@ $content = Get-Content $MigrationFile -Raw
 
 # Check for dangerous SQLite type conversions
 $dangerousPatterns = @(
-    'type:\s*"TEXT".*oldType:\s*"nvarchar',
-    'type:\s*"TEXT".*oldType:\s*"datetime2',
-    'type:\s*"TEXT".*oldType:\s*"uniqueidentifier',
+    'type:\s*"TEXT".*oldType:\s*"nvarchar"',
+    'type:\s*"TEXT".*oldType:\s*"datetime2"',
+    'type:\s*"TEXT".*oldType:\s*"uniqueidentifier"',
     'type:\s*"INTEGER".*oldType:\s*"int"',
     'type:\s*"INTEGER".*oldType:\s*"bit"'
 )
@@ -40,17 +40,17 @@ if ($alterColumnCount -gt 20) {
 
 # Report results
 if ($foundIssues.Count -gt 0) {
-    Write-Host "`n✗ MIGRATION VALIDATION FAILED!" -ForegroundColor Red
+    Write-Host "`nMIGRATION VALIDATION FAILED!" -ForegroundColor Red
     Write-Host "This migration contains dangerous operations:`n" -ForegroundColor Red
 
     foreach ($issue in $foundIssues) {
-        Write-Host "  • $issue" -ForegroundColor Yellow
+        Write-Host "  - $issue" -ForegroundColor Yellow
     }
 
-    Write-Host "`nThis migration will likely corrupt your SQL Server database!" -ForegroundColor Red
-    Write-Host "Review the migration file and regenerate it with proper SQL Server context." -ForegroundColor Yellow
+    Write-Host "`nThis migration will likely corrupt your database!" -ForegroundColor Red
+    Write-Host "Review the migration file and regenerate it with the proper database provider." -ForegroundColor Yellow
     exit 1
 } else {
-    Write-Host "`n✓ Migration validation passed!" -ForegroundColor Green
+    Write-Host "`nMigration validation passed." -ForegroundColor Green
     Write-Host "No dangerous SQLite conversions detected." -ForegroundColor Green
 }

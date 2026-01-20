@@ -64,7 +64,7 @@ jobs:
             exit 1
           }
 
-          Write-Host "✓ Migration validation passed" -ForegroundColor Green
+                    Write-Host "Migration validation passed." -ForegroundColor Green
 
       - name: dotnet publish
         run: dotnet publish src/WebAPI/WebAPI.csproj -c Release -o "${{env.DOTNET_ROOT}}/myapp"

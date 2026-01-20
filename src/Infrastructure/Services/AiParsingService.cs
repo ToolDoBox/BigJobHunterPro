@@ -27,7 +27,7 @@ public class AiParsingService : IAiParsingService
     {
         _httpClientFactory = httpClientFactory;
         _logger = logger;
-        _model = configuration["AnthropicSettings:Model"] ?? "claude-haiku-4-5-20251016";
+        _model = configuration["AnthropicSettings:Model"] ?? "claude-haiku-4-5";
         _maxTokens = int.TryParse(configuration["AnthropicSettings:MaxTokens"], out var tokens) ? tokens : 1024;
         var apiKey = configuration["AnthropicSettings:ApiKey"]
             ?? configuration["AnthropicApiKey"]

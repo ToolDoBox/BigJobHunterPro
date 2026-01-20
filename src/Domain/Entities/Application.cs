@@ -26,6 +26,8 @@ public class Application
     public int Points { get; set; }
     public DateTime CreatedDate { get; set; }
     public DateTime UpdatedDate { get; set; }
+    public string? CoverLetterHtml { get; set; }
+    public DateTime? CoverLetterGeneratedAt { get; set; }
 
     // Navigation properties
     public ApplicationUser User { get; set; } = null!;

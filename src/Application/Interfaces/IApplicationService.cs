@@ -5,7 +5,7 @@ namespace Application.Interfaces;
 public interface IApplicationService
 {
     Task<CreateApplicationResponse> CreateApplicationAsync(CreateApplicationRequest request);
-    Task<ApplicationsListResponse> GetApplicationsAsync(int page, int pageSize);
+    Task<ApplicationsListResponse> GetApplicationsAsync(int page, int pageSize, string? search = null, string? status = null);
     Task<ApplicationDto?> GetApplicationAsync(Guid id);
     Task<ApplicationDto?> UpdateApplicationAsync(Guid id, UpdateApplicationRequest request);
     Task<ApplicationDto?> UpdateApplicationStatusAsync(Guid id, UpdateStatusRequest request);

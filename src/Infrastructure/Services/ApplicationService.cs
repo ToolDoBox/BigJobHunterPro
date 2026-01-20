@@ -136,13 +136,26 @@ public class ApplicationService : IApplicationService
         };
     }
 
-    public async Task<ApplicationsListResponse> GetApplicationsAsync(int page, int pageSize)
+    public async Task<ApplicationsListResponse> GetApplicationsAsync(int page, int pageSize, string? search = null, string? status = null)
     {
         var userId = _currentUser.GetUserId()
             ?? throw new UnauthorizedAccessException("User not authenticated");
 
-        // Generate cache key
-        var cacheKey = $"applications-list-{userId}-{page}-{pageSize}";
+        // Parse status if provided
+        ApplicationStatus? parsedStatus = null;
+        if (!string.IsNullOrWhiteSpace(status))
+        {
+            if (Enum.TryParse<ApplicationStatus>(status.Trim(), true, out var parsed))
+            {
+                parsedStatus = parsed;
+            }
+        }
+
+        // Normalize search
+        var normalizedSearch = string.IsNullOrWhiteSpace(search) ? null : search.Trim();
+
+        // Generate cache key including filters
+        var cacheKey = $"applications-list-{userId}-{page}-{pageSize}-{normalizedSearch ?? "null"}-{status ?? "null"}";
 
         // Try to get from cache
         if (_cache.TryGetValue(cacheKey, out ApplicationsListResponse? cachedResponse) && cachedResponse != null)
@@ -150,10 +163,25 @@ public class ApplicationService : IApplicationService
             return cachedResponse;
         }
 
-        var items = await _unitOfWork.Applications.GetPageByUserIdAsync(
-            userId,
-            (page - 1) * pageSize,
-            pageSize + 1);
+        IReadOnlyList<Domain.Entities.Application> items;
+
+        // Use filtered query if filters are present
+        if (normalizedSearch != null || parsedStatus.HasValue)
+        {
+            items = await _unitOfWork.Applications.GetPageByUserIdWithFiltersAsync(
+                userId,
+                (page - 1) * pageSize,
+                pageSize + 1,
+                normalizedSearch,
+                parsedStatus);
+        }
+        else
+        {
+            items = await _unitOfWork.Applications.GetPageByUserIdAsync(
+                userId,
+                (page - 1) * pageSize,
+                pageSize + 1);
+        }
 
         var mappedItems = items.Select(application => new ApplicationListDto
         {
@@ -378,6 +406,8 @@ public class ApplicationService : IApplicationService
             UpdatedDate = application.UpdatedDate,
             LastAIParsedDate = application.LastAIParsedDate,
             RawPageContent = application.RawPageContent,
+            CoverLetterHtml = application.CoverLetterHtml,
+            CoverLetterGeneratedAt = application.CoverLetterGeneratedAt,
             TimelineEvents = application.TimelineEvents
                 .OrderByDescending(e => e.Timestamp)
                 .ThenByDescending(e => e.CreatedDate)

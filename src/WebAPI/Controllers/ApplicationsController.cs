@@ -5,6 +5,7 @@ using Application.DTOs.Applications;
 using Application.DTOs.Auth;
 using Application.Exceptions;
 using Application.Interfaces;
+using Domain.Enums;
 
 namespace WebAPI.Controllers;
 
@@ -62,16 +63,29 @@ public class ApplicationsController : ControllerBase
     [ProducesResponseType(typeof(ApplicationsListResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> GetApplications([FromQuery] int page = 1, [FromQuery] int pageSize = 25)
+    public async Task<IActionResult> GetApplications(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 25,
+        [FromQuery] string? search = null,
+        [FromQuery] string? status = null)
     {
         if (page < 1 || pageSize < 1 || pageSize > 100)
         {
             return BadRequest(new { error = "Page must be >= 1 and pageSize must be between 1 and 100." });
         }
 
+        // Validate status if provided
+        if (!string.IsNullOrWhiteSpace(status))
+        {
+            if (!Enum.TryParse<Domain.Enums.ApplicationStatus>(status.Trim(), true, out _))
+            {
+                return BadRequest(new { error = "Invalid status value. Valid values: Applied, Screening, Interview, Offer, Rejected, Withdrawn." });
+            }
+        }
+
         try
         {
-            var result = await _applicationService.GetApplicationsAsync(page, pageSize);
+            var result = await _applicationService.GetApplicationsAsync(page, pageSize, search, status);
             return Ok(result);
         }
         catch (UnauthorizedAccessException)

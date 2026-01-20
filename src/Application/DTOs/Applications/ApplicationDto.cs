@@ -24,5 +24,7 @@ public class ApplicationDto
     public DateTime UpdatedDate { get; set; }
     public DateTime? LastAIParsedDate { get; set; }
     public string? RawPageContent { get; set; }
+    public string? CoverLetterHtml { get; set; }
+    public DateTime? CoverLetterGeneratedAt { get; set; }
     public List<TimelineEventDto> TimelineEvents { get; set; } = new();
 }

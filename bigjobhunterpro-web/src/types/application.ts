@@ -51,6 +51,8 @@ export interface ApplicationDetail {
   updatedDate: string;
   lastAIParsedDate: string | null;
   rawPageContent: string | null;
+  coverLetterHtml: string | null;
+  coverLetterGeneratedAt: string | null;
   timelineEvents: TimelineEvent[];
 }
 

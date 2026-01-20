@@ -116,10 +116,22 @@ export const applicationsService = {
       throw { errors };
     }
   },
-  async getApplications(page = 1, pageSize = 25): Promise<ApplicationsListResponse> {
+  async getApplications(
+    page = 1,
+    pageSize = 25,
+    search?: string,
+    status?: string
+  ): Promise<ApplicationsListResponse> {
     try {
+      const params: Record<string, string | number> = { page, pageSize };
+      if (search) {
+        params.search = search;
+      }
+      if (status) {
+        params.status = status;
+      }
       const response = await api.get<ApplicationsListResponse>('/api/applications', {
-        params: { page, pageSize },
+        params,
       });
       return response.data;
     } catch (error) {

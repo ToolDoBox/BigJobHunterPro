@@ -7,6 +7,17 @@ import ErrorState from '@/components/applications/ErrorState';
 import applicationsService from '@/services/applications';
 import type { ApplicationListItem } from '@/types/application';
 import { useKeyboardShortcut } from '@/hooks/useKeyboardShortcut';
+import { useDebounce } from '@/hooks/useDebounce';
+
+const STATUS_OPTIONS = [
+  { value: '', label: 'All Statuses' },
+  { value: 'Applied', label: 'Applied' },
+  { value: 'Screening', label: 'Screening' },
+  { value: 'Interview', label: 'Interview' },
+  { value: 'Offer', label: 'Offer' },
+  { value: 'Rejected', label: 'Rejected' },
+  { value: 'Withdrawn', label: 'Withdrawn' },
+];
 
 const PAGE_SIZE = 25;
 
@@ -18,13 +29,22 @@ export default function Applications() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [isQuickCaptureOpen, setIsQuickCaptureOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
 
-  const fetchApplications = useCallback(async () => {
+  const debouncedSearch = useDebounce(searchTerm, 300);
+
+  const fetchApplications = useCallback(async (search?: string, status?: string) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await applicationsService.getApplications(1, PAGE_SIZE);
+      const response = await applicationsService.getApplications(
+        1,
+        PAGE_SIZE,
+        search || undefined,
+        status || undefined
+      );
       setApplications(response.items);
       setPage(response.page);
       setHasMore(response.hasMore);
@@ -45,7 +65,12 @@ export default function Applications() {
     setError(null);
 
     try {
-      const response = await applicationsService.getApplications(page + 1, PAGE_SIZE);
+      const response = await applicationsService.getApplications(
+        page + 1,
+        PAGE_SIZE,
+        debouncedSearch || undefined,
+        statusFilter || undefined
+      );
       setApplications((prev) => [...prev, ...response.items]);
       setPage(response.page);
       setHasMore(response.hasMore);
@@ -55,11 +80,19 @@ export default function Applications() {
     } finally {
       setIsLoadingMore(false);
     }
-  }, [hasMore, isLoadingMore, page]);
+  }, [hasMore, isLoadingMore, page, debouncedSearch, statusFilter]);
 
+  // Fetch on initial load and when filters change
   useEffect(() => {
-    fetchApplications();
-  }, [fetchApplications]);
+    fetchApplications(debouncedSearch, statusFilter);
+  }, [debouncedSearch, statusFilter, fetchApplications]);
+
+  const handleClearFilters = () => {
+    setSearchTerm('');
+    setStatusFilter('');
+  };
+
+  const hasActiveFilters = searchTerm.trim() !== '' || statusFilter !== '';
 
   useKeyboardShortcut('k', () => setIsQuickCaptureOpen(true), {
     ctrl: true,
@@ -95,6 +128,41 @@ export default function Applications() {
           <span className="text-xs text-gray-500">
             {applications.length} logged
           </span>
+        </div>
+
+        {/* Search and Filter Controls */}
+        <div className="flex flex-col gap-3 md:flex-row md:items-center mb-4">
+          <div className="flex-1">
+            <input
+              type="text"
+              placeholder="Search by company or role..."
+              className="input-arcade w-full"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <div className="flex gap-2">
+            <select
+              className="input-arcade"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              {STATUS_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            {hasActiveFilters && (
+              <button
+                className="btn-metal"
+                onClick={handleClearFilters}
+                title="Clear filters"
+              >
+                CLEAR
+              </button>
+            )}
+          </div>
         </div>
 
         {isLoading ? (
@@ -133,7 +201,7 @@ export default function Applications() {
       <QuickCaptureModal
         isOpen={isQuickCaptureOpen}
         onClose={() => setIsQuickCaptureOpen(false)}
-        onSuccess={fetchApplications}
+        onSuccess={() => fetchApplications(debouncedSearch, statusFilter)}
       />
     </div>
   );

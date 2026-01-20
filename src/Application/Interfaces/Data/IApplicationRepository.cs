@@ -63,6 +63,26 @@ public interface IApplicationRepository : IRepository<ApplicationEntity>
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Gets a page of applications for a user with optional search and status filters.
+    /// </summary>
+    Task<IReadOnlyList<ApplicationEntity>> GetPageByUserIdWithFiltersAsync(
+        string userId,
+        int skip,
+        int take,
+        string? search = null,
+        ApplicationStatus? status = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Counts applications for a user with optional search and status filters.
+    /// </summary>
+    Task<int> CountByUserIdWithFiltersAsync(
+        string userId,
+        string? search = null,
+        ApplicationStatus? status = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Counts applications for a user within a date range.
     /// </summary>
     Task<int> CountByUserIdInRangeAsync(

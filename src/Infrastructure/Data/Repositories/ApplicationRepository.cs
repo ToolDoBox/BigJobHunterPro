@@ -91,6 +91,64 @@ public class ApplicationRepository : Repository<ApplicationEntity>, IApplication
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<ApplicationEntity>> GetPageByUserIdWithFiltersAsync(
+        string userId,
+        int skip,
+        int take,
+        string? search = null,
+        ApplicationStatus? status = null,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _dbSet
+            .AsNoTracking()
+            .Where(a => a.UserId == userId);
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var searchLower = search.ToLower();
+            query = query.Where(a =>
+                a.CompanyName.ToLower().Contains(searchLower) ||
+                a.RoleTitle.ToLower().Contains(searchLower));
+        }
+
+        if (status.HasValue)
+        {
+            query = query.Where(a => a.Status == status.Value);
+        }
+
+        return await query
+            .OrderByDescending(a => a.CreatedDate)
+            .Skip(skip)
+            .Take(take)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<int> CountByUserIdWithFiltersAsync(
+        string userId,
+        string? search = null,
+        ApplicationStatus? status = null,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _dbSet
+            .AsNoTracking()
+            .Where(a => a.UserId == userId);
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var searchLower = search.ToLower();
+            query = query.Where(a =>
+                a.CompanyName.ToLower().Contains(searchLower) ||
+                a.RoleTitle.ToLower().Contains(searchLower));
+        }
+
+        if (status.HasValue)
+        {
+            query = query.Where(a => a.Status == status.Value);
+        }
+
+        return await query.CountAsync(cancellationToken);
+    }
+
     public async Task<int> CountByUserIdInRangeAsync(
         string userId,
         DateTime startInclusive,

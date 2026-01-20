@@ -43,6 +43,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             entity.Property(e => e.JobDescription).HasMaxLength(4000);
             entity.Property(e => e.RequiredSkills).HasConversion(stringListConverter);
             entity.Property(e => e.NiceToHaveSkills).HasConversion(stringListConverter);
+            entity.Property(e => e.CoverLetterHtml).HasMaxLength(15000);
             entity.HasIndex(e => e.UserId);
             entity.HasIndex(e => e.CreatedDate);
             entity.HasOne(e => e.User)

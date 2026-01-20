@@ -182,6 +182,7 @@ builder.Services.AddScoped<Application.Interfaces.IAnalyticsService, Infrastruct
 builder.Services.AddScoped<Application.Interfaces.IApplicationService, Infrastructure.Services.ApplicationService>();
 builder.Services.AddScoped<Application.Interfaces.ITimelineEventService, Infrastructure.Services.TimelineEventService>();
 builder.Services.AddScoped<Application.Interfaces.IActivityEventService, Infrastructure.Services.ActivityEventService>();
+builder.Services.AddScoped<Application.Interfaces.ICoverLetterService, Infrastructure.Services.CoverLetterService>();
 
 // Add HttpClient for Anthropic API
 builder.Services.AddHttpClient("Anthropic", client =>

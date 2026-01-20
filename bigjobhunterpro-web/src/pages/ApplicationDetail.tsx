@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ChangeEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import StatusBadge from '@/components/applications/StatusBadge';
 import FormInput from '@/components/forms/FormInput';
@@ -8,6 +8,7 @@ import { useToast } from '@/context/ToastContext';
 import { formatRelativeDate } from '@/utils/date';
 import { useAuth } from '@/hooks/useAuth';
 import { TimelineView } from '@/components/applications/TimelineView';
+import CoverLetterSection from '@/components/applications/CoverLetterSection';
 import type {
   ApplicationDetail,
   UpdateApplicationRequest
@@ -175,6 +176,12 @@ export default function ApplicationDetail() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [notFound, setNotFound] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+
+  const timelineRef = useRef<HTMLDivElement>(null);
+
+  const handleScrollToTimeline = () => {
+    timelineRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   const hasChanges = useMemo(
     () => JSON.stringify(formData) !== JSON.stringify(initialFormData),
@@ -495,6 +502,13 @@ export default function ApplicationDetail() {
             </button>
             <button
               className="btn-metal"
+              onClick={handleScrollToTimeline}
+              title="Jump to timeline"
+            >
+              TIMELINE
+            </button>
+            <button
+              className="btn-metal"
               onClick={() => setShowDeleteConfirm(true)}
               disabled={isDeleting}
             >
@@ -739,11 +753,25 @@ export default function ApplicationDetail() {
         <div className="divider-metal my-6" />
 
         {/* Timeline Events Section */}
+        <div ref={timelineRef}>
+          {application && (
+            <TimelineView
+              applicationId={application.id}
+              events={application.timelineEvents || []}
+              onEventsUpdated={fetchApplication}
+            />
+          )}
+        </div>
+
+        <div className="divider-metal my-6" />
+
+        {/* Cover Letter Section */}
         {application && (
-          <TimelineView
+          <CoverLetterSection
             applicationId={application.id}
-            events={application.timelineEvents || []}
-            onEventsUpdated={fetchApplication}
+            coverLetterHtml={application.coverLetterHtml}
+            coverLetterGeneratedAt={application.coverLetterGeneratedAt}
+            onUpdated={fetchApplication}
           />
         )}
 

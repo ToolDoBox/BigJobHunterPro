@@ -20,4 +20,8 @@ public class ApplicationUser : IdentityUser
 
     // Hunting party membership (one party per user for MVP)
     public ICollection<HuntingPartyMembership> PartyMemberships { get; set; } = new List<HuntingPartyMembership>();
+
+    // Resume storage
+    public string? ResumeText { get; set; }
+    public DateTime? ResumeUpdatedAt { get; set; }
 }

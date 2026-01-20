@@ -7,6 +7,7 @@ import Dashboard from '@/pages/Dashboard';
 import Applications from '@/pages/Applications';
 import ApplicationDetail from '@/pages/ApplicationDetail';
 import Party from '@/pages/Party';
+import ProfilePage from '@/pages/ProfilePage';
 import Landing from '@/pages/Landing';
 
 export const router = createBrowserRouter([
@@ -56,15 +57,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'profile',
-        element: (
-          <div className="metal-panel text-center">
-            <div className="metal-panel-screws" />
-            <h2 className="font-arcade text-xl text-amber mb-4">
-              HUNTER PROFILE
-            </h2>
-            <p className="text-gray-400">Coming in future sprint...</p>
-          </div>
-        ),
+        element: <ProfilePage />,
       },
     ],
   },

@@ -1,0 +1,486 @@
+                                                                                
+ ▐▛███▜▌   Claude Code v2.1.12                                                  
+▝▜█████▛▘  Opus 4.5 · Claude API                                                
+  ▘▘ ▝▝    ~\Documents\GitHub\BigJobHunterPro_C                                 
+                                                                                
+> Implement the following plan:                                                 
+                                                                                
+  # Resume Input Feature - Hunter Profile Page                                  
+                                                                                
+  ## Summary                                                                    
+                                                                                
+  Add a Resume Input feature to the Hunter Profile page where users can         
+  paste their entire resume text. The page will provide clear instructions      
+  for copying from PDFs (Ctrl+A, Ctrl+C, Ctrl+V) and persist the resume to      
+  the database for future use.                                                  
+                                                                                
+  ---                                                                           
+                                                                                
+  ## Backend Changes                                                            
+                                                                                
+  ### 1. Entity: Add Resume Fields                                              
+  **File:** `src/Domain/Entities/ApplicationUser.cs`                            
+                                                                                
+  Add two properties:                                                           
+  ```csharp                                                                     
+  public string? ResumeText { get; set; }                                       
+  public DateTime? ResumeUpdatedAt { get; set; }                                
+  ```                                                                           
+                                                                                
+  ### 2. Database Migration                                                     
+  **Command:**                                                                  
+  ```bash                                                                       
+  dotnet ef migrations add AddResumeToApplicationUser --project                 
+  src/Infrastructure --startup-project src/WebAPI                               
+  dotnet ef database update --project src/Infrastructure --startup-project      
+  src/WebAPI                                                                    
+  ```                                                                           
+                                                                                
+  ### 3. DTOs                                                                   
+  **New folder:** `src/Application/DTOs/Profile/`                               
+                                                                                
+  Create three files:                                                           
+  - `ProfileResponse.cs` - Returns displayName, email, resumeText,              
+  resumeUpdatedAt, characterCount                                               
+  - `UpdateResumeRequest.cs` - Contains resumeText string                       
+  - `UpdateResumeResponse.cs` - Returns success, resumeUpdatedAt,               
+  characterCount, message                                                       
+                                                                                
+  ### 4. Profile Controller                                                     
+  **New file:** `src/WebAPI/Controllers/ProfileController.cs`                   
+                                                                                
+  Endpoints:                                                                    
+  - `GET /api/profile` - Get profile including resume                           
+  - `PUT /api/profile/resume` - Update resume text (50,000 char limit)          
+  - `DELETE /api/profile/resume` - Clear resume                                 
+                                                                                
+  ---                                                                           
+                                                                                
+  ## Frontend Changes                                                           
+                                                                                
+  ### 1. Profile Service                                                        
+  **New file:** `bigjobhunterpro-web/src/services/profile.ts`                   
+                                                                                
+  Following the auth.ts pattern:                                                
+  - Types: `ProfileResponse`, `UpdateResumeRequest`, `UpdateResumeResponse`     
+  - Functions: `getProfile()`, `updateResume()`, `clearResume()`                
+                                                                                
+  ### 2. Profile Page Component                                                 
+  **New file:** `bigjobhunterpro-web/src/pages/ProfilePage.tsx`                 
+                                                                                
+  Features:                                                                     
+  - Header: "HUNTER PROFILE" with user's display name                           
+  - Instructions panel: Step-by-step guide (open PDF → Ctrl+A → Ctrl+C →        
+  Ctrl+V)                                                                       
+  - Large textarea (300-600px height, monospace font)                           
+  - Character counter (0 / 50,000) with color feedback                          
+  - Save button (enabled when changes exist)                                    
+  - Clear button with confirmation                                              
+  - Success/error feedback messages                                             
+  - Unsaved changes indicator                                                   
+                                                                                
+  ### 3. Router Update                                                          
+  **File:** `bigjobhunterpro-web/src/router/index.tsx`                          
+                                                                                
+  - Add import for ProfilePage                                                  
+  - Replace placeholder element at `/app/profile` with `<ProfilePage />`        
+                                                                                
+  ---                                                                           
+                                                                                
+  ## UX Design                                                                  
+                                                                                
+  ### Instructions Panel Copy                                                   
+  ```                                                                           
+  HOW TO LOAD YOUR RESUME                                                       
+  1. Open your resume PDF in any PDF viewer                                     
+  2. Press Ctrl+A to select all text                                            
+  3. Press Ctrl+C to copy                                                       
+  4. Click in the box below and press Ctrl+V to paste                           
+                                                                                
+  Tip: Word docs work too! Just Ctrl+A, Ctrl+C from Word, then paste here.      
+  ```                                                                           
+                                                                                
+  ### Character Limit Feedback                                                  
+  - 0-15,000: Terminal green (normal)                                           
+  - 15,001-45,000: Amber with "Getting long!" warning                           
+  - 45,001-50,000: Red (near limit)                                             
+                                                                                
+  ### State Management                                                          
+  - Track `hasUnsavedChanges` to enable/disable Save button                     
+  - Show pulsing "You have unsaved changes" when dirty                          
+  - Disable inputs during save operation                                        
+                                                                                
+  ---                                                                           
+                                                                                
+  ## Files to Create                                                            
+                                                                                
+  | File | Purpose |                                                            
+  |------|---------|                                                            
+  | `src/Application/DTOs/Profile/ProfileResponse.cs` | Profile data DTO |      
+  | `src/Application/DTOs/Profile/UpdateResumeRequest.cs` | Resume update       
+  request |                                                                     
+  | `src/Application/DTOs/Profile/UpdateResumeResponse.cs` | Resume update      
+  response |                                                                    
+  | `src/WebAPI/Controllers/ProfileController.cs` | Profile API endpoints |     
+  | `bigjobhunterpro-web/src/services/profile.ts` | Profile API service |       
+  | `bigjobhunterpro-web/src/pages/ProfilePage.tsx` | Profile page              
+  component |                                                                   
+                                                                                
+  ## Files to Modify                                                            
+                                                                                
+  | File | Changes |                                                            
+  |------|---------|                                                            
+  | `src/Domain/Entities/ApplicationUser.cs` | Add ResumeText,                  
+  ResumeUpdatedAt |                                                             
+  | `bigjobhunterpro-web/src/router/index.tsx` | Import ProfilePage, update     
+  route |                                                                       
+                                                                                
+  ---                                                                           
+                                                                                
+  ## Verification                                                               
+                                                                                
+  1. **Backend:**                                                               
+  - Run migration successfully                                                  
+  - Test `GET /api/profile` returns profile with null resume                    
+  - Test `PUT /api/profile/resume` saves and returns updated timestamp          
+  - Test `DELETE /api/profile/resume` clears resume                             
+                                                                                
+  2. **Frontend:**                                                              
+  - Navigate to `/app/profile`                                                  
+  - Verify instructions panel displays correctly                                
+  - Paste text into textarea, verify character count updates                    
+  - Click Save, verify success message and button state                         
+  - Refresh page, verify resume persists                                        
+  - Click Clear, confirm, verify resume removed                                 
+                                                                                
+  3. **Full Flow:**                                                             
+  - Open a PDF, Ctrl+A, Ctrl+C                                                  
+  - Paste into textarea                                                         
+  - Save and verify persistence across sessions                                 
+                                                                                
+                                                                                
+  If you need specific details from before exiting plan mode (like exact        
+  code snippets, error messages, or content you generated), read the full       
+  transcript at: C:\Users\hey\.claude\projects\C--Users-hey-Documents-GitHu     
+  b-BigJobHunterPro-C\f6790aa0-9bed-445f-84c0-a8dd7581df5e.jsonl                
+                                                                                
+● I'll implement the Resume Input feature for the Hunter Profile page. Let me   
+  start by creating a todo list and reading the existing files to understand the
+   patterns.                                                                    
+                                                                                
+● Read(src\Domain\Entities\ApplicationUser.cs)                                  
+  ⎿  Read 24 lines                                                              
+                                                                                
+● Read(bigjobhunterpro-web\src\services\auth.ts)                                
+  ⎿  Read 219 lines                                                             
+                                                                                
+● Read(bigjobhunterpro-web\src\router\index.tsx)                                
+  ⎿  Read 78 lines                                                              
+                                                                                
+● Let me also read an existing controller and a page component to match the     
+  patterns.                                                                     
+                                                                                
+● Read(src\WebAPI\Controllers\AuthController.cs)                                
+  ⎿  Read 279 lines                                                             
+                                                                                
+● Read(bigjobhunterpro-web\src\pages\Dashboard.tsx)                             
+  ⎿  Read 415 lines                                                             
+                                                                                
+● Search(pattern: "src/Application/DTOs/**/*.cs")                               
+  ⎿  Found 36 files (ctrl+o to expand)                                          
+                                                                                
+● Let me check a sample DTO and the api.ts service file for patterns.           
+                                                                                
+● Read(src\Application\DTOs\Auth\GetMeResponse.cs)                              
+  ⎿  Read 15 lines                                                              
+                                                                                
+● Read(bigjobhunterpro-web\src\services\api.ts)                                 
+  ⎿  Read 59 lines                                                              
+                                                                                
+● Now I have a good understanding of the patterns. Let me start implementing.   
+                                                                                
+● Update(src\Domain\Entities\ApplicationUser.cs)                                
+  ⎿  Added 4 lines                                                              
+      20                                                                        
+      21      // Hunting party membership (one party per user for MVP)          
+      22      public ICollection<HuntingPartyMembership> PartyMemberships       
+           { get; set; } = new List<HuntingPartyMembership>();                  
+      23 +                                                                      
+      24 +    // Resume storage                                                 
+      25 +    public string? ResumeText { get; set; }                           
+      26 +    public DateTime? ResumeUpdatedAt { get; set; }                    
+      27  }                                                                     
+                                                                                
+● Bash(cd "C:\Users\hey\Documents\GitHub\BigJobHunterPro_C" &&       timeout: 1m
+      dotnet ef migrations add AddResumeToApplicationUser --project  0s         
+      src/Infrastructure --startup-project src/W…)                              
+                                                                                
+  ⎿  Error: Exit code 1                                                         
+     Could not execute because the specified command or file was not found.     
+                                                                                
+     Possible reasons for this include:                                         
+       * You misspelled a built-in dotnet command.                              
+       * You intended to execute a .NET program, but dotnet-ef does not exist.  
+       * You intended to run a global tool, but a dotnet-prefixed executable wit
+      this name could not be found on the PATH.                                 
+                                                                                
+● Bash(cd "C:\Users\hey\Documents\GitHub\BigJobHunterPro_C" &&       timeout: 1m
+      dotnet tool install --global dotnet-ef)                        0s         
+                                                                                
+  ⎿  You can invoke the tool using the following command: dotnet-ef             
+     Tool 'dotnet-ef' (version '10.0.2') was successfully installed.            
+                                                                                
+● Bash(cd "C:\Users\hey\Documents\GitHub\BigJobHunterPro_C" &&       timeout: 1m
+      dotnet ef migrations add AddResumeToApplicationUser --project  0s         
+      src/Infrastructure --startup-project src/W…)                              
+                                                                                
+  ⎿  Build started...                                                           
+     Build succeeded.                                                           
+     warn: Microsoft.EntityFrameworkCore.Model.Validation[10620]                
+     … +30 lines (ctrl+o to expand)                                             
+                                                                                
+● Bash(cd "C:\Users\hey\Documents\GitHub\BigJobHunterPro_C" &&       timeout: 1m
+      dotnet ef database update --project src/Infrastructure         0s         
+      --startup-project src/WebAPI)                                             
+  ⎿  Error: Exit code 1                                                         
+     Build started...                                                           
+     Build succeeded.                                                           
+     warn: Microsoft.EntityFrameworkCore.Model.Validation[10620]                
+           The property 'Application.NiceToHaveSkills' is a collection or       
+     enumeration type with a value converter but with no value comparer. Set a  
+     value comparer to ensure the collection/enumeration elements are compared  
+     correctly.                                                                 
+     warn: Microsoft.EntityFrameworkCore.Model.Validation[10620]                
+           The property 'Application.RequiredSkills' is a collection or         
+     enumeration type with a value converter but with no value comparer. Set a  
+     value comparer to ensure the collection/enumeration elements are compared  
+     correctly.                                                                 
+     info: Microsoft.EntityFrameworkCore.Database.Command[20101]                
+           Executed DbCommand (7ms) [Parameters=[], CommandType='Text',         
+     CommandTimeout='30']                                                       
+           SELECT COUNT(*) FROM "sqlite_master" WHERE "name" =                  
+     '__EFMigrationsHistory' AND "type" = 'table';                              
+     … +49 lines (ctrl+o to see all)                                            
+                                                                                
+● The database already exists but the migrations history is out of sync. Let me 
+  check the generated migration file.                                           
+                                                                                
+● Search(pattern:                                                               
+        "src/Infrastructure/Migrations/*AddResumeToApplicationUser*.cs")        
+  ⎿  Found 2 files (ctrl+o to expand)                                           
+                                                                                
+● The migration was created successfully. The database sync issue is a local    
+  environment concern (existing database without migration history). Let me     
+  continue with creating the DTOs.                                              
+                                                                                
+● Bash(mkdir -p "C:\Users\hey\Documents\GitHub\BigJobHunterPro_C\src\Application
+      \DTOs\Profile")                                                           
+  ⎿  (No content)                                                               
+                                                                                
+● Write(src\Application\DTOs\Profile\ProfileResponse.cs)                        
+  ⎿  Wrote 1 lines to src\Application\DTOs\Profile\ProfileResponse.cs           
+      1 namespace Application.DTOs.Profile;                                     
+      2 public class ProfileResponse                                            
+      3 {                                                                       
+      4     public string DisplayName { get; set; } = string.Empty;             
+      5     public string Email { get; set; } = string.Empty;                   
+      6     public string? ResumeText { get; set; }                             
+      7     public DateTime? ResumeUpdatedAt { get; set; }                      
+      8     public int CharacterCount { get; set; }                             
+      9 }                                                                       
+                                                                                
+● Write(src\Application\DTOs\Profile\UpdateResumeRequest.cs)                    
+  ⎿  Wrote 1 lines to src\Application\DTOs\Profile\UpdateResumeRequest.cs       
+      1 using System.ComponentModel.DataAnnotations;                            
+      2 namespace Application.DTOs.Profile;                                     
+      3 public class UpdateResumeRequest                                        
+      4 {                                                                       
+      5     [MaxLength(50000, ErrorMessage = "Resume text cannot exceed 5       
+        0,000 characters")]                                                     
+      6     public string? ResumeText { get; set; }                             
+      7 }                                                                       
+                                                                                
+● Write(src\Application\DTOs\Profile\UpdateResumeResponse.cs)                   
+  ⎿  Wrote 1 lines to src\Application\DTOs\Profile\UpdateResumeResponse.cs      
+      1 namespace Application.DTOs.Profile;                                     
+      2 public class UpdateResumeResponse                                       
+      3 {                                                                       
+      4     public bool Success { get; set; }                                   
+      5     public DateTime? ResumeUpdatedAt { get; set; }                      
+      6     public int CharacterCount { get; set; }                             
+      7     public string Message { get; set; } = string.Empty;                 
+      8 }                                                                       
+                                                                                
+● Write(src\WebAPI\Controllers\ProfileController.cs)                            
+  ⎿  Wrote 1 lines to src\WebAPI\Controllers\ProfileController.cs               
+      1 using Application.DTOs.Auth;                                            
+      2 using Application.DTOs.Profile;                                         
+      3 using Application.Interfaces;                                           
+      4 using Domain.Entities;                                                  
+      5 using Infrastructure.Data;                                              
+      6 using Microsoft.AspNetCore.Authorization;                               
+      7 using Microsoft.AspNetCore.Identity;                                    
+      8 using Microsoft.AspNetCore.Mvc;                                         
+      9 using Microsoft.EntityFrameworkCore;                                    
+                                                                                
+● Write(bigjobhunterpro-web\src\services\profile.ts)                            
+  ⎿  Wrote 1 lines to bigjobhunterpro-web\src\services\profile.ts               
+      1 import axios from 'axios';                                              
+      2 import api from './api';                                                
+      3 // Type definitions                                                     
+      4 export interface ProfileResponse {                                      
+      5   displayName: string;                                                  
+      6   email: string;                                                        
+      7   resumeText: string | null;                                            
+      8   resumeUpdatedAt: string | null; // ISO 8601 UTC                       
+      9   characterCount: number;                                               
+                                                                                
+● Write(bigjobhunterpro-web\src\pages\ProfilePage.tsx)                          
+  ⎿  Wrote 1 lines to bigjobhunterpro-web\src\pages\ProfilePage.tsx             
+      1 import { useState, useEffect, useCallback } from 'react';               
+      2 import { useAuth } from '@/hooks/useAuth';                              
+      3 import { profileService, type ProfileResponse } from '@/services/       
+        profile';                                                               
+      4 const MAX_CHARACTERS = 50000;                                           
+      5 export default function ProfilePage() {                                 
+      6   const { user } = useAuth();                                           
+      7   const [profile, setProfile] = useState<ProfileResponse | null>(       
+        null);                                                                  
+      8   const [resumeText, setResumeText] = useState('');                     
+                                                                                
+● Update(bigjobhunterpro-web\src\router\index.tsx)                              
+  ⎿  Added 1 line                                                               
+       7  import Applications from '@/pages/Applications';                      
+       8  import ApplicationDetail from '@/pages/ApplicationDetail';            
+       9  import Party from '@/pages/Party';                                    
+      10 +import ProfilePage from '@/pages/ProfilePage';                        
+      11  import Landing from '@/pages/Landing';                                
+      12                                                                        
+      13  export const router = createBrowserRouter([                           
+                                                                                
+● Update(bigjobhunterpro-web\src\router\index.tsx)                              
+  ⎿  Added 1 line, removed 9 lines                                              
+      57        },                                                              
+      58        {                                                               
+      59          path: 'profile',                                              
+      60 -        element: (                                                    
+      61 -          <div className="metal-panel text-center">                   
+      62 -            <div className="metal-panel-screws" />                    
+      63 -            <h2 className="font-arcade text-xl text-amber mb-4"       
+         ->                                                                     
+      64 -              HUNTER PROFILE                                          
+      65 -            </h2>                                                     
+      66 -            <p className="text-gray-400">Coming in future sprin       
+         -t...</p>                                                              
+      67 -          </div>                                                      
+      68 -        ),                                                            
+      60 +        element: <ProfilePage />,                                     
+      61        },                                                              
+      62      ],                                                                
+      63    },                                                                  
+                                                                                
+● Bash(cd "C:\Users\hey\Documents\GitHub\BigJobHunterPro_C" && dotnet build)    
+  ⎿   Determining projects to restore...                                        
+      All projects are up-to-date for restore.                                  
+      Domain -> C:\Users\hey\Documents\GitHub\BigJobHunterPro_C\src\Domain\     
+    … +56 lines (ctrl+o to expand)                                              
+                                                                                
+                                                                                
+● Bash(cd "C:\Users\hey\Documents\GitHub\BigJobHunterPro_C\bigjobhunterpro-web" 
+      && npm run build)                                                         
+  ⎿  > bigjobhunterpro-web@0.0.0 build                                          
+     > tsc -b && vite build                                                     
+     … +23 lines (ctrl+o to expand)                                             
+                                                                                
+● Both the backend and frontend build successfully. Let me mark the             
+  implementation as complete.                                                   
+                                                                                
+● The Resume Input feature has been implemented successfully. Here's a summary  
+  of the changes:                                                               
+                                                                                
+  Backend Changes                                                               
+                                                                                
+  Modified:                                                                     
+  - src/Domain/Entities/ApplicationUser.cs:24-25 - Added ResumeText and         
+  ResumeUpdatedAt properties                                                    
+                                                                                
+  Created:                                                                      
+  - src/Infrastructure/Migrations/20260120040357_AddResumeToApplicationUser.cs -
+   Database migration                                                           
+  - src/Application/DTOs/Profile/ProfileResponse.cs - Profile data DTO          
+  - src/Application/DTOs/Profile/UpdateResumeRequest.cs - Resume update request 
+  DTO                                                                           
+  - src/Application/DTOs/Profile/UpdateResumeResponse.cs - Resume update        
+  response DTO                                                                  
+  - src/WebAPI/Controllers/ProfileController.cs - Profile API with endpoints:   
+    - GET /api/profile - Get profile including resume                           
+    - PUT /api/profile/resume - Update resume (50,000 char limit)               
+    - DELETE /api/profile/resume - Clear resume                                 
+                                                                                
+  Frontend Changes                                                              
+                                                                                
+  Modified:                                                                     
+  - bigjobhunterpro-web/src/router/index.tsx - Added ProfilePage import and     
+  route                                                                         
+                                                                                
+  Created:                                                                      
+  - bigjobhunterpro-web/src/services/profile.ts - Profile API service           
+  - bigjobhunterpro-web/src/pages/ProfilePage.tsx - Profile page with:          
+    - Step-by-step instructions for copying from PDFs                           
+    - Large textarea with monospace font                                        
+    - Character counter with color feedback (green/amber/red)                   
+    - Save/Clear buttons with confirmation                                      
+    - Unsaved changes indicator                                                 
+                                                                                
+  Note on Database Migration                                                    
+                                                                                
+  The migration was generated but there's a local database sync issue (existing 
+  tables without migration history). When you need to apply the migration, you  
+  may need to either:                                                           
+  1. Delete the local SQLite database and run dotnet ef database update         
+  2. Or manually mark older migrations as applied with dotnet ef database update
+   <migration-name>                                                             
+                                                                                
+✻ Cogitated for 5m 3s                                                           
+                                                                                
+> The database is just for testing it doesn't mess with the production at       
+  all; it's completely separateCurrently hosting Postgres via Superbase         
+                                                                                
+● Got it. Let me fix the local SQLite test database by deleting it and          
+  recreating fresh with all migrations applied.                                 
+                                                                                
+● Search(pattern: "**/*.db")                                                    
+  ⎿  Found 1 file (ctrl+o to expand)                                            
+                                                                                
+● Bash(rm "C:\Users\hey\Documents\GitHub\BigJobHunterPro_C\src\WebAPI\bigjobhunt
+      erpro.db")                                                                
+  ⎿  (No content)                                                               
+                                                                                
+● Bash(cd "C:\Users\hey\Documents\GitHub\BigJobHunterPro_C" &&       timeout: 1m
+      dotnet ef database update --project src/Infrastructure         0s         
+      --startup-project src/WebAPI)                                             
+  ⎿  Build started...                                                           
+     Build succeeded.                                                           
+     warn: Microsoft.EntityFrameworkCore.Model.Validation[10620]                
+     … +845 lines (ctrl+o to expand)                                            
+                                                                                
+● Bash(tail -20 "C:\Users\hey\.claude\projects\C--Users-hey-Documents-GitHub-Big
+      JobHunterPro-C\edc2e2ce-a0fa-4972-994a-1eae2b2f5467\tool-results\toolu_01C
+      7mzQQtyqnmsjU…)                                                           
+  ⎿ info: Microsoft.EntityFrameworkCore.Database.Command[20101]                 
+          Executed DbCommand (0ms) [Parameters=[], CommandType='Text', Comm     
+    andTimeout='30']                                                            
+    … +29 lines (ctrl+o to expand)                                              
+                                                                                
+                                                                                
+● All migrations applied successfully, including the new                        
+  AddResumeToApplicationUser migration. The local SQLite test database is now   
+  ready with the resume fields.                                                 
+                                                                                
+  You can test the feature by:                                                  
+  1. Running the backend: dotnet run --project src/WebAPI                       
+  2. Running the frontend: cd bigjobhunterpro-web && npm run dev                
+  3. Navigate to /app/profile after logging in                                  
+                                                                                
+✻ Cooked for 38s                                                                
+

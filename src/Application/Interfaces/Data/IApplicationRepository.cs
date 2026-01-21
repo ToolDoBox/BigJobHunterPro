@@ -31,6 +31,13 @@ public interface IApplicationRepository : IRepository<ApplicationEntity>
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Gets a single application by ID with timeline events and contacts included.
+    /// </summary>
+    Task<ApplicationEntity?> GetByIdWithDetailsAsync(
+        Guid id,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Counts the total number of applications for a user.
     /// </summary>
     Task<int> CountByUserIdAsync(

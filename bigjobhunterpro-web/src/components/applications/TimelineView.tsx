@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import type { TimelineEvent } from '../../types/timelineEvent';
+import type { Contact } from '../../types/contact';
 import { EventTypeBadge } from './EventTypeBadge';
 import { AddTimelineEventModal } from './AddTimelineEventModal';
 import { EditTimelineEventModal } from './EditTimelineEventModal';
+import FollowUpEmailModal from './FollowUpEmailModal';
 import { timelineEventsService } from '../../services/timelineEvents';
 import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../hooks/useAuth';
@@ -11,12 +13,23 @@ interface TimelineViewProps {
   applicationId: string;
   events: TimelineEvent[];
   onEventsUpdated: () => void;
+  companyName: string;
+  roleTitle: string;
+  contacts: Contact[];
 }
 
-export function TimelineView({ applicationId, events, onEventsUpdated }: TimelineViewProps) {
+export function TimelineView({
+  applicationId,
+  events,
+  onEventsUpdated,
+  companyName,
+  roleTitle,
+  contacts,
+}: TimelineViewProps) {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<TimelineEvent | null>(null);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  const [followUpEvent, setFollowUpEvent] = useState<TimelineEvent | null>(null);
   const { showToast } = useToast();
 
   const formatDate = (dateString: string) => {
@@ -129,6 +142,17 @@ export function TimelineView({ applicationId, events, onEventsUpdated }: Timelin
                 </div>
 
                 <div className="flex items-center gap-2 ml-4">
+                  {/* Follow-up email button for Interview and Screening events */}
+                  {(event.eventType === 'Interview' || event.eventType === 'Screening') && (
+                    <button
+                      onClick={() => setFollowUpEvent(event)}
+                      className="text-amber hover:text-orange text-sm"
+                      aria-label="Generate follow-up email"
+                      title="Generate follow-up email"
+                    >
+                      📧
+                    </button>
+                  )}
                   <button
                     onClick={() => setEditingEvent(event)}
                     className="text-terminal hover:text-crt-amber text-sm"
@@ -164,6 +188,15 @@ export function TimelineView({ applicationId, events, onEventsUpdated }: Timelin
         onClose={() => setEditingEvent(null)}
         onSubmit={handleEditEvent}
         event={editingEvent}
+      />
+
+      <FollowUpEmailModal
+        isOpen={!!followUpEvent}
+        onClose={() => setFollowUpEvent(null)}
+        companyName={companyName}
+        roleTitle={roleTitle}
+        contacts={contacts}
+        event={followUpEvent}
       />
     </div>
   );

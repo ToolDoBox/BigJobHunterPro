@@ -1,4 +1,5 @@
 import type { TimelineEvent } from './timelineEvent';
+import type { Contact } from './contact';
 
 export interface CreateApplicationRequest {
   sourceUrl?: string;
@@ -54,6 +55,7 @@ export interface ApplicationDetail {
   coverLetterHtml: string | null;
   coverLetterGeneratedAt: string | null;
   timelineEvents: TimelineEvent[];
+  contacts: Contact[];
 }
 
 export interface UpdateApplicationRequest {

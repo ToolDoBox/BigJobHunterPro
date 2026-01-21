@@ -9,6 +9,7 @@ import { formatRelativeDate } from '@/utils/date';
 import { useAuth } from '@/hooks/useAuth';
 import { TimelineView } from '@/components/applications/TimelineView';
 import CoverLetterSection from '@/components/applications/CoverLetterSection';
+import ContactsSection from '@/components/applications/ContactsSection';
 import type {
   ApplicationDetail,
   UpdateApplicationRequest
@@ -752,6 +753,17 @@ export default function ApplicationDetail() {
 
         <div className="divider-metal my-6" />
 
+        {/* Contacts Section */}
+        {application && (
+          <ContactsSection
+            applicationId={application.id}
+            contacts={application.contacts || []}
+            onUpdated={fetchApplication}
+          />
+        )}
+
+        <div className="divider-metal my-6" />
+
         {/* Timeline Events Section */}
         <div ref={timelineRef}>
           {application && (
@@ -759,6 +771,9 @@ export default function ApplicationDetail() {
               applicationId={application.id}
               events={application.timelineEvents || []}
               onEventsUpdated={fetchApplication}
+              companyName={application.companyName}
+              roleTitle={application.roleTitle}
+              contacts={application.contacts || []}
             />
           )}
         </div>

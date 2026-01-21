@@ -1,3 +1,4 @@
+using Application.DTOs.Contacts;
 using Application.DTOs.TimelineEvents;
 
 namespace Application.DTOs.Applications;
@@ -27,4 +28,5 @@ public class ApplicationDto
     public string? CoverLetterHtml { get; set; }
     public DateTime? CoverLetterGeneratedAt { get; set; }
     public List<TimelineEventDto> TimelineEvents { get; set; } = new();
+    public List<ContactDto> Contacts { get; set; } = new();
 }

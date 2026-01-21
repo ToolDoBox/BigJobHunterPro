@@ -16,6 +16,7 @@ public class UnitOfWork : IUnitOfWork
     // Lazy-loaded repositories
     private IApplicationRepository? _applications;
     private ITimelineEventRepository? _timelineEvents;
+    private IContactRepository? _contacts;
     private IActivityEventRepository? _activityEvents;
     private IHuntingPartyRepository? _huntingParties;
     private IHuntingPartyMembershipRepository? _huntingPartyMemberships;
@@ -37,6 +38,12 @@ public class UnitOfWork : IUnitOfWork
     /// </summary>
     public ITimelineEventRepository TimelineEvents =>
         _timelineEvents ??= new TimelineEventRepository(_context);
+
+    /// <summary>
+    /// Gets the Contact repository (lazy-loaded).
+    /// </summary>
+    public IContactRepository Contacts =>
+        _contacts ??= new ContactRepository(_context);
 
     /// <summary>
     /// Gets the ActivityEvent repository (lazy-loaded).

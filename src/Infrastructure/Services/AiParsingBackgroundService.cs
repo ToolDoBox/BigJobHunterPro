@@ -1,4 +1,6 @@
+using Application.DTOs.AiParsing;
 using Application.Interfaces;
+using Domain.Entities;
 using Domain.Enums;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -111,6 +113,39 @@ public class AiParsingBackgroundService : BackgroundService
                         Enum.TryParse<WorkMode>(result.WorkMode, ignoreCase: true, out var workMode))
                     {
                         application.WorkMode = workMode;
+                    }
+
+                    // Create Contact entities from parsed contacts
+                    if (result.Contacts.Count > 0)
+                    {
+                        foreach (var parsedContact in result.Contacts)
+                        {
+                            var relationship = ContactRelationship.Other;
+                            if (!string.IsNullOrEmpty(parsedContact.Relationship) &&
+                                Enum.TryParse<ContactRelationship>(parsedContact.Relationship, ignoreCase: true, out var parsedRelationship))
+                            {
+                                relationship = parsedRelationship;
+                            }
+
+                            var contact = new Contact
+                            {
+                                Id = Guid.NewGuid(),
+                                ApplicationId = application.Id,
+                                Name = parsedContact.Name,
+                                Role = parsedContact.Role,
+                                Relationship = relationship,
+                                Emails = parsedContact.Emails,
+                                Phones = parsedContact.Phones,
+                                LinkedIn = parsedContact.LinkedIn,
+                                CreatedDate = DateTime.UtcNow
+                            };
+
+                            dbContext.Contacts.Add(contact);
+                        }
+
+                        _logger.LogInformation(
+                            "Created {ContactCount} contacts for application {Id}",
+                            result.Contacts.Count, application.Id);
                     }
 
                     application.ParsedByAI = true;

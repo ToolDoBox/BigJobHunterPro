@@ -1,0 +1,1293 @@
+                                                                                
+ ▐▛███▜▌   Claude Code v2.1.14                                                  
+▝▜█████▛▘  Opus 4.5 · Claude Pro                                                
+  ▘▘ ▝▝    E:\Dev\BigJobHunterPro                                               
+                                                                                
+❯ Implement the following plan:                                                 
+                                                                                
+  # Follow-Up Email Feature Implementation Plan                                 
+                                                                                
+  ## Summary                                                                    
+                                                                                
+  Two-part feature:                                                             
+  1. **Contacts System**: Add a Contact entity to track recruiters/hiring       
+  managers with multiple phones, emails, and notes                              
+  2. **AI Parsing Update**: Update the AI job parsing to extract contact        
+  information when available                                                    
+  3. **Follow-Up Email**: Add a button to generate thank-you emails using       
+  stored contacts                                                               
+                                                                                
+  ---                                                                           
+                                                                                
+  # Part 1: Contacts System                                                     
+                                                                                
+  ## Contact Entity Design                                                      
+                                                                                
+  Each Application can have multiple Contacts. Each Contact has:                
+  - **Name** (required)                                                         
+  - **Role** (e.g., "Recruiter", "Hiring Manager", "Team Lead")                 
+  - **Relationship** (enum: Recruiter, HiringManager, TeamMember, Other)        
+  - **Emails** (JSON array - supports multiple)                                 
+  - **Phones** (JSON array - supports multiple)                                 
+  - **LinkedIn** (optional URL)                                                 
+  - **Notes** (text field)                                                      
+                                                                                
+  This follows the existing pattern of using JSON arrays for collections        
+  (like RequiredSkills).                                                        
+                                                                                
+  ## Files to Create (Backend)                                                  
+                                                                                
+  ### 1. `src/Domain/Entities/Contact.cs`                                       
+  ```csharp                                                                     
+  public class Contact                                                          
+  {                                                                             
+  public Guid Id { get; set; }                                                  
+  public Guid ApplicationId { get; set; }                                       
+  public string Name { get; set; } = string.Empty;                              
+  public string? Role { get; set; }                                             
+  public ContactRelationship Relationship { get; set; }                         
+  public List<string> Emails { get; set; } = new();                             
+  public List<string> Phones { get; set; } = new();                             
+  public string? LinkedIn { get; set; }                                         
+  public string? Notes { get; set; }                                            
+  public DateTime CreatedDate { get; set; }                                     
+  public DateTime? UpdatedDate { get; set; }                                    
+                                                                                
+  // Navigation                                                                 
+  public Application Application { get; set; } = null!;                         
+  }                                                                             
+  ```                                                                           
+                                                                                
+  ### 2. `src/Domain/Enums/ContactRelationship.cs`                              
+  ```csharp                                                                     
+  public enum ContactRelationship                                               
+  {                                                                             
+  Recruiter,                                                                    
+  HiringManager,                                                                
+  TeamMember,                                                                   
+  Other                                                                         
+  }                                                                             
+  ```                                                                           
+                                                                                
+  ### 3. `src/Application/DTOs/Contacts/ContactDto.cs`                          
+  ```csharp                                                                     
+  public class ContactDto                                                       
+  {                                                                             
+  public Guid Id { get; set; }                                                  
+  public string Name { get; set; }                                              
+  public string? Role { get; set; }                                             
+  public string Relationship { get; set; }                                      
+  public List<string> Emails { get; set; }                                      
+  public List<string> Phones { get; set; }                                      
+  public string? LinkedIn { get; set; }                                         
+  public string? Notes { get; set; }                                            
+  }                                                                             
+  ```                                                                           
+                                                                                
+  ### 4. `src/Application/DTOs/Contacts/CreateContactRequest.cs`                
+  ### 5. `src/Application/DTOs/Contacts/UpdateContactRequest.cs`                
+                                                                                
+  ### 6. `src/WebAPI/Controllers/ContactsController.cs`                         
+  Nested under applications:                                                    
+  - `POST /api/applications/{applicationId}/contacts`                           
+  - `GET /api/applications/{applicationId}/contacts`                            
+  - `PUT /api/applications/{applicationId}/contacts/{contactId}`                
+  - `DELETE /api/applications/{applicationId}/contacts/{contactId}`             
+                                                                                
+  ## Files to Modify (Backend)                                                  
+                                                                                
+  ### 7. `src/Domain/Entities/Application.cs`                                   
+  Add navigation property:                                                      
+  ```csharp                                                                     
+  public List<Contact> Contacts { get; set; } = new();                          
+  ```                                                                           
+                                                                                
+  ### 8. `src/Infrastructure/Data/ApplicationDbContext.cs`                      
+  - Add `DbSet<Contact> Contacts`                                               
+  - Add Contact entity configuration with JSON conversion for Emails/Phones     
+  - Configure cascade delete from Application                                   
+                                                                                
+  ### 9. `src/Application/DTOs/Applications/ApplicationDto.cs`                  
+  Add contacts to response:                                                     
+  ```csharp                                                                     
+  public List<ContactDto> Contacts { get; set; } = new();                       
+  ```                                                                           
+                                                                                
+  ### 10. Migration                                                             
+  Create migration for Contacts table.                                          
+                                                                                
+  ---                                                                           
+                                                                                
+  # Part 2: AI Parsing Update                                                   
+                                                                                
+  Update the AI parser to extract contact information from job postings         
+  when available.                                                               
+                                                                                
+  ## Files to Modify                                                            
+                                                                                
+  ### 1. `src/Infrastructure/Services/AiParsingService.cs`                      
+                                                                                
+  **Update prompt** (lines 117-143) to include contacts:                        
+  ```                                                                           
+  "contacts": [                                                                 
+  {                                                                             
+  "name": string,                                                               
+  "role": string | null,                                                        
+  "relationship": "Recruiter" | "HiringManager" | "TeamMember" |                
+  "Other",                                                                      
+  "emails": string[],                                                           
+  "phones": string[],                                                           
+  "linkedin": string | null                                                     
+  }                                                                             
+  ]                                                                             
+  ```                                                                           
+                                                                                
+  **Update `ParsedJobPosting` class** (lines 291-302):                          
+  ```csharp                                                                     
+  public List<ParsedContact>? Contacts { get; set; }                            
+                                                                                
+  private class ParsedContact                                                   
+  {                                                                             
+  public string? Name { get; set; }                                             
+  public string? Role { get; set; }                                             
+  public string? Relationship { get; set; }                                     
+  public List<string>? Emails { get; set; }                                     
+  public List<string>? Phones { get; set; }                                     
+  public string? LinkedIn { get; set; }                                         
+  }                                                                             
+  ```                                                                           
+                                                                                
+  **Update result mapping** (lines 201-213) to include contacts.                
+                                                                                
+  ### 2. `src/Application/DTOs/AiParsing/AiParsingResult.cs`                    
+  Add:                                                                          
+  ```csharp                                                                     
+  public List<ParsedContactResult> Contacts { get; set; } = new();              
+                                                                                
+  public class ParsedContactResult                                              
+  {                                                                             
+  public string Name { get; set; } = string.Empty;                              
+  public string? Role { get; set; }                                             
+  public string Relationship { get; set; } = "Other";                           
+  public List<string> Emails { get; set; } = new();                             
+  public List<string> Phones { get; set; } = new();                             
+  public string? LinkedIn { get; set; }                                         
+  }                                                                             
+  ```                                                                           
+                                                                                
+  ### 3. `src/Infrastructure/Services/AiParsingBackgroundService.cs`            
+  Update `ProcessPendingApplicationsAsync` (lines 99-121) to create Contact     
+  entities from parsed contacts.                                                
+                                                                                
+  ---                                                                           
+                                                                                
+  # Part 3: Frontend Contacts UI                                                
+                                                                                
+  ## Files to Create (Frontend)                                                 
+                                                                                
+  ### 1. `bigjobhunterpro-web/src/types/contact.ts`                             
+  ```typescript                                                                 
+  export type ContactRelationship = 'Recruiter' | 'HiringManager' |             
+  'TeamMember' | 'Other';                                                       
+                                                                                
+  export interface Contact {                                                    
+  id: string;                                                                   
+  name: string;                                                                 
+  role: string | null;                                                          
+  relationship: ContactRelationship;                                            
+  emails: string[];                                                             
+  phones: string[];                                                             
+  linkedin: string | null;                                                      
+  notes: string | null;                                                         
+  }                                                                             
+  ```                                                                           
+                                                                                
+  ### 2. `bigjobhunterpro-web/src/services/contacts.ts`                         
+  API service for contact CRUD operations.                                      
+                                                                                
+  ### 3.                                                                        
+  `bigjobhunterpro-web/src/components/applications/ContactsSection.tsx`         
+  Display contacts for an application with:                                     
+  - List of contact cards                                                       
+  - Add/Edit/Delete buttons                                                     
+  - Shows name, role, emails, phones                                            
+                                                                                
+  ### 4.                                                                        
+  `bigjobhunterpro-web/src/components/applications/AddContactModal.tsx`         
+  ### 5.                                                                        
+  `bigjobhunterpro-web/src/components/applications/EditContactModal.tsx`        
+                                                                                
+  ## Files to Modify (Frontend)                                                 
+                                                                                
+  ### 6. `bigjobhunterpro-web/src/types/application.ts`                         
+  Add contacts to ApplicationDetail interface.                                  
+                                                                                
+  ### 7. `bigjobhunterpro-web/src/pages/ApplicationDetail.tsx`                  
+  Add ContactsSection component **above** the Timeline section (before line     
+  756).                                                                         
+                                                                                
+  ---                                                                           
+                                                                                
+  # Part 4: Follow-Up Email Feature                                             
+                                                                                
+  Now that contacts exist, the follow-up email modal can pre-populate from      
+  stored contacts.                                                              
+                                                                                
+  ## Files to Create                                                            
+                                                                                
+  ### 1. `bigjobhunterpro-web/src/utils/followUpEmail.ts`                       
+                                                                                
+  Utility functions for email generation:                                       
+                                                                                
+  - `generateFollowUpEmail(data)` - Builds email content from template          
+  tokens                                                                        
+  - `extractTopicFromNotes(notes)` - Extracts first sentence from event         
+  notes as topic suggestion                                                     
+  - `openMailtoLink(url)` - Opens mailto URL in new tab                         
+                                                                                
+  **Email Template** (Final Draft format per requirements):                     
+  ```                                                                           
+  Hi {RecipientFirstName},                                                      
+                                                                                
+  Thank you for taking the time to speak with me about the {RoleTitle} role     
+  at {CompanyName}. I appreciated the discussion about {TopicDiscussed}.        
+  Please let me know if I can provide anything else.                            
+                                                                                
+  {SenderName}                                                                  
+  ```                                                                           
+                                                                                
+  ### 2.                                                                        
+  `bigjobhunterpro-web/src/components/applications/FollowUpEmailModal.tsx`      
+                                                                                
+  Modal component with contact selection and preview:                           
+                                                                                
+  **Features:**                                                                 
+  - If contacts exist: dropdown to select a contact (auto-fills email/name)     
+  - If no contacts: manual email/name entry                                     
+  - Topic discussed field (pre-filled from event notes)                         
+  - Preview before sending                                                      
+  - "Open Email Client" button launches mailto                                  
+                                                                                
+  ## Files to Modify                                                            
+                                                                                
+  ### 3. `bigjobhunterpro-web/src/components/applications/TimelineView.tsx`     
+                                                                                
+  Update props to include contacts:                                             
+  ```typescript                                                                 
+  interface TimelineViewProps {                                                 
+  applicationId: string;                                                        
+  events: TimelineEvent[];                                                      
+  onEventsUpdated: () => void;                                                  
+  companyName: string;    // NEW                                                
+  roleTitle: string;      // NEW                                                
+  contacts: Contact[];    // NEW                                                
+  }                                                                             
+  ```                                                                           
+                                                                                
+  Add 📧 button to Interview/Screening event cards.                             
+                                                                                
+  ### 4. `bigjobhunterpro-web/src/pages/ApplicationDetail.tsx`                  
+                                                                                
+  Pass contacts to TimelineView:                                                
+  ```typescript                                                                 
+  <TimelineView                                                                 
+  applicationId={application.id}                                                
+  events={application.timelineEvents || []}                                     
+  onEventsUpdated={fetchApplication}                                            
+  companyName={application.companyName}                                         
+  roleTitle={application.roleTitle}                                             
+  contacts={application.contacts || []}                                         
+  />                                                                            
+  ```                                                                           
+                                                                                
+  ---                                                                           
+                                                                                
+  # Implementation Order                                                        
+                                                                                
+  ## Phase 1: Backend Contacts System                                           
+  1. Create `Contact.cs` entity and `ContactRelationship.cs` enum               
+  2. Add Contacts navigation to `Application.cs`                                
+  3. Update `ApplicationDbContext.cs` with DbSet and configuration              
+  4. Create migration and apply                                                 
+  5. Create DTOs: `ContactDto`, `CreateContactRequest`,                         
+  `UpdateContactRequest`                                                        
+  6. Create `ContactsController.cs` with CRUD endpoints                         
+  7. Update `ApplicationDto.cs` to include contacts                             
+                                                                                
+  ## Phase 2: AI Parsing Update                                                 
+  8. Update `AiParsingResult.cs` with contacts list                             
+  9. Update `AiParsingService.cs` prompt and parsing logic                      
+  10. Update `AiParsingBackgroundService.cs` to create Contact entities         
+                                                                                
+  ## Phase 3: Frontend Contacts UI                                              
+  11. Create `contact.ts` types                                                 
+  12. Create `contacts.ts` API service                                          
+  13. Update `application.ts` types                                             
+  14. Create `ContactsSection.tsx`, `AddContactModal.tsx`,                      
+  `EditContactModal.tsx`                                                        
+  15. Add ContactsSection to `ApplicationDetail.tsx`                            
+                                                                                
+  ## Phase 4: Follow-Up Email                                                   
+  16. Create `followUpEmail.ts` utility                                         
+  17. Create `FollowUpEmailModal.tsx`                                           
+  18. Update `TimelineView.tsx` with button and modal                           
+  19. Update `ApplicationDetail.tsx` to pass contacts to TimelineView           
+                                                                                
+  ---                                                                           
+                                                                                
+  # Verification Steps                                                          
+                                                                                
+  ## Backend Verification                                                       
+  1. Run `dotnet build` - should compile without errors                         
+  2. Run `dotnet ef migrations add AddContacts` - creates migration             
+  3. Run `dotnet ef database update` - applies migration                        
+  4. Start API with `dotnet run --project src/WebAPI`                           
+  5. Test contacts CRUD via curl or Postman:                                    
+  - POST /api/applications/{id}/contacts                                        
+  - GET /api/applications/{id}/contacts                                         
+  - PUT /api/applications/{id}/contacts/{contactId}                             
+  - DELETE /api/applications/{id}/contacts/{contactId}                          
+                                                                                
+  ## AI Parsing Verification                                                    
+  6. Create a new application with raw content containing contact info          
+  7. Check logs for AI parsing completion                                       
+  8. Verify contacts were created from parsed data                              
+                                                                                
+  ## Frontend Verification                                                      
+  9. Navigate to application detail page                                        
+  10. Verify Contacts section appears with add/edit/delete functionality        
+  11. Add a contact manually, verify it persists                                
+  12. Click 📧 on an Interview/Screening event                                  
+  13. Verify contact dropdown appears if contacts exist                         
+  14. Select contact, verify email/name auto-populate                           
+  15. Preview email, verify template tokens are filled correctly                
+  16. Click "Open Email Client", verify mailto opens with correct content       
+                                                                                
+  ## Edge Cases to Test                                                         
+  - Application with no contacts (manual entry mode)                            
+  - Contact with multiple emails (first email selected by default)              
+  - Event with no notes (topic field empty)                                     
+  - Long event notes (truncated appropriately)                                  
+                                                                                
+                                                                                
+  If you need specific details from before exiting plan mode (like exact        
+  code snippets, error messages, or content you generated), read the full       
+  transcript at: C:\Users\chris\.claude\projects\E--Dev-BigJobHunterPro\526     
+  be56a-b854-41db-9421-4bc3fcc39f01.jsonl                                       
+                                                                                
+● I'll implement this feature in phases. Let me start by creating a todo list to
+   track progress.                                                              
+                                                                                
+● Let me first examine the existing codebase structure to understand the        
+  patterns.                                                                     
+                                                                                
+● Search(pattern: "src/Domain/Entities/*.cs")                                   
+  ⎿  Found 6 files (ctrl+o to expand)                                           
+                                                                                
+● Search(pattern: "src/Domain/Enums/*.cs")                                      
+  ⎿  Found 6 files (ctrl+o to expand)                                           
+                                                                                
+● Search(pattern: "src/Application/DTOs/**/*.cs")                               
+  ⎿  Found 45 files (ctrl+o to expand)                                          
+                                                                                
+● Read(src\Domain\Entities\Application.cs)                                      
+  ⎿  Read 66 lines                                                              
+                                                                                
+● Read(src\Domain\Enums\EventType.cs)                                           
+  ⎿  Read 13 lines                                                              
+                                                                                
+● Read(src\Application\DTOs\Applications\ApplicationDto.cs)                     
+  ⎿  Read 31 lines                                                              
+                                                                                
+● Read(src\Infrastructure\Data\ApplicationDbContext.cs)                         
+  ⎿  Read 116 lines                                                             
+                                                                                
+● Search(pattern: "src/WebAPI/Controllers/*.cs")                                
+  ⎿  Found 9 files (ctrl+o to expand)                                           
+                                                                                
+● Read(src\WebAPI\Controllers\TimelineEventsController.cs)                      
+  ⎿  Read 144 lines                                                             
+                                                                                
+● Read(src\Application\DTOs\TimelineEvents\CreateTimelineEventRequest.cs)       
+  ⎿  Read 19 lines                                                              
+                                                                                
+● Search(pattern: "src/Application/Interfaces/*.cs")                            
+  ⎿  Found 17 files (ctrl+o to expand)                                          
+                                                                                
+● Read(src\Infrastructure\Services\AiParsingService.cs)                         
+  ⎿  Read 304 lines                                                             
+                                                                                
+● Let me also check the background service and the existing service pattern.    
+                                                                                
+● Read(src\Infrastructure\Services\AiParsingBackgroundService.cs)               
+  ⎿  Read 165 lines                                                             
+                                                                                
+● Read(src\Application\Interfaces\ITimelineEventService.cs)                     
+  ⎿  Read 12 lines                                                              
+                                                                                
+● Search(pattern: "src/Infrastructure/Services/*Service.cs")                    
+  ⎿  Found 16 files (ctrl+o to expand)                                          
+                                                                                
+● Read(src\Application\DTOs\AiParsing\AiParsingResult.cs)                       
+  ⎿  Read 25 lines                                                              
+                                                                                
+● Read(src\Infrastructure\Services\TimelineEventService.cs)                     
+  ⎿  Read 249 lines                                                             
+                                                                                
+● Search(pattern: "src/Application/Interfaces/Data/*.cs")                       
+  ⎿  Found 8 files (ctrl+o to expand)                                           
+                                                                                
+● Read(src\Application\Interfaces\Data\IUnitOfWork.cs)                          
+  ⎿  Read 63 lines                                                              
+                                                                                
+● Read(src\Application\Interfaces\Data\IRepository.cs)                          
+  ⎿  Read 57 lines                                                              
+                                                                                
+● Search(pattern: "src/Infrastructure/Data/Repositories/*.cs")                  
+  ⎿  Found 7 files (ctrl+o to expand)                                           
+                                                                                
+● Read(src\Application\Interfaces\Data\ITimelineEventRepository.cs)             
+  ⎿  Read 49 lines                                                              
+                                                                                
+● Read(src\Infrastructure\Data\Repositories\Repository.cs)                      
+  ⎿  Read 63 lines                                                              
+                                                                                
+● Search(pattern: "src/Infrastructure/Data/UnitOfWork.cs")                      
+  ⎿  Found 1 file (ctrl+o to expand)                                            
+                                                                                
+● Read(src\Infrastructure\Data\UnitOfWork.cs)                                   
+  ⎿  Read 137 lines                                                             
+                                                                                
+● Now I have a good understanding of the codebase. Let me start implementing    
+  Phase 1.                                                                      
+                                                                                
+● Write(src\Domain\Enums\ContactRelationship.cs)                                
+  ⎿  Wrote 1 lines to src\Domain\Enums\ContactRelationship.cs                   
+     namespace Domain.Enums;                                                    
+     public enum ContactRelationship                                            
+     {                                                                          
+         Recruiter = 0,                                                         
+         HiringManager = 1,                                                     
+         TeamMember = 2,                                                        
+         Other = 3                                                              
+     }                                                                          
+                                                                                
+● Write(src\Domain\Entities\Contact.cs)                                         
+  ⎿  Wrote 1 lines to src\Domain\Entities\Contact.cs                            
+     using Domain.Enums;                                                        
+     namespace Domain.Entities;                                                 
+     public class Contact                                                       
+     {                                                                          
+         public Guid Id { get; set; }                                           
+         public Guid ApplicationId { get; set; }                                
+         public string Name { get; set; } = string.Empty;                       
+         public string? Role { get; set; }                                      
+                                                                                
+● Update(src\Domain\Entities\Application.cs)                                    
+  ⎿  Added 1 line                                                               
+      32      // Navigation properties                                          
+      33      public ApplicationUser User { get; set; } = null!;                
+      34      public List<TimelineEvent> TimelineEvents { get; set; } =         
+          new();                                                                
+      35 +    public List<Contact> Contacts { get; set; } = new();              
+      36                                                                        
+      37      // Computed properties for performance                            
+      38      public ApplicationStatus ComputeCurrentStatus()                   
+                                                                                
+● Update(src\Infrastructure\Data\ApplicationDbContext.cs)                       
+  ⎿  Added 1 line                                                               
+      16      // DbSets                                                         
+      17      public DbSet<Domain.Entities.Application> Applications =>         
+          Set<Domain.Entities.Application>();                                   
+      18      public DbSet<TimelineEvent> TimelineEvents =>                     
+          Set<TimelineEvent>();                                                 
+      19 +    public DbSet<Contact> Contacts => Set<Contact>();                 
+      20      public DbSet<ActivityEvent> ActivityEvents =>                     
+          Set<ActivityEvent>();                                                 
+      21      public DbSet<HuntingParty> HuntingParties =>                      
+          Set<HuntingParty>();                                                  
+      22      public DbSet<HuntingPartyMembership>                              
+          HuntingPartyMemberships => Set<HuntingPartyMembership>();             
+                                                                                
+● Now I need to add the Contact entity configuration. Let me add it after the   
+  TimelineEvent configuration.                                                  
+                                                                                
+● Update(src\Infrastructure\Data\ApplicationDbContext.cs)                       
+  ⎿  Added 17 lines                                                             
+      66              entity.HasIndex(e => e.Timestamp);                        
+      67          });                                                           
+      68                                                                        
+      69 +        // Configure Contact entity                                   
+      70 +        builder.Entity<Contact>(entity =>                             
+      71 +        {                                                             
+      72 +            entity.HasKey(e => e.Id);                                 
+      73 +            entity.Property(e =>                                      
+         +e.Name).IsRequired().HasMaxLength(200);                               
+      74 +            entity.Property(e => e.Role).HasMaxLength(100);           
+      75 +            entity.Property(e =>                                      
+         +e.LinkedIn).HasMaxLength(500);                                        
+      76 +            entity.Property(e => e.Notes).HasMaxLength(2000);         
+      77 +            entity.Property(e =>                                      
+         +e.Emails).HasConversion(stringListConverter);                         
+      78 +            entity.Property(e =>                                      
+         +e.Phones).HasConversion(stringListConverter);                         
+      79 +            entity.HasIndex(e => e.ApplicationId);                    
+      80 +            entity.HasOne(e => e.Application)                         
+      81 +                  .WithMany(a => a.Contacts)                          
+      82 +                  .HasForeignKey(e => e.ApplicationId)                
+      83 +                  .OnDelete(DeleteBehavior.Cascade);                  
+      84 +        });                                                           
+      85 +                                                                      
+      86          // Configure ActivityEvent entity                             
+      87          builder.Entity<ActivityEvent>(entity =>                       
+      88          {                                                             
+                                                                                
+● Now let me create the Contact repository interface and implementation.        
+                                                                                
+● Write(src\Application\Interfaces\Data\IContactRepository.cs)                  
+  ⎿  Wrote 1 lines to src\Application\Interfaces\Data\IContactRepository.cs     
+     using Domain.Entities;                                                     
+     namespace Application.Interfaces.Data;                                     
+     /// <summary>                                                              
+     /// Repository interface for Contact entity.                               
+     /// </summary>                                                             
+     public interface IContactRepository : IRepository<Contact>                 
+     {                                                                          
+         /// <summary>                                                          
+                                                                                
+● Write(src\Infrastructure\Data\Repositories\ContactRepository.cs)              
+  ⎿  Wrote 1 lines to                                                           
+     src\Infrastructure\Data\Repositories\ContactRepository.cs                  
+     using Application.Interfaces.Data;                                         
+     using Domain.Entities;                                                     
+     using Microsoft.EntityFrameworkCore;                                       
+     namespace Infrastructure.Data.Repositories;                                
+     /// <summary>                                                              
+     /// Repository implementation for Contact entity.                          
+     /// </summary>                                                             
+     public class ContactRepository : Repository<Contact>,                      
+     IContactRepository                                                         
+                                                                                
+● Now let me update the UnitOfWork interface and implementation.                
+                                                                                
+● Update(src\Application\Interfaces\Data\IUnitOfWork.cs)                        
+  ⎿  Added 5 lines                                                              
+      17      ITimelineEventRepository TimelineEvents { get; }                  
+      18                                                                        
+      19      /// <summary>                                                     
+      20 +    /// Repository for Contact entities.                              
+      21 +    /// </summary>                                                    
+      22 +    IContactRepository Contacts { get; }                              
+      23 +                                                                      
+      24 +    /// <summary>                                                     
+      25      /// Repository for ActivityEvent entities.                        
+      26      /// </summary>                                                    
+      27      IActivityEventRepository ActivityEvents { get; }                  
+                                                                                
+● Update(src\Infrastructure\Data\UnitOfWork.cs)                                 
+  ⎿  Added 1 line                                                               
+      16      // Lazy-loaded repositories                                       
+      17      private IApplicationRepository? _applications;                    
+      18      private ITimelineEventRepository? _timelineEvents;                
+      19 +    private IContactRepository? _contacts;                            
+      20      private IActivityEventRepository? _activityEvents;                
+      21      private IHuntingPartyRepository? _huntingParties;                 
+      22      private IHuntingPartyMembershipRepository?                        
+          _huntingPartyMemberships;                                             
+                                                                                
+● Update(src\Infrastructure\Data\UnitOfWork.cs)                                 
+  ⎿  Added 6 lines                                                              
+      40          _timelineEvents ??= new                                       
+          TimelineEventRepository(_context);                                    
+      41                                                                        
+      42      /// <summary>                                                     
+      43 +    /// Gets the Contact repository (lazy-loaded).                    
+      44 +    /// </summary>                                                    
+      45 +    public IContactRepository Contacts =>                             
+      46 +        _contacts ??= new ContactRepository(_context);                
+      47 +                                                                      
+      48 +    /// <summary>                                                     
+      49      /// Gets the ActivityEvent repository (lazy-loaded).              
+      50      /// </summary>                                                    
+      51      public IActivityEventRepository ActivityEvents =>                 
+                                                                                
+● Write(src\Application\DTOs\Contacts\ContactDto.cs)                            
+  ⎿  Wrote 1 lines to src\Application\DTOs\Contacts\ContactDto.cs               
+     namespace Application.DTOs.Contacts;                                       
+     public class ContactDto                                                    
+     {                                                                          
+         public Guid Id { get; set; }                                           
+         public string Name { get; set; } = string.Empty;                       
+         public string? Role { get; set; }                                      
+         public string Relationship { get; set; } = string.Empty;               
+         public List<string> Emails { get; set; } = new();                      
+         public List<string> Phones { get; set; } = new();                      
+                                                                                
+● Write(src\Application\DTOs\Contacts\CreateContactRequest.cs)                  
+  ⎿  Wrote 1 lines to src\Application\DTOs\Contacts\CreateContactRequest.cs     
+     using System.ComponentModel.DataAnnotations;                               
+     using Domain.Enums;                                                        
+     namespace Application.DTOs.Contacts;                                       
+     public class CreateContactRequest                                          
+     {                                                                          
+         [Required]                                                             
+         [MaxLength(200)]                                                       
+         public string Name { get; set; } = string.Empty;                       
+                                                                                
+● Write(src\Application\DTOs\Contacts\UpdateContactRequest.cs)                  
+  ⎿  Wrote 1 lines to src\Application\DTOs\Contacts\UpdateContactRequest.cs     
+     using System.ComponentModel.DataAnnotations;                               
+     using Domain.Enums;                                                        
+     namespace Application.DTOs.Contacts;                                       
+     public class UpdateContactRequest                                          
+     {                                                                          
+         [Required]                                                             
+         [MaxLength(200)]                                                       
+         public string Name { get; set; } = string.Empty;                       
+                                                                                
+● Write(src\Application\DTOs\Contacts\ContactsListResponse.cs)                  
+  ⎿  Wrote 1 lines to src\Application\DTOs\Contacts\ContactsListResponse.cs     
+     namespace Application.DTOs.Contacts;                                       
+     public class ContactsListResponse                                          
+     {                                                                          
+         public Guid ApplicationId { get; set; }                                
+         public List<ContactDto> Contacts { get; set; } = new();                
+         public int TotalCount { get; set; }                                    
+     }                                                                          
+                                                                                
+● Now let me create the Contact service interface and implementation.           
+                                                                                
+● Write(src\Application\Interfaces\IContactService.cs)                          
+  ⎿  Wrote 1 lines to src\Application\Interfaces\IContactService.cs             
+     using Application.DTOs.Contacts;                                           
+     namespace Application.Interfaces;                                          
+     public interface IContactService                                           
+     {                                                                          
+         Task<ContactDto> CreateContactAsync(Guid applicationId,                
+     CreateContactRequest request);                                             
+         Task<ContactsListResponse> GetContactsAsync(Guid applicationId);       
+         Task<ContactDto?> UpdateContactAsync(Guid applicationId, Guid          
+     contactId, UpdateContactRequest request);                                  
+         Task<bool> DeleteContactAsync(Guid applicationId, Guid contactId);     
+                                                                                
+● Write(src\Infrastructure\Services\ContactService.cs)                          
+  ⎿  Wrote 1 lines to src\Infrastructure\Services\ContactService.cs             
+     using Application.DTOs.Contacts;                                           
+     using Application.Interfaces;                                              
+     using Application.Interfaces.Data;                                         
+     using Domain.Entities;                                                     
+     namespace Infrastructure.Services;                                         
+     public class ContactService : IContactService                              
+     {                                                                          
+         private readonly IUnitOfWork _unitOfWork;                              
+                                                                                
+● Write(src\WebAPI\Controllers\ContactsController.cs)                           
+  ⎿  Wrote 1 lines to src\WebAPI\Controllers\ContactsController.cs              
+     using Microsoft.AspNetCore.Authorization;                                  
+     using Microsoft.AspNetCore.Mvc;                                            
+     using Application.DTOs.Contacts;                                           
+     using Application.DTOs.Auth;                                               
+     using Application.Interfaces;                                              
+     namespace WebAPI.Controllers;                                              
+     [Authorize]                                                                
+     [ApiController]                                                            
+                                                                                
+● Now let me find where services are registered to add the ContactService.      
+                                                                                
+● Search(pattern: "AddScoped.*ITimelineEventService", output_mode: "content")   
+  ⎿  Found 1 line (ctrl+o to expand)                                            
+                                                                                
+● Read(src\WebAPI\Program.cs)                                                   
+  ⎿  Read 30 lines                                                              
+                                                                                
+● Update(src\WebAPI\Program.cs)                                                 
+  ⎿  Added 1 line                                                               
+      185  builder.Services.AddScoped<Application.Interfaces.IActivityEv        
+           entService, Infrastructure.Services.ActivityEventService>();         
+      186  builder.Services.AddScoped<Application.Interfaces.ICoverLette        
+           rService, Infrastructure.Services.CoverLetterService>();             
+      187  builder.Services.AddScoped<Application.Interfaces.ICoverLette        
+           rDocumentService,                                                    
+           Infrastructure.Services.CoverLetterDocumentService>();               
+      188 +builder.Services.AddScoped<Application.Interfaces.IContactSer        
+          +vice, Infrastructure.Services.ContactService>();                     
+      189                                                                       
+      190  // Add HttpClient for Anthropic API                                  
+      191  builder.Services.AddHttpClient("Anthropic", client =>                
+                                                                                
+● Now let me update the ApplicationDto to include contacts.                     
+                                                                                
+● Update(src\Application\DTOs\Applications\ApplicationDto.cs)                   
+  ⎿  Added 1 line                                                               
+      1 +using Application.DTOs.Contacts;                                       
+      2  using Application.DTOs.TimelineEvents;                                 
+      3                                                                         
+      4  namespace Application.DTOs.Applications;                               
+                                                                                
+● Update(src\Application\DTOs\Applications\ApplicationDto.cs)                   
+  ⎿  Added 1 line                                                               
+      28      public string? CoverLetterHtml { get; set; }                      
+      29      public DateTime? CoverLetterGeneratedAt { get; set; }             
+      30      public List<TimelineEventDto> TimelineEvents { get; set; }        
+           = new();                                                             
+      31 +    public List<ContactDto> Contacts { get; set; } = new();           
+      32  }                                                                     
+                                                                                
+● Now I need to update the ApplicationRepository to load contacts with the      
+  application detail. Let me check the repository interface and implementation. 
+                                                                                
+● Read(src\Application\Interfaces\Data\IApplicationRepository.cs)               
+  ⎿  Read 101 lines                                                             
+                                                                                
+● Read(src\Infrastructure\Data\Repositories\ApplicationRepository.cs)           
+  ⎿  Read 190 lines                                                             
+                                                                                
+● I need to add a new method to get application with both timeline and contacts.
+   Let me update the repository interface and implementation.                   
+                                                                                
+● Update(src\Application\Interfaces\Data\IApplicationRepository.cs)             
+  ⎿  Added 7 lines                                                              
+      31          CancellationToken cancellationToken = default);               
+      32                                                                        
+      33      /// <summary>                                                     
+      34 +    /// Gets a single application by ID with timeline events          
+         +and contacts included.                                                
+      35 +    /// </summary>                                                    
+      36 +    Task<ApplicationEntity?> GetByIdWithDetailsAsync(                 
+      37 +        Guid id,                                                      
+      38 +        CancellationToken cancellationToken = default);               
+      39 +                                                                      
+      40 +    /// <summary>                                                     
+      41      /// Counts the total number of applications for a user.           
+      42      /// </summary>                                                    
+      43      Task<int> CountByUserIdAsync(                                     
+                                                                                
+● Update(src\Infrastructure\Data\Repositories\ApplicationRepository.cs)         
+  ⎿  Added 10 lines                                                             
+      44              .FirstOrDefaultAsync(a => a.Id == id,                     
+          cancellationToken);                                                   
+      45      }                                                                 
+      46                                                                        
+      47 +    public async Task<ApplicationEntity?>                             
+         +GetByIdWithDetailsAsync(                                              
+      48 +        Guid id,                                                      
+      49 +        CancellationToken cancellationToken = default)                
+      50 +    {                                                                 
+      51 +        return await _dbSet                                           
+      52 +            .Include(a =>                                             
+         +a.TimelineEvents.OrderByDescending(te => te.Timestamp))               
+      53 +            .Include(a => a.Contacts.OrderBy(c =>                     
+         +c.CreatedDate))                                                       
+      54 +            .FirstOrDefaultAsync(a => a.Id == id,                     
+         +cancellationToken);                                                   
+      55 +    }                                                                 
+      56 +                                                                      
+      57      public async Task<int> CountByUserIdAsync(                        
+      58          string userId,                                                
+      59          CancellationToken cancellationToken = default)                
+                                                                                
+● Now let me update the ApplicationService to include contacts in the mapping.  
+                                                                                
+● Read(src\Infrastructure\Services\ApplicationService.cs)                       
+  ⎿  Read 551 lines                                                             
+                                                                                
+● Update(src\Infrastructure\Services\ApplicationService.cs)                     
+  ⎿  Added 1 line                                                               
+      1  using Application.DTOs.Applications;                                   
+      2 +using Application.DTOs.Contacts;                                       
+      3  using Application.Exceptions;                                          
+      4  using Application.DTOs.TimelineEvents;                                 
+      5  using Application.Interfaces.Data;                                     
+                                                                                
+● Update(src\Infrastructure\Services\ApplicationService.cs)                     
+  ⎿  Added 1 line, removed 1 line                                               
+      224              ?? throw new UnauthorizedAccessException("User           
+           not authenticated");                                                 
+      225                                                                       
+      226          var application = await _unitOfWork.Applications             
+      227 -            .GetByIdWithTimelineAsync(id);                           
+      227 +            .GetByIdWithDetailsAsync(id);                            
+      228                                                                       
+      229          if (application == null || application.UserId !=             
+           userId)                                                              
+      230          {                                                            
+                                                                                
+● Update(src\Infrastructure\Services\ApplicationService.cs)                     
+  ⎿  Added 16 lines                                                             
+      424                      Points = e.Points,                               
+      425                      CreatedDate = e.CreatedDate                      
+      426                  })                                                   
+      427 +                .ToList(),                                           
+      428 +            Contacts = (application.Contacts ?? new                  
+          +List<Contact>())                                                     
+      429 +                .OrderBy(c => c.CreatedDate)                         
+      430 +                .Select(c => new ContactDto                          
+      431 +                {                                                    
+      432 +                    Id = c.Id,                                       
+      433 +                    Name = c.Name,                                   
+      434 +                    Role = c.Role,                                   
+      435 +                    Relationship = c.Relationship.ToString(),        
+      436 +                    Emails = c.Emails,                               
+      437 +                    Phones = c.Phones,                               
+      438 +                    LinkedIn = c.LinkedIn,                           
+      439 +                    Notes = c.Notes,                                 
+      440 +                    CreatedDate = c.CreatedDate,                     
+      441 +                    UpdatedDate = c.UpdatedDate                      
+      442 +                })                                                   
+      443                  .ToList()                                            
+      444          };                                                           
+      445      }                                                                
+                                                                                
+● Let me build the backend to verify it compiles correctly.                     
+                                                                                
+● Bash(cd /e/Dev/BigJobHunterPro && dotnet build --no-restore 2>&1 | head -100) 
+  ⎿   Domain -> E:\Dev\BigJobHunterPro\src\Domain\bin\Debug\net8.0\Domain.d     
+    ll                                                                          
+      Application -> E:\Dev\BigJobHunterPro\src\Application\bin\Debug\net8.     
+    … +528 lines (ctrl+o to expand)                                             
+                                                                                
+                                                                                
+                                                                                
+● The build succeeded. Now let me create the migration.                         
+                                                                                
+● Bash(cd /e/Dev/BigJobHunterPro && dotnet ef migrations add AddContacts        
+      --project src/Infrastructure --startup-project src/WebAPI 2>&1)           
+  ⎿  Error: Exit code 1                                                         
+     Build started...                                                           
+     Build failed. Use dotnet build to see the errors.                          
+                                                                                
+● Bash(cd /e/Dev/BigJobHunterPro && dotnet build src/WebAPI 2>&1)               
+  ⎿  Error: Exit code 1                                                         
+       Determining projects to restore...                                       
+       All projects are up-to-date for restore.                                 
+       Domain -> E:\Dev\BigJobHunterPro\src\Domain\bin\Debug\net8.0\Domain.dll  
+       Application ->                                                           
+     E:\Dev\BigJobHunterPro\src\Application\bin\Debug\net8.0\Application.dll    
+       Infrastructure -> E:\Dev\BigJobHunterPro\src\Infrastructure\bin\Debug\net
+     .0\Infrastructure.dll                                                      
+     C:\Program                                                                 
+     Files\dotnet\sdk\8.0.411\Microsoft.Common.CurrentVersion.targets(5034,5):  
+     warning MSB3026: Could not copy                                            
+     "E:\Dev\BigJobHunterPro\src\Domain\bin\Debug\net8.0\Domain.dll" to         
+     "bin\Debug\net8.0\Domain.dll". Beginning retry 1 in 1000ms. The process    
+     cannot access the file                                                     
+     'E:\Dev\BigJobHunterPro\src\WebAPI\bin\Debug\net8.0\Domain.dll' because it 
+     is being used by another process. The file is locked by: "WebAPI (31848)"  
+     [E:\Dev\BigJobHunterPro\src\WebAPI\WebAPI.csproj]                          
+     C:\Program                                                                 
+     Files\dotnet\sdk\8.0.411\Microsoft.Common.CurrentVersion.targets(5034,5):  
+     warning MSB3026: Could not copy "E:\Dev\BigJobHunterPro\src\Infrastructure\
+     in\Debug\net8.0\Infrastructure.dll" to                                     
+     "bin\Debug\net8.0\Infrastructure.dll". Beginning retry 1 in 1000ms. The    
+     process cannot access the file                                             
+     'E:\Dev\BigJobHunterPro\src\WebAPI\bin\Debug\net8.0\Infrastructure.dll'    
+     because it is being used by another process. The file is locked by: "WebAPI
+     (31848)" [E:\Dev\BigJobHunterPro\src\WebAPI\WebAPI.csproj]                 
+     C:\Program                                                                 
+     Files\dotnet\sdk\8.0.411\Microsoft.Common.CurrentVersion.targets(5034,5):  
+     warning MSB3026: Could not copy                                            
+     "E:\Dev\BigJobHunterPro\src\Application\bin\Debug\net8.0\Application.dll" t
+      "bin\Debug\net8.0\Application.dll". Beginning retry 1 in 1000ms. The      
+     process cannot access the file                                             
+     'E:\Dev\BigJobHunterPro\src\WebAPI\bin\Debug\net8.0\Application.dll' becaus
+      it is being used by another process. The file is locked by: "WebAPI       
+     (31848)" [E:\Dev\BigJobHunterPro\src\WebAPI\WebAPI.csproj]                 
+     C:\Program                                                                 
+     Files\dotnet\sdk\8.0.411\Microsoft.Common.CurrentVersion.targets(5034,5):  
+     warning MSB3026: Could not copy                                            
+     "E:\Dev\BigJobHunterPro\src\Application\bin\Debug\net8.0\Application.dll" t
+      "bin\Debug\net8.0\Application.dll". Beginning retry 2 in 1000ms. The      
+     process cannot access the file                                             
+     'E:\Dev\BigJobHunterPro\src\WebAPI\bin\Debug\net8.0\Application.dll' becaus
+      it is being used by another process. The file is locked by: "WebAPI       
+     (31848)" [E:\Dev\BigJobHunterPro\src\WebAPI\WebAPI.csproj]                 
+                                                                                
+                                                                                
+                                                                                
+     … +25 lines (ctrl+o to see all)                                            
+                                                                                
+● The WebAPI is running and locking files. Let me stop it first.                
+                                                                                
+● Bash(taskkill //F //PID 31848 2>&1 || echo "Process already stopped")         
+  ⎿  SUCCESS: The process with PID 31848 has been terminated.                   
+                                                                                
+● Bash(cd /e/Dev/BigJobHunterPro && dotnet ef migrations add AddContacts        
+      --project src/Infrastructure --startup-project src/WebAPI 2>&1)           
+  ⎿ Build started...                                                            
+    Build succeeded.                                                            
+    The Entity Framework tools version '8.0.17' is older than that of the r     
+    … +17 lines (ctrl+o to expand)                                              
+                                                                                
+                                                                                
+● Good, the migration was created. Let me verify and apply it.                  
+                                                                                
+● Search(pattern: "src/Infrastructure/Migrations/*AddContacts*.cs")             
+  ⎿  Found 2 files (ctrl+o to expand)                                           
+                                                                                
+● Read(src\Infrastructure\Migrations\20260121172546_AddContacts.cs)             
+  ⎿  Read 55 lines                                                              
+                                                                                
+● Now let me work on Phase 2: AI Parsing Update. First, I'll update             
+  AiParsingResult.cs.                                                           
+                                                                                
+● Update(src\Application\DTOs\AiParsing\AiParsingResult.cs)                     
+  ⎿  Added 11 lines                                                             
+      15      public string? JobDescription { get; set; }                       
+      16      public List<string> RequiredSkills { get; set; } = new();         
+      17      public List<string> NiceToHaveSkills { get; set; } =              
+          new();                                                                
+      18 +    public List<ParsedContactResult> Contacts { get; set; } =         
+         +new();                                                                
+      19                                                                        
+      20      public static AiParsingResult Failed(string errorMessage)         
+          => new()                                                              
+      21      {                                                                 
+     ...                                                                        
+      22          ErrorMessage = errorMessage                                   
+      23      };                                                                
+      24  }                                                                     
+      25 +                                                                      
+      26 +public class ParsedContactResult                                      
+      27 +{                                                                     
+      28 +    public string Name { get; set; } = string.Empty;                  
+      29 +    public string? Role { get; set; }                                 
+      30 +    public string Relationship { get; set; } = "Other";               
+      31 +    public List<string> Emails { get; set; } = new();                 
+      32 +    public List<string> Phones { get; set; } = new();                 
+      33 +    public string? LinkedIn { get; set; }                             
+      34 +}                                                                     
+                                                                                
+● Now let me update AiParsingService.cs prompt and parsing logic.               
+                                                                                
+● Update(src\Infrastructure\Services\AiParsingService.cs)                       
+  ⎿  Added 13 lines, removed 2 lines                                            
+      123              3. For salary, extract the numeric values only           
+           (no currency symbols). Keep as-is (e.g., 18 for $18/hour, not        
+            18000)                                                              
+      124              4. For skills, separate into "requiredSkills"            
+           (must-have, mandatory, required) and "niceToHaveSkills"              
+           (preferred, bonus, nice to have)                                     
+      125              5. Keep jobDescription to 2-3 sentences                  
+           summarizing the role                                                 
+      126 -            6. If a field cannot be determined from the              
+          -posting, use null (or empty array for skills)                        
+      126 +            6. If a field cannot be determined from the              
+          +posting, use null (or empty array for skills/contacts)               
+      127 +            7. For contacts, extract any recruiter, hiring           
+          +manager, or contact person mentioned with their details              
+      128                                                                       
+      129              Respond with ONLY valid JSON in this exact format        
+            (no markdown, no explanation):                                      
+      130              {                                                        
+     ...                                                                        
+      135                "salaryMax": number | null,                            
+      136                "jobDescription": string | null,                       
+      137                "requiredSkills": string[],                            
+      138 -              "niceToHaveSkills": string[]                           
+      138 +              "niceToHaveSkills": string[],                          
+      139 +              "contacts": [                                          
+      140 +                {                                                    
+      141 +                  "name": string,                                    
+      142 +                  "role": string | null,                             
+      143 +                  "relationship": "Recruiter" |                      
+          +"HiringManager" | "TeamMember" | "Other",                            
+      144 +                  "emails": string[],                                
+      145 +                  "phones": string[],                                
+      146 +                  "linkedin": string | null                          
+      147 +                }                                                    
+      148 +              ]                                                      
+      149              }                                                        
+      150                                                                       
+      151              JOB POSTING CONTENT:                                     
+                                                                                
+● Now let me update the ParsedJobPosting class and result mapping.              
+                                                                                
+● Update(src\Infrastructure\Services\AiParsingService.cs)                       
+  ⎿  Added 11 lines                                                             
+      310          public string? JobDescription { get; set; }                  
+      311          public List<string>? RequiredSkills { get; set; }            
+      312          public List<string>? NiceToHaveSkills { get; set; }          
+      313 +        public List<ParsedContact>? Contacts { get; set; }           
+      314      }                                                                
+      315 +                                                                     
+      316 +    private class ParsedContact                                      
+      317 +    {                                                                
+      318 +        public string? Name { get; set; }                            
+      319 +        public string? Role { get; set; }                            
+      320 +        public string? Relationship { get; set; }                    
+      321 +        public List<string>? Emails { get; set; }                    
+      322 +        public List<string>? Phones { get; set; }                    
+      323 +        public string? LinkedIn { get; set; }                        
+      324 +    }                                                                
+      325  }                                                                    
+                                                                                
+● Now let me update the result mapping in ParseApiResponse.                     
+                                                                                
+● Update(src\Infrastructure\Services\AiParsingService.cs)                       
+  ⎿  Added 15 lines, removed 1 line                                             
+      209              _logger.LogInformation("Successfully parsed job          
+           posting: {Company} - {Role}",                                        
+      210                  parsed.CompanyName, parsed.RoleTitle);               
+      211                                                                       
+      212 +            var contacts = (parsed.Contacts ?? new                   
+          +List<ParsedContact>())                                               
+      213 +                .Where(c =>                                          
+          +!string.IsNullOrWhiteSpace(c.Name))                                  
+      214 +                .Select(c => new ParsedContactResult                 
+      215 +                {                                                    
+      216 +                    Name = c.Name ?? string.Empty,                   
+      217 +                    Role = c.Role,                                   
+      218 +                    Relationship = c.Relationship ?? "Other",        
+      219 +                    Emails = c.Emails ?? new List<string>(),         
+      220 +                    Phones = c.Phones ?? new List<string>(),         
+      221 +                    LinkedIn = c.LinkedIn                            
+      222 +                })                                                   
+      223 +                .ToList();                                           
+      224 +                                                                     
+      225              return new AiParsingResult                               
+      226              {                                                        
+      227                  Success = true,                                      
+     ...                                                                        
+      220                  SalaryMax = parsed.SalaryMax,                        
+      221                  JobDescription = parsed.JobDescription,              
+      222                  RequiredSkills = parsed.RequiredSkills ?? new        
+            List<string>(),                                                     
+      223 -                NiceToHaveSkills = parsed.NiceToHaveSkills ??        
+          -new List<string>()                                                   
+      223 +                NiceToHaveSkills = parsed.NiceToHaveSkills ??        
+          +new List<string>(),                                                  
+      224 +                Contacts = contacts                                  
+      225              };                                                       
+      226          }                                                            
+      227          catch (JsonException ex)                                     
+                                                                                
+● I need to add the missing using statement for ParsedContactResult.            
+                                                                                
+● Read(src\Infrastructure\Services\AiParsingService.cs)                         
+  ⎿  Read 15 lines                                                              
+                                                                                
+● Now let me update AiParsingBackgroundService to create Contact entities from  
+  parsed contacts.                                                              
+                                                                                
+● Update(src\Infrastructure\Services\AiParsingBackgroundService.cs)             
+  ⎿  Added 2 lines                                                              
+      1 +using Application.DTOs.AiParsing;                                      
+      2  using Application.Interfaces;                                          
+      3 +using Domain.Entities;                                                 
+      4  using Domain.Enums;                                                    
+      5  using Infrastructure.Data;                                             
+      6  using Microsoft.EntityFrameworkCore;                                   
+                                                                                
+● Update(src\Infrastructure\Services\AiParsingBackgroundService.cs)             
+  ⎿  Added 33 lines                                                             
+      115                          application.WorkMode = workMode;             
+      116                      }                                                
+      117                                                                       
+      118 +                    // Create Contact entities from parsed           
+          +contacts                                                             
+      119 +                    if (result.Contacts.Count > 0)                   
+      120 +                    {                                                
+      121 +                        foreach (var parsedContact in                
+          +result.Contacts)                                                     
+      122 +                        {                                            
+      123 +                            var relationship =                       
+          +ContactRelationship.Other;                                           
+      124 +                            if                                       
+          +(!string.IsNullOrEmpty(parsedContact.Relationship) &&                
+      125 +                                Enum.TryParse<ContactRelation        
+          +ship>(parsedContact.Relationship, ignoreCase: true, out var          
+          +parsedRelationship))                                                 
+      126 +                            {                                        
+      127 +                                relationship =                       
+          +parsedRelationship;                                                  
+      128 +                            }                                        
+      129 +                                                                     
+      130 +                            var contact = new Contact                
+      131 +                            {                                        
+      132 +                                Id = Guid.NewGuid(),                 
+      133 +                                ApplicationId =                      
+          +application.Id,                                                      
+      134 +                                Name = parsedContact.Name,           
+      135 +                                Role = parsedContact.Role,           
+      136 +                                Relationship = relationship,         
+      137 +                                Emails =                             
+          +parsedContact.Emails,                                                
+      138 +                                Phones =                             
+          +parsedContact.Phones,                                                
+      139 +                                LinkedIn =                           
+          +parsedContact.LinkedIn,                                              
+      140 +                                CreatedDate = DateTime.UtcNow        
+      141 +                            };                                       
+      142 +                                                                     
+      143 +                            dbContext.Contacts.Add(contact);         
+      144 +                        }                                            
+      145 +                                                                     
+      146 +                        _logger.LogInformation(                      
+      147 +                            "Created {ContactCount} contacts         
+          +for application {Id}",                                               
+      148 +                            result.Contacts.Count,                   
+          +application.Id);                                                     
+      149 +                    }                                                
+      150 +                                                                     
+      151                      application.ParsedByAI = true;                   
+      152                      application.AiParsingStatus =                    
+           AiParsingStatus.Success;                                             
+      153                                                                       
+                                                                                
+● Let me verify the backend compiles correctly.                                 
+                                                                                
+● Bash(cd /e/Dev/BigJobHunterPro && dotnet build --no-restore 2>&1 | grep -E    
+      "(error|Error|Build succeeded)" | head -20)                               
+  ⎿  Build succeeded.                                                           
+         0 Error(s)                                                             
+                                                                                
+● Backend builds successfully. Now let me move on to Phase 3: Frontend          
+  implementation.                                                               
+                                                                                
+● Search(pattern: "bigjobhunterpro-web/src/types/*.ts")                         
+  ⎿  Found 4 files (ctrl+o to expand)                                           
+                                                                                
+● Search(pattern: "bigjobhunterpro-web/src/services/*.ts")                      
+  ⎿  Found 10 files (ctrl+o to expand)                                          
+                                                                                
+● Read(bigjobhunterpro-web\src\types\application.ts)                            
+  ⎿  Read 83 lines                                                              
+                                                                                
+● Read(bigjobhunterpro-web\src\services\timelineEvents.ts)                      
+  ⎿  Read 102 lines                                                             
+                                                                                
+● Write(bigjobhunterpro-web\src\types\contact.ts)                               
+  ⎿  Wrote 1 lines to bigjobhunterpro-web\src\types\contact.ts                  
+     export type ContactRelationship = 'Recruiter' | 'HiringManager' |          
+     'TeamMember' | 'Other';                                                    
+     export interface Contact {                                                 
+       id: string;                                                              
+       name: string;                                                            
+       role: string | null;                                                     
+       relationship: ContactRelationship;                                       
+       emails: string[];                                                        
+       phones: string[];                                                        
+       linkedin: string | null;                                                 
+                                                                                
+● Write(bigjobhunterpro-web\src\services\contacts.ts)                           
+  ⎿  Wrote 1 lines to bigjobhunterpro-web\src\services\contacts.ts              
+     import axios from 'axios';                                                 
+     import api from './api';                                                   
+     import type {                                                              
+       Contact,                                                                 
+       CreateContactRequest,                                                    
+       UpdateContactRequest,                                                    
+       ContactsListResponse,                                                    
+     } from '../types/contact';                                                 
+     const parseContactError = (error: unknown, action: string): string =>      
+     {                                                                          
+                                                                                
+● Update(bigjobhunterpro-web\src\types\application.ts)                          
+  ⎿  Added 1 line                                                               
+      1  import type { TimelineEvent } from './timelineEvent';                  
+      2 +import type { Contact } from './contact';                              
+      3                                                                         
+      4  export interface CreateApplicationRequest {                            
+      5    sourceUrl?: string;                                                  
+                                                                                
+● Update(bigjobhunterpro-web\src\types\application.ts)                          
+  ⎿  Added 1 line                                                               
+      55    coverLetterHtml: string | null;                                     
+      56    coverLetterGeneratedAt: string | null;                              
+      57    timelineEvents: TimelineEvent[];                                    
+      58 +  contacts: Contact[];                                                
+      59  }                                                                     
+      60                                                                        
+      61  export interface UpdateApplicationRequest {                           
+                                                                                
+● Search(pattern: "bigjobhunterpro-web/src/components/applications/*.tsx")      
+  ⎿  Found 13 files (ctrl+o to expand)                                          
+                                                                                
+● Read(bigjobhunterpro-web\src\components\applications\CoverLetterSection.tsx)  
+  ⎿  Read 461 lines                                                             
+                                                                                
+● Read(bigjobhunterpro-web\src\components\applications\AddTimelineEventModal.tsx
+      )                                                                         
+  ⎿  Read 158 lines                                                             
+                                                                                
+● Now let me create the contact management components.                          
+                                                                                
+● Write(bigjobhunterpro-web\src\components\applications\AddContactModal.tsx)    
+  ⎿  Wrote 1 lines to                                                           
+     bigjobhunterpro-web\src\components\applications\AddContactModal.tsx        
+     import { useState } from 'react';                                          
+     import SidePanel from '../ui/SidePanel';                                   
+     import type { ContactRelationship, CreateContactRequest } from             
+     '../../types/contact';                                                     
+     interface AddContactModalProps {                                           
+       isOpen: boolean;                                                         
+       onClose: () => void;                                                     
+       onSubmit: (data: CreateContactRequest) => void;                          
+     }                                                                          
+                                                                                
+● Write(bigjobhunterpro-web\src\components\applications\EditContactModal.tsx)   
+  ⎿  Wrote 1 lines to                                                           
+     bigjobhunterpro-web\src\components\applications\EditContactModal.tsx       
+     import { useState, useEffect } from 'react';                               
+     import SidePanel from '../ui/SidePanel';                                   
+     import type { Contact, ContactRelationship, UpdateContactRequest }         
+     from '../../types/contact';                                                
+     interface EditContactModalProps {                                          
+       isOpen: boolean;                                                         
+       onClose: () => void;                                                     
+       onSubmit: (data: UpdateContactRequest) => void;                          
+       contact: Contact | null;                                                 
+     }                                                                          
+                                                                                
+● Write(bigjobhunterpro-web\src\components\applications\ContactsSection.tsx)    
+  ⎿  Wrote 1 lines to                                                           
+     bigjobhunterpro-web\src\components\applications\ContactsSection.tsx        
+     import { useState } from 'react';                                          
+     import { contactsService } from '@/services/contacts';                     
+     import { useToast } from '@/context/ToastContext';                         
+     import AddContactModal from './AddContactModal';                           
+     import EditContactModal from './EditContactModal';                         
+     import type { Contact, CreateContactRequest, UpdateContactRequest }        
+     from '@/types/contact';                                                    
+     interface ContactsSectionProps {                                           
+       applicationId: string;                                                   
+       contacts: Contact[];                                                     
+                                                                                
+● Search(pattern: "bigjobhunterpro-web/src/utils/*.ts")                         
+  ⎿  Found 1 file (ctrl+o to expand)                                            
+                                                                                
+● Write(bigjobhunterpro-web\src\utils\followUpEmail.ts)                         
+  ⎿  Wrote 1 lines to bigjobhunterpro-web\src\utils\followUpEmail.ts            
+     export interface FollowUpEmailData {                                       
+       recipientEmail: string;                                                  
+       recipientFirstName: string;                                              
+       senderName: string;                                                      
+       companyName: string;                                                     
+       roleTitle: string;                                                       
+       topicDiscussed: string;                                                  
+     }                                                                          
+     /**                                                                        
+                                                                                
+● Write(bigjobhunterpro-web\src\components\applications\FollowUpEmailModal.tsx) 
+  ⎿  Wrote 1 lines to                                                           
+     bigjobhunterpro-web\src\components\applications\FollowUpEmailModal.tsx     
+     import { useState, useEffect, useMemo } from 'react';                      
+     import Modal from '../ui/Modal';                                           
+     import type { Contact } from '@/types/contact';                            
+     import type { TimelineEvent } from '@/types/timelineEvent';                
+     import {                                                                   
+       extractFirstName,                                                        
+       extractTopicFromNotes,                                                   
+       generateFollowUpEmail,                                                   
+       buildMailtoUrl,                                                          
+       openMailtoLink,                                                          
+  ⎿  You've hit your limit · resets 3pm (America/Chicago)                       
+     /upgrade to increase your usage limit.                                     
+                                                                                
+✻ Churned for 12m 28s                                                           
+                                                                                
+❯ Unknown skill: rate-limit-options                                             
+                                                                                
+❯ /usage                                                                        
+  ⎿  Status dialog dismissed                                                    
+

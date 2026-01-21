@@ -32,6 +32,7 @@ public class Application
     // Navigation properties
     public ApplicationUser User { get; set; } = null!;
     public List<TimelineEvent> TimelineEvents { get; set; } = new();
+    public List<Contact> Contacts { get; set; } = new();
 
     // Computed properties for performance
     public ApplicationStatus ComputeCurrentStatus()

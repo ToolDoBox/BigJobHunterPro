@@ -1,4 +1,5 @@
 using Application.DTOs.Applications;
+using Application.DTOs.Contacts;
 using Application.Exceptions;
 using Application.DTOs.TimelineEvents;
 using Application.Interfaces.Data;
@@ -223,7 +224,7 @@ public class ApplicationService : IApplicationService
             ?? throw new UnauthorizedAccessException("User not authenticated");
 
         var application = await _unitOfWork.Applications
-            .GetByIdWithTimelineAsync(id);
+            .GetByIdWithDetailsAsync(id);
 
         if (application == null || application.UserId != userId)
         {
@@ -422,6 +423,22 @@ public class ApplicationService : IApplicationService
                     Notes = e.Notes,
                     Points = e.Points,
                     CreatedDate = e.CreatedDate
+                })
+                .ToList(),
+            Contacts = (application.Contacts ?? new List<Contact>())
+                .OrderBy(c => c.CreatedDate)
+                .Select(c => new ContactDto
+                {
+                    Id = c.Id,
+                    Name = c.Name,
+                    Role = c.Role,
+                    Relationship = c.Relationship.ToString(),
+                    Emails = c.Emails,
+                    Phones = c.Phones,
+                    LinkedIn = c.LinkedIn,
+                    Notes = c.Notes,
+                    CreatedDate = c.CreatedDate,
+                    UpdatedDate = c.UpdatedDate
                 })
                 .ToList()
         };

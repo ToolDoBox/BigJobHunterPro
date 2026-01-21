@@ -16,6 +16,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     // DbSets
     public DbSet<Domain.Entities.Application> Applications => Set<Domain.Entities.Application>();
     public DbSet<TimelineEvent> TimelineEvents => Set<TimelineEvent>();
+    public DbSet<Contact> Contacts => Set<Contact>();
     public DbSet<ActivityEvent> ActivityEvents => Set<ActivityEvent>();
     public DbSet<HuntingParty> HuntingParties => Set<HuntingParty>();
     public DbSet<HuntingPartyMembership> HuntingPartyMemberships => Set<HuntingPartyMembership>();
@@ -63,6 +64,23 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             entity.Property(e => e.Notes).HasMaxLength(5000);
             entity.HasIndex(e => e.ApplicationId);
             entity.HasIndex(e => e.Timestamp);
+        });
+
+        // Configure Contact entity
+        builder.Entity<Contact>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Role).HasMaxLength(100);
+            entity.Property(e => e.LinkedIn).HasMaxLength(500);
+            entity.Property(e => e.Notes).HasMaxLength(2000);
+            entity.Property(e => e.Emails).HasConversion(stringListConverter);
+            entity.Property(e => e.Phones).HasConversion(stringListConverter);
+            entity.HasIndex(e => e.ApplicationId);
+            entity.HasOne(e => e.Application)
+                  .WithMany(a => a.Contacts)
+                  .HasForeignKey(e => e.ApplicationId)
+                  .OnDelete(DeleteBehavior.Cascade);
         });
 
         // Configure ActivityEvent entity

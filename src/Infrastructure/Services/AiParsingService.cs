@@ -123,7 +123,8 @@ public class AiParsingService : IAiParsingService
             3. For salary, extract the numeric values only (no currency symbols). Keep as-is (e.g., 18 for $18/hour, not 18000)
             4. For skills, separate into "requiredSkills" (must-have, mandatory, required) and "niceToHaveSkills" (preferred, bonus, nice to have)
             5. Keep jobDescription to 2-3 sentences summarizing the role
-            6. If a field cannot be determined from the posting, use null (or empty array for skills)
+            6. If a field cannot be determined from the posting, use null (or empty array for skills/contacts)
+            7. For contacts, extract any recruiter, hiring manager, or contact person mentioned with their details
 
             Respond with ONLY valid JSON in this exact format (no markdown, no explanation):
             {
@@ -135,7 +136,17 @@ public class AiParsingService : IAiParsingService
               "salaryMax": number | null,
               "jobDescription": string | null,
               "requiredSkills": string[],
-              "niceToHaveSkills": string[]
+              "niceToHaveSkills": string[],
+              "contacts": [
+                {
+                  "name": string,
+                  "role": string | null,
+                  "relationship": "Recruiter" | "HiringManager" | "TeamMember" | "Other",
+                  "emails": string[],
+                  "phones": string[],
+                  "linkedin": string | null
+                }
+              ]
             }
 
             JOB POSTING CONTENT:
@@ -198,6 +209,19 @@ public class AiParsingService : IAiParsingService
             _logger.LogInformation("Successfully parsed job posting: {Company} - {Role}",
                 parsed.CompanyName, parsed.RoleTitle);
 
+            var contacts = (parsed.Contacts ?? new List<ParsedContact>())
+                .Where(c => !string.IsNullOrWhiteSpace(c.Name))
+                .Select(c => new ParsedContactResult
+                {
+                    Name = c.Name ?? string.Empty,
+                    Role = c.Role,
+                    Relationship = c.Relationship ?? "Other",
+                    Emails = c.Emails ?? new List<string>(),
+                    Phones = c.Phones ?? new List<string>(),
+                    LinkedIn = c.LinkedIn
+                })
+                .ToList();
+
             return new AiParsingResult
             {
                 Success = true,
@@ -209,7 +233,8 @@ public class AiParsingService : IAiParsingService
                 SalaryMax = parsed.SalaryMax,
                 JobDescription = parsed.JobDescription,
                 RequiredSkills = parsed.RequiredSkills ?? new List<string>(),
-                NiceToHaveSkills = parsed.NiceToHaveSkills ?? new List<string>()
+                NiceToHaveSkills = parsed.NiceToHaveSkills ?? new List<string>(),
+                Contacts = contacts
             };
         }
         catch (JsonException ex)
@@ -299,5 +324,16 @@ public class AiParsingService : IAiParsingService
         public string? JobDescription { get; set; }
         public List<string>? RequiredSkills { get; set; }
         public List<string>? NiceToHaveSkills { get; set; }
+        public List<ParsedContact>? Contacts { get; set; }
+    }
+
+    private class ParsedContact
+    {
+        public string? Name { get; set; }
+        public string? Role { get; set; }
+        public string? Relationship { get; set; }
+        public List<string>? Emails { get; set; }
+        public List<string>? Phones { get; set; }
+        public string? LinkedIn { get; set; }
     }
 }

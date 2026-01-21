@@ -17,6 +17,11 @@ public interface IUnitOfWork : IDisposable
     ITimelineEventRepository TimelineEvents { get; }
 
     /// <summary>
+    /// Repository for Contact entities.
+    /// </summary>
+    IContactRepository Contacts { get; }
+
+    /// <summary>
     /// Repository for ActivityEvent entities.
     /// </summary>
     IActivityEventRepository ActivityEvents { get; }

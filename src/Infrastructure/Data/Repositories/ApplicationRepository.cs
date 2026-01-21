@@ -44,6 +44,16 @@ public class ApplicationRepository : Repository<ApplicationEntity>, IApplication
             .FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
     }
 
+    public async Task<ApplicationEntity?> GetByIdWithDetailsAsync(
+        Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        return await _dbSet
+            .Include(a => a.TimelineEvents.OrderByDescending(te => te.Timestamp))
+            .Include(a => a.Contacts.OrderBy(c => c.CreatedDate))
+            .FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
+    }
+
     public async Task<int> CountByUserIdAsync(
         string userId,
         CancellationToken cancellationToken = default)

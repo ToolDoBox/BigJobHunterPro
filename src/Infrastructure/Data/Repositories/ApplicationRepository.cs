@@ -41,7 +41,6 @@ public class ApplicationRepository : Repository<ApplicationEntity>, IApplication
     {
         return await _dbSet
             .Include(a => a.TimelineEvents.OrderByDescending(te => te.Timestamp))
-            .Include(a => a.User)
             .FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
     }
 

@@ -296,10 +296,32 @@ app.MapControllers();
 app.MapHub<LeaderboardHub>("/hubs/leaderboard").RequireCors("AllowFrontend");
 app.MapHub<ActivityHub>("/hubs/activity").RequireCors("AllowFrontend");
 
-// Ensure database is created and seed data in development environment
+// Apply pending database migrations on startup (only for relational databases)
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
+    // Only apply migrations for relational databases (not in-memory for tests)
+    if (dbContext.Database.IsRelational())
+    {
+        try
+        {
+            logger.LogInformation("Applying pending database migrations...");
+            await dbContext.Database.MigrateAsync();
+            logger.LogInformation("Database migrations applied successfully.");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "An error occurred while applying database migrations.");
+            throw;
+        }
+    }
+}
+
+// Seed test data in development environment only
 if (app.Environment.IsDevelopment())
 {
-    // SeedData.InitializeAsync handles database creation internally
     await Infrastructure.Data.SeedData.InitializeAsync(app.Services);
 }
 

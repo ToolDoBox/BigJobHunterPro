@@ -51,6 +51,10 @@ dotnet user-secrets set "JwtSettings:Audience" "BigJobHunterPro"
 # Run database migrations (creates tables and seeds dev data)
 dotnet ef database update
 
+# Install Playwright browsers (required for combined PDF downloads)
+dotnet build ..\Infrastructure
+pwsh ..\Infrastructure\bin\Debug\net8.0\playwright.ps1 install
+
 # Run the API (HTTP for local development)
 dotnet run --launch-profile http
 ```

@@ -19,19 +19,23 @@ public class ProfileController : ControllerBase
     private readonly ICurrentUserService _currentUserService;
     private readonly ApplicationDbContext _context;
     private readonly ILogger<ProfileController> _logger;
+    private readonly IHtmlSanitizer _htmlSanitizer;
 
     private const int MaxResumeLength = 50000;
+    private const int MaxResumeHtmlLength = 200000;
 
     public ProfileController(
         UserManager<ApplicationUser> userManager,
         ICurrentUserService currentUserService,
         ApplicationDbContext context,
-        ILogger<ProfileController> logger)
+        ILogger<ProfileController> logger,
+        IHtmlSanitizer htmlSanitizer)
     {
         _userManager = userManager;
         _currentUserService = currentUserService;
         _context = context;
         _logger = logger;
+        _htmlSanitizer = htmlSanitizer;
     }
 
     /// <summary>
@@ -61,7 +65,10 @@ public class ProfileController : ControllerBase
                 Email = u.Email ?? string.Empty,
                 ResumeText = u.ResumeText,
                 ResumeUpdatedAt = u.ResumeUpdatedAt,
-                CharacterCount = u.ResumeText != null ? u.ResumeText.Length : 0
+                CharacterCount = u.ResumeText != null ? u.ResumeText.Length : 0,
+                ResumeHtml = u.ResumeHtml,
+                ResumeHtmlUpdatedAt = u.ResumeHtmlUpdatedAt,
+                HtmlCharacterCount = u.ResumeHtml != null ? u.ResumeHtml.Length : 0
             })
             .FirstOrDefaultAsync();
 
@@ -189,6 +196,125 @@ public class ProfileController : ControllerBase
             ResumeUpdatedAt = null,
             CharacterCount = 0,
             Message = "Resume cleared successfully"
+        });
+    }
+
+    /// <summary>
+    /// Update user's resume HTML for PDF rendering
+    /// </summary>
+    /// <param name="request">Resume HTML to save (max 200,000 characters)</param>
+    /// <returns>Success status with updated timestamp and character count</returns>
+    [HttpPut("resume-html")]
+    [ProducesResponseType(typeof(UpdateResumeHtmlResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<UpdateResumeHtmlResponse>> UpdateResumeHtml([FromBody] UpdateResumeHtmlRequest request)
+    {
+        var userId = _currentUserService.GetUserId();
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Unauthorized(new ErrorResponse(
+                "Unauthorized",
+                new List<string> { "Unable to identify authenticated user" }
+            ));
+        }
+
+        if (request.ResumeHtml != null && request.ResumeHtml.Length > MaxResumeHtmlLength)
+        {
+            return BadRequest(new ErrorResponse(
+                "Resume HTML too long",
+                new List<string>
+                {
+                    $"Resume HTML cannot exceed {MaxResumeHtmlLength:N0} characters. Current length: {request.ResumeHtml.Length:N0}"
+                }
+            ));
+        }
+
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null)
+        {
+            _logger.LogWarning("UpdateResumeHtml failed: User not found for authenticated request");
+            return NotFound(new ErrorResponse(
+                "User not found",
+                new List<string> { "The authenticated user no longer exists in the system" }
+            ));
+        }
+
+        var sanitizedHtml = string.IsNullOrWhiteSpace(request.ResumeHtml)
+            ? request.ResumeHtml
+            : _htmlSanitizer.Sanitize(request.ResumeHtml);
+
+        user.ResumeHtml = sanitizedHtml;
+        user.ResumeHtmlUpdatedAt = DateTime.UtcNow;
+
+        var result = await _userManager.UpdateAsync(user);
+        if (!result.Succeeded)
+        {
+            var errors = result.Errors.Select(e => e.Description).ToList();
+            _logger.LogError("UpdateResumeHtml failed for user {UserId}: {Errors}", userId, string.Join(", ", errors));
+            return BadRequest(new ErrorResponse("Failed to update resume HTML", errors));
+        }
+
+        _logger.LogInformation("User {UserId} updated their resume HTML ({CharCount} characters)", userId, sanitizedHtml?.Length ?? 0);
+
+        return Ok(new UpdateResumeHtmlResponse
+        {
+            Success = true,
+            ResumeHtmlUpdatedAt = user.ResumeHtmlUpdatedAt,
+            HtmlCharacterCount = sanitizedHtml?.Length ?? 0,
+            Message = "Resume HTML saved successfully"
+        });
+    }
+
+    /// <summary>
+    /// Clear user's resume HTML
+    /// </summary>
+    /// <returns>Success status confirming resume HTML was cleared</returns>
+    [HttpDelete("resume-html")]
+    [ProducesResponseType(typeof(UpdateResumeHtmlResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<UpdateResumeHtmlResponse>> ClearResumeHtml()
+    {
+        var userId = _currentUserService.GetUserId();
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Unauthorized(new ErrorResponse(
+                "Unauthorized",
+                new List<string> { "Unable to identify authenticated user" }
+            ));
+        }
+
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null)
+        {
+            _logger.LogWarning("ClearResumeHtml failed: User not found for authenticated request");
+            return NotFound(new ErrorResponse(
+                "User not found",
+                new List<string> { "The authenticated user no longer exists in the system" }
+            ));
+        }
+
+        user.ResumeHtml = null;
+        user.ResumeHtmlUpdatedAt = null;
+
+        var result = await _userManager.UpdateAsync(user);
+        if (!result.Succeeded)
+        {
+            var errors = result.Errors.Select(e => e.Description).ToList();
+            _logger.LogError("ClearResumeHtml failed for user {UserId}: {Errors}", userId, string.Join(", ", errors));
+            return BadRequest(new ErrorResponse("Failed to clear resume HTML", errors));
+        }
+
+        _logger.LogInformation("User {UserId} cleared their resume HTML", userId);
+
+        return Ok(new UpdateResumeHtmlResponse
+        {
+            Success = true,
+            ResumeHtmlUpdatedAt = null,
+            HtmlCharacterCount = 0,
+            Message = "Resume HTML cleared successfully"
         });
     }
 }

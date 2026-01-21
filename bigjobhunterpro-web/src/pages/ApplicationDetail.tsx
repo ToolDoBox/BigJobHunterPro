@@ -163,7 +163,7 @@ export default function ApplicationDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { showToast } = useToast();
-  const { refreshUser } = useAuth();
+  const { refreshUser, user } = useAuth();
 
   const [application, setApplication] = useState<ApplicationDetail | null>(null);
   const [formData, setFormData] = useState<FormState>(emptyFormState);
@@ -769,6 +769,8 @@ export default function ApplicationDetail() {
         {application && (
           <CoverLetterSection
             applicationId={application.id}
+            applicantName={user?.displayName ?? null}
+            companyName={application.companyName}
             coverLetterHtml={application.coverLetterHtml}
             coverLetterGeneratedAt={application.coverLetterGeneratedAt}
             onUpdated={fetchApplication}

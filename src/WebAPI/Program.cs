@@ -173,6 +173,7 @@ builder.Services.AddMemoryCache();
 builder.Services.AddScoped<Application.Interfaces.IJwtTokenService, Infrastructure.Services.JwtTokenService>();
 builder.Services.AddScoped<Application.Interfaces.ICurrentUserService, Infrastructure.Services.CurrentUserService>();
 builder.Services.AddScoped<Application.Interfaces.IHealthCheckService, Infrastructure.Services.HealthCheckService>();
+builder.Services.AddScoped<Application.Interfaces.IHtmlSanitizer, Infrastructure.Services.HtmlSanitizerService>();
 
 // Add after other service registrations
 builder.Services.AddScoped<Application.Interfaces.IStreakService, Infrastructure.Services.StreakService>();
@@ -183,6 +184,7 @@ builder.Services.AddScoped<Application.Interfaces.IApplicationService, Infrastru
 builder.Services.AddScoped<Application.Interfaces.ITimelineEventService, Infrastructure.Services.TimelineEventService>();
 builder.Services.AddScoped<Application.Interfaces.IActivityEventService, Infrastructure.Services.ActivityEventService>();
 builder.Services.AddScoped<Application.Interfaces.ICoverLetterService, Infrastructure.Services.CoverLetterService>();
+builder.Services.AddScoped<Application.Interfaces.ICoverLetterDocumentService, Infrastructure.Services.CoverLetterDocumentService>();
 
 // Add HttpClient for Anthropic API
 builder.Services.AddHttpClient("Anthropic", client =>
@@ -242,7 +244,8 @@ builder.Services.AddCors(options =>
         policy.WithOrigins(allowedOrigins)
               .AllowAnyMethod()
               .AllowAnyHeader()
-              .AllowCredentials();
+              .AllowCredentials()
+              .WithExposedHeaders("content-disposition");
     });
 });
 

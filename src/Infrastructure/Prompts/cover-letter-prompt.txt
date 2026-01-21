@@ -11,7 +11,7 @@ Generate a one-page, professional cover letter in clean, print-ready HTML that c
 
 OUTPUT REQUIREMENTS (HARD)
 - Output MUST be valid HTML only (no markdown, no backticks, no commentary).
-- Single page when rendered to US Letter (8.5x11) with normal margins.
+- Single page when rendered to US Letter (8.5x11) with 1in margins.
 - Use simple, PDF-friendly HTML + inline CSS in a <style> block.
 - Use a single wrapper <div class="page"> with a max content width suitable for printing.
 - Use fonts that render well everywhere (system fonts).
@@ -48,7 +48,7 @@ STYLE GUIDELINES
 
 PRINT/PDF HTML TEMPLATE REQUIREMENTS
 - Include a <style> block that sets:
-  - @page size: letter; margin ~0.75in (or equivalent)
+  - @page size: letter; margin ~1in (or equivalent)
   - body font: 11pt; line-height: 1.25–1.35
   - consistent spacing between header and paragraphs
 - Use simple classes: .page, .header, .name, .contact, .date (optional), .salutation, .body, .closing
@@ -78,9 +78,9 @@ You may use this as a structural example, but you MUST write a new letter tailor
   <head>
     <meta charset="utf-8" />
     <style>
-      @page { size: letter; margin: 0.75in; }
+      @page { size: letter; margin: 1in; }
       body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; font-size: 11pt; line-height: 1.3; color: #111; }
-      .page { max-width: 7.25in; }
+      .page { max-width: 6.5in; }
       .header { margin-bottom: 18px; }
       .name { font-size: 16pt; font-weight: 700; margin: 0 0 4px 0; }
       .contact { margin: 0; font-size: 10.5pt; }

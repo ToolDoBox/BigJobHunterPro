@@ -8,6 +8,9 @@ export interface ProfileResponse {
   resumeText: string | null;
   resumeUpdatedAt: string | null; // ISO 8601 UTC
   characterCount: number;
+  resumeHtml: string | null;
+  resumeHtmlUpdatedAt: string | null; // ISO 8601 UTC
+  htmlCharacterCount: number;
 }
 
 export interface UpdateResumeRequest {
@@ -18,6 +21,17 @@ export interface UpdateResumeResponse {
   success: boolean;
   resumeUpdatedAt: string | null; // ISO 8601 UTC
   characterCount: number;
+  message: string;
+}
+
+export interface UpdateResumeHtmlRequest {
+  resumeHtml: string | null;
+}
+
+export interface UpdateResumeHtmlResponse {
+  success: boolean;
+  resumeHtmlUpdatedAt: string | null; // ISO 8601 UTC
+  htmlCharacterCount: number;
   message: string;
 }
 
@@ -93,6 +107,31 @@ export const profileService = {
   async clearResume(): Promise<UpdateResumeResponse> {
     try {
       const response = await api.delete<UpdateResumeResponse>('/api/profile/resume');
+      return response.data;
+    } catch (error) {
+      throw new Error(parseError(error));
+    }
+  },
+
+  /**
+   * Update user's resume HTML
+   */
+  async updateResumeHtml(resumeHtml: string | null): Promise<UpdateResumeHtmlResponse> {
+    try {
+      const request: UpdateResumeHtmlRequest = { resumeHtml };
+      const response = await api.put<UpdateResumeHtmlResponse>('/api/profile/resume-html', request);
+      return response.data;
+    } catch (error) {
+      throw new Error(parseError(error));
+    }
+  },
+
+  /**
+   * Clear user's resume HTML
+   */
+  async clearResumeHtml(): Promise<UpdateResumeHtmlResponse> {
+    try {
+      const response = await api.delete<UpdateResumeHtmlResponse>('/api/profile/resume-html');
       return response.data;
     } catch (error) {
       throw new Error(parseError(error));

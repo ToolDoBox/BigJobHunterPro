@@ -16,6 +16,11 @@ export interface SaveCoverLetterRequest {
   coverLetterHtml: string;
 }
 
+interface CombinedPdfResponse {
+  blob: Blob;
+  fileName: string;
+}
+
 const parseError = (error: unknown): string => {
   if (axios.isAxiosError(error)) {
     const data = error.response?.data as { error?: string } | undefined;
@@ -34,6 +39,19 @@ const parseError = (error: unknown): string => {
     }
   }
   return 'Something went wrong. Please try again.';
+};
+
+const parseFilename = (contentDisposition?: string): string | null => {
+  if (!contentDisposition) return null;
+
+  const filenameMatch = /filename\*?=(?:UTF-8''|")?([^\";]+)/i.exec(contentDisposition);
+  if (!filenameMatch?.[1]) return null;
+
+  try {
+    return decodeURIComponent(filenameMatch[1]);
+  } catch {
+    return filenameMatch[1];
+  }
 };
 
 export const coverLetterService = {
@@ -70,6 +88,33 @@ export const coverLetterService = {
         coverLetterHtml: null,
         generatedAt: null,
       };
+    }
+  },
+
+  async downloadCombinedPdf(applicationId: string): Promise<CombinedPdfResponse> {
+    try {
+      const response = await api.get<Blob>(
+        `/api/applications/${applicationId}/cover-letter/combined-pdf`,
+        { responseType: 'blob' }
+      );
+      const contentDisposition = response.headers['content-disposition'];
+      const fileName = parseFilename(contentDisposition) ?? 'cover-letter-resume.pdf';
+      return { blob: response.data, fileName };
+    } catch (error) {
+      let detailedMessage: string | null = null;
+      if (axios.isAxiosError(error)) {
+        const contentType = error.response?.headers?.['content-type'];
+        if (contentType?.includes('application/json') && error.response?.data instanceof Blob) {
+          try {
+            const text = await error.response.data.text();
+            const parsed = JSON.parse(text) as { error?: string };
+            detailedMessage = parsed?.error ?? null;
+          } catch {
+            detailedMessage = null;
+          }
+        }
+      }
+      throw new Error(detailedMessage ?? parseError(error));
     }
   },
 };

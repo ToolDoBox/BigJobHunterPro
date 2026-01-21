@@ -80,8 +80,6 @@ describe('ApplicationDetail', () => {
 
     expect(await screen.findByText('Acme Corp')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: /edit/i }));
-
     const companyInput = screen.getByLabelText('COMPANY');
     await user.clear(companyInput);
     await user.type(companyInput, 'Nimbus Labs');

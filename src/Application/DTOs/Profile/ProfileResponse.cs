@@ -7,4 +7,7 @@ public class ProfileResponse
     public string? ResumeText { get; set; }
     public DateTime? ResumeUpdatedAt { get; set; }
     public int CharacterCount { get; set; }
+    public string? ResumeHtml { get; set; }
+    public DateTime? ResumeHtmlUpdatedAt { get; set; }
+    public int HtmlCharacterCount { get; set; }
 }

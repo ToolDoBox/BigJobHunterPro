@@ -169,9 +169,10 @@ public class CoverLetterService : ICoverLetterService
 
             OUTPUT REQUIREMENTS (HARD)
             - Output MUST be valid HTML only (no markdown, no backticks, no commentary).
-            - Single page when rendered to US Letter (8.5x11) with normal margins.
+            - Single page when rendered to US Letter (8.5x11) with 1in margins.
             - Use simple, PDF-friendly HTML + inline CSS in a <style> block.
-            - Use a single wrapper <div class="page"> with a max content width suitable for printing.
+            - Include @page { size: letter; margin: 1in; } in the CSS.
+            - Use a single wrapper <div class="page"> with a max content width around 6.5in and a centered layout.
             - Use fonts that render well everywhere (system fonts).
             - No external assets, no links required (only include URLs if present in the resume).
             - No tables unless needed for alignment; prefer simple <div>/<p> structure.

@@ -3,17 +3,22 @@ import { useAuth } from '@/hooks/useAuth';
 import { profileService, type ProfileResponse } from '@/services/profile';
 
 const MAX_CHARACTERS = 50000;
+const MAX_HTML_CHARACTERS = 200000;
 
 export default function ProfilePage() {
   const { user } = useAuth();
   const [profile, setProfile] = useState<ProfileResponse | null>(null);
   const [resumeText, setResumeText] = useState('');
+  const [resumeHtml, setResumeHtml] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSavingHtml, setIsSavingHtml] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [hasUnsavedHtmlChanges, setHasUnsavedHtmlChanges] = useState(false);
+  const [showClearHtmlConfirm, setShowClearHtmlConfirm] = useState(false);
 
   // Fetch profile on mount
   useEffect(() => {
@@ -24,6 +29,7 @@ export default function ProfilePage() {
         const data = await profileService.getProfile();
         setProfile(data);
         setResumeText(data.resumeText ?? '');
+        setResumeHtml(data.resumeHtml ?? '');
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load profile');
       } finally {
@@ -42,6 +48,13 @@ export default function ProfilePage() {
     }
   }, [resumeText, profile]);
 
+  useEffect(() => {
+    if (profile) {
+      const originalHtml = profile.resumeHtml ?? '';
+      setHasUnsavedHtmlChanges(resumeHtml !== originalHtml);
+    }
+  }, [resumeHtml, profile]);
+
   // Clear success message after 5 seconds
   useEffect(() => {
     if (successMessage) {
@@ -50,7 +63,7 @@ export default function ProfilePage() {
     }
   }, [successMessage]);
 
-  const handleSave = useCallback(async () => {
+  const handleSaveResume = useCallback(async () => {
     if (!hasUnsavedChanges || isSaving) return;
 
     setIsSaving(true);
@@ -74,7 +87,7 @@ export default function ProfilePage() {
     }
   }, [resumeText, hasUnsavedChanges, isSaving]);
 
-  const handleClear = useCallback(async () => {
+  const handleClearResume = useCallback(async () => {
     if (isSaving) return;
 
     setIsSaving(true);
@@ -99,6 +112,56 @@ export default function ProfilePage() {
       setIsSaving(false);
     }
   }, [isSaving]);
+
+  const handleSaveResumeHtml = useCallback(async () => {
+    if (!hasUnsavedHtmlChanges || isSavingHtml) return;
+
+    setIsSavingHtml(true);
+    setError(null);
+    setSuccessMessage(null);
+
+    try {
+      const response = await profileService.updateResumeHtml(resumeHtml || null);
+      setProfile(prev => prev ? {
+        ...prev,
+        resumeHtml: resumeHtml || null,
+        resumeHtmlUpdatedAt: response.resumeHtmlUpdatedAt,
+        htmlCharacterCount: response.htmlCharacterCount
+      } : null);
+      setHasUnsavedHtmlChanges(false);
+      setSuccessMessage(response.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save resume HTML');
+    } finally {
+      setIsSavingHtml(false);
+    }
+  }, [resumeHtml, hasUnsavedHtmlChanges, isSavingHtml]);
+
+  const handleClearResumeHtml = useCallback(async () => {
+    if (isSavingHtml) return;
+
+    setIsSavingHtml(true);
+    setError(null);
+    setSuccessMessage(null);
+    setShowClearHtmlConfirm(false);
+
+    try {
+      const response = await profileService.clearResumeHtml();
+      setResumeHtml('');
+      setProfile(prev => prev ? {
+        ...prev,
+        resumeHtml: null,
+        resumeHtmlUpdatedAt: null,
+        htmlCharacterCount: 0
+      } : null);
+      setHasUnsavedHtmlChanges(false);
+      setSuccessMessage(response.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to clear resume HTML');
+    } finally {
+      setIsSavingHtml(false);
+    }
+  }, [isSavingHtml]);
 
   const getCharacterCountColor = (count: number): string => {
     if (count > 45000) return 'text-red-400';
@@ -236,7 +299,7 @@ export default function ProfilePage() {
         {/* Action Buttons */}
         <div className="flex items-center gap-4 mt-6">
           <button
-            onClick={handleSave}
+            onClick={handleSaveResume}
             disabled={!hasUnsavedChanges || isSaving}
             className="btn-metal-primary disabled:opacity-50 disabled:cursor-not-allowed"
           >
@@ -257,7 +320,7 @@ export default function ProfilePage() {
             <div className="flex items-center gap-3">
               <span className="text-gray-400 text-sm">Clear all resume text?</span>
               <button
-                onClick={handleClear}
+                onClick={handleClearResume}
                 disabled={isSaving}
                 className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded font-semibold text-sm disabled:opacity-50"
               >
@@ -273,6 +336,98 @@ export default function ProfilePage() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Resume HTML Panel */}
+      <div className="metal-panel">
+        <div className="metal-panel-screws" />
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-arcade text-base text-amber">RESUME HTML</h2>
+          {profile?.resumeHtmlUpdatedAt && (
+            <span className="text-gray-500 text-sm">
+              Last saved: {formatDate(profile.resumeHtmlUpdatedAt)}
+            </span>
+          )}
+        </div>
+
+        <p className="text-gray-400 text-sm mb-4">
+          This HTML is used only to render the combined PDF. It never goes to the AI API.
+        </p>
+
+        <textarea
+          value={resumeHtml}
+          onChange={(e) => setResumeHtml(e.target.value)}
+          disabled={isSavingHtml}
+          placeholder="Paste your resume HTML here..."
+          className="w-full h-[400px] bg-gray-900 border border-gray-700 rounded-lg p-4 text-gray-200 font-mono text-sm resize-y focus:outline-none focus:border-amber disabled:opacity-50 disabled:cursor-not-allowed"
+          maxLength={MAX_HTML_CHARACTERS}
+        />
+
+        <div className="flex items-center justify-between mt-3">
+          <span className="font-mono text-sm text-gray-400">
+            {resumeHtml.length.toLocaleString()} / {MAX_HTML_CHARACTERS.toLocaleString()}
+          </span>
+
+          {hasUnsavedHtmlChanges && (
+            <span className="text-amber text-sm animate-pulse">
+              You have unsaved HTML changes
+            </span>
+          )}
+        </div>
+
+        <div className="flex items-center gap-4 mt-6">
+          <button
+            onClick={handleSaveResumeHtml}
+            disabled={!hasUnsavedHtmlChanges || isSavingHtml}
+            className="btn-metal-primary disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isSavingHtml ? 'SAVING HTML...' : 'SAVE RESUME HTML'}
+          </button>
+
+          {resumeHtml && !showClearHtmlConfirm && (
+            <button
+              onClick={() => setShowClearHtmlConfirm(true)}
+              disabled={isSavingHtml}
+              className="btn-metal-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              CLEAR RESUME HTML
+            </button>
+          )}
+
+          {showClearHtmlConfirm && (
+            <div className="flex items-center gap-3">
+              <span className="text-gray-400 text-sm">Clear resume HTML?</span>
+              <button
+                onClick={handleClearResumeHtml}
+                disabled={isSavingHtml}
+                className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded font-semibold text-sm disabled:opacity-50"
+              >
+                YES, CLEAR
+              </button>
+              <button
+                onClick={() => setShowClearHtmlConfirm(false)}
+                disabled={isSavingHtml}
+                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded font-semibold text-sm disabled:opacity-50"
+              >
+                CANCEL
+              </button>
+            </div>
+          )}
+        </div>
+
+        {resumeHtml && (
+          <div className="mt-6">
+            <h3 className="font-arcade text-xs text-amber mb-2">HTML PREVIEW</h3>
+            <div className="border border-metal-light/30 rounded-lg overflow-hidden bg-white">
+              <iframe
+                title="Resume HTML Preview"
+                srcDoc={resumeHtml}
+                className="w-full h-[600px] border-0"
+                sandbox=""
+              />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

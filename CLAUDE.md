@@ -107,6 +107,50 @@ docker exec -it bigjobhunterpro-postgres psql -U postgres -d bigjobhunterpro_dev
 - Frontend: Vitest + React Testing Library
 - E2E: Playwright (planned)
 
+## Common Pitfalls & Production Issues
+
+### EF Core Include and CORS Errors (Sprint-11 Incident)
+
+**Symptom:** API endpoints return 500 errors that appear as CORS errors in the browser (no `Access-Control-Allow-Origin` header on error responses).
+
+**Root Cause:** When EF Core queries use `.Include(entity => entity.NavigationProperty)` and the target entity has new columns that don't exist in the database (migration not applied), the SQL query fails. The exception occurs before CORS middleware can add headers to the response.
+
+**Prevention Rules:**
+1. **Avoid unnecessary Includes** - Only use `.Include()` when the navigation property data is actually needed in the response. If you're mapping to a DTO that doesn't use certain navigation properties, don't include them.
+2. **Use projections when possible** - Prefer `.Select()` projections over full entity loading. Projections only query the columns you specify, avoiding issues with missing columns.
+3. **Auto-migration is enabled** - `Program.cs` now applies pending migrations automatically on startup. However, always verify migrations ran successfully in production logs.
+
+**Example of the problem:**
+```csharp
+// BAD: Includes User but User data isn't used in MapToDetailDto
+return await _dbSet
+    .Include(a => a.TimelineEvents)
+    .Include(a => a.User)  // <-- If User has new columns, this breaks
+    .FirstOrDefaultAsync(a => a.Id == id);
+
+// GOOD: Only include what you need
+return await _dbSet
+    .Include(a => a.TimelineEvents)
+    .FirstOrDefaultAsync(a => a.Id == id);
+
+// BETTER: Use projection for specific data
+return await _dbSet
+    .Where(a => a.Id == id)
+    .Select(a => new ApplicationDto { ... })
+    .FirstOrDefaultAsync();
+```
+
+**Debugging production CORS/500 errors:**
+1. Use `curl -v` to call the API directly (bypasses CORS) to see the actual HTTP status code
+2. Check if OPTIONS preflight succeeds but GET/POST fails - this indicates server-side exception
+3. Look for 500 status with empty body - indicates unhandled exception before response is written
+
+### Database Migrations
+
+- Migrations are auto-applied on startup in production (see `Program.cs`)
+- Always test locally with PostgreSQL before deploying (SQLite may hide issues)
+- After adding new entity properties, create a migration and verify it applies cleanly
+
 ## Project Documentation
 
 - `Meta/Docs/Project-Structure.md` - Architecture, data models, style guide, technical decisions

@@ -1,0 +1,44 @@
+{
+  "id": "993d3892-0b26-4bf6-a509-2195057b5dde",
+  "companyName": "Robert Half",
+  "roleTitle": "Software Engineer",
+  "sourceName": "linkedin.com",
+  "sourceUrl": "https://www.linkedin.com/jobs/view/4362590552",
+  "status": "Applied",
+  "workMode": "Hybrid",
+  "location": "Fort Worth, TX",
+  "salaryMin": 60,
+  "salaryMax": 65,
+  "jobDescription": "We are seeking a highly skilled .NET Developer to design, develop, and maintain software applications. This role is ideal for a developer who excels at troubleshooting, integrating complex solutions, and working within distributed messaging environments.",
+  "requiredSkills": [
+    "C#",
+    ".NET",
+    "MVC",
+    "APIs",
+    "SQL Server",
+    "JavaScript",
+    "HTML",
+    "Git/TFS",
+    "Windows OS",
+    "Messaging Systems (Azure Service Bus, Apache Kafka, or RabbitMQ)"
+  ],
+  "niceToHaveSkills": [
+    "Azure Service Bus",
+    "Apache Kafka",
+    "RabbitMQ"
+  ],
+  "rawPageContent": "Robert Half logo\nRobert Half\nShare\nShow more options\nSoftware Engineer \nFort Worth, TX · 17 hours ago · Over 100 applicants\nPromoted by hirer · No response insights available yet\n\n\n$60/hr - $65/hr\n\n Hybrid\nMatches your job preferences, workplace type is Hybrid.\n\nContract\n\nEasy Apply\n\nSave\nSave Software Engineer  at Robert Half\nHow your profile and resume fit this job\nGet AI-powered advice on this job and more exclusive features with Premium. Try Premium for $0\n\n\n\nShow match details\n\nTailor my resume\n\nHelp me stand out\n\nPeople you can reach out to\nReginald profile photo\nReginald profile photo\nReginald Singh \nReginald Singh is verified \n· 3rd\nInformation Technology\nSchool alum from University of the People\n\nMessage\nMeet the hiring team\nLuke Vaughn\nLuke Vaughn  \n 3rd\nPractice Director at Robert Half\nJob poster\n\nMessage\nAbout the job\nWe are seeking a highly skilled .NET Developer to design, develop, and maintain software applications. This role is ideal for a developer who excels at troubleshooting, integrating complex solutions, and working within distributed messaging environments.\n\n\nKey Responsibilities\nDevelop & Implement: Design, test, and maintain software programs and databases using the .NET framework.\nAsynchronous Integration: Implement and manage messaging patterns to ensure reliable communication between systems and applications.\nTechnical Troubleshooting: Identify software issues, perform root cause analysis, and resolve problems promptly.\nSystem Maintenance: Integrate new software products with existing applications and maintain data using established procedures.\nOperational Excellence: Execute Standard Operating Procedures (SOPs) for development tasks and perform code check-ins, merges, and quality validation.\nCollaboration: Participate in an agile environment, providing project updates to managers and stakeholders while contributing to overall team success.\nReporting: Create ad-hoc queries for audits or special requests as needed.\n\n\nSkills & Experience\nMessaging Systems Requirement: Candidates must have professional experience with at least one of the following (listed in order of preference):\nAzure Service Bus (Highly Preferred)\nApache Kafka\nRabbitMQ\n\n\nCore Development:\n\nExperience: Minimum 5 years of professional experience with C#, .NET, MVC, and APIs.\nDatabase: Strong knowledge of SQL Server programming, integration, and database design.\nWeb Tech: Proficiency in JavaScript, HTML, and programming web applications.\nTools: Experience with Git/TFS, MS Office Suite, and Windows OS.",
+  "points": 1,
+  "createdDate": "2026-01-22T16:01:49.294208Z",
+  "updatedDate": "2026-01-23T13:32:30.875386Z",
+  "aiParsingStatus": "Success",
+  "timelineEvents": [
+    {
+      "id": "82459730-b0ca-41fa-8bd0-687f8e67f321",
+      "eventType": "Applied",
+      "notes": "Application created",
+      "timestamp": "2026-01-22T16:01:49.294208Z",
+      "createdDate": "2026-01-22T16:01:49.294208Z"
+    }
+  ]
+}

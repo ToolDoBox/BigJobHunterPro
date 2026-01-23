@@ -14,19 +14,21 @@ export default function ApplicationCard({ application }: ApplicationCardProps) {
   return (
     <Link
       to={`/app/applications/${application.id}`}
-      className="rounded-lg border border-metal-border bg-metal p-4 shadow-sm transition-colors hover:border-amber/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber/60"
+      className="block rounded-lg border border-metal-border bg-metal p-4 shadow-sm transition-colors hover:border-amber/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber/60 active:bg-metal-light"
       aria-label={`View ${companyDisplay} application`}
     >
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="text-amber font-semibold truncate" title={companyDisplay}>
+        <div className="min-w-0 flex-1">
+          <div className="text-amber font-semibold truncate text-base" title={companyDisplay}>
             {companyDisplay}
           </div>
-          <div className="text-gray-300 text-sm mt-1 truncate" title={roleDisplay}>
+          <div className="text-gray-300 text-sm mt-1.5 truncate" title={roleDisplay}>
             {roleDisplay}
           </div>
         </div>
-        <StatusBadge status={application.status} />
+        <div className="shrink-0">
+          <StatusBadge status={application.status} />
+        </div>
       </div>
       <div className="text-gray-400 text-xs mt-3">
         {formatRelativeDate(application.createdDate)}

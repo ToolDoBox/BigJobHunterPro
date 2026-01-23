@@ -100,20 +100,20 @@ export default function Applications() {
   });
 
   return (
-    <div className="space-y-6">
-      <div className="metal-panel metal-panel-orange">
+    <div className="space-y-4 md:space-y-6">
+      <div className="metal-panel metal-panel-orange p-3 sm:p-4 md:p-6">
         <div className="metal-panel-screws" />
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h1 className="font-arcade text-xl md:text-2xl text-blaze mb-2">
+          <div className="min-w-0">
+            <h1 className="font-arcade text-base md:text-xl lg:text-2xl text-blaze mb-2 leading-relaxed">
               THE ARMORY
             </h1>
-            <p className="text-gray-400">
+            <p className="text-sm md:text-base text-gray-400">
               Review every hunt, spot your progress, and stay on target.
             </p>
           </div>
           <button
-            className="btn-metal-primary"
+            className="btn-metal-primary w-full md:w-auto shrink-0"
             onClick={() => setIsQuickCaptureOpen(true)}
           >
             + QUICK CAPTURE
@@ -121,29 +121,29 @@ export default function Applications() {
         </div>
       </div>
 
-      <div className="metal-panel">
+      <div className="metal-panel p-3 sm:p-4 md:p-6">
         <div className="metal-panel-screws" />
         <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between mb-4">
-          <h2 className="font-arcade text-sm text-amber">APPLICATION LOG</h2>
+          <h2 className="font-arcade text-xs md:text-sm text-amber leading-relaxed">APPLICATION LOG</h2>
           <span className="text-xs text-gray-500">
             {applications.length} logged
           </span>
         </div>
 
         {/* Search and Filter Controls */}
-        <div className="flex flex-col gap-3 md:flex-row md:items-center mb-4">
-          <div className="flex-1">
+        <div className="flex flex-col gap-3 mb-4">
+          <div className="w-full">
             <input
               type="text"
               placeholder="Search by company or role..."
-              className="input-arcade w-full"
+              className="input-arcade w-full text-sm md:text-base"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <select
-              className="input-arcade"
+              className="input-arcade flex-1 text-sm md:text-base"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
             >
@@ -155,7 +155,7 @@ export default function Applications() {
             </select>
             {hasActiveFilters && (
               <button
-                className="btn-metal"
+                className="btn-metal w-full sm:w-auto"
                 onClick={handleClearFilters}
                 title="Clear filters"
               >

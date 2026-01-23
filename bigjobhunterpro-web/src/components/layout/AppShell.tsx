@@ -9,7 +9,7 @@ export default function AppShell() {
       <Header />
 
       {/* Main content area */}
-      <main className="flex-1 p-6 max-w-7xl mx-auto w-full hud-frame">
+      <main className="flex-1 px-2 py-3 sm:p-4 md:p-6 max-w-7xl mx-auto w-full hud-frame">
         <Outlet />
       </main>
 

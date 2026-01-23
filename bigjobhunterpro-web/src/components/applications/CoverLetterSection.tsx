@@ -194,7 +194,7 @@ export default function CoverLetterSection({
       let canvas: HTMLCanvasElement;
       try {
         canvas = await html2canvas(renderTarget, {
-          scale: 2,
+          scale: 1,
           useCORS: true,
           backgroundColor: '#ffffff',
           windowWidth: renderTarget.scrollWidth,
@@ -252,14 +252,14 @@ export default function CoverLetterSection({
           sliceHeight
         );
 
-        const pageData = pageCanvas.toDataURL('image/png');
+        const pageData = pageCanvas.toDataURL('image/jpeg', 0.9);
         if (pageIndex > 0) {
           pdf.addPage();
         }
         const pageImgHeight = (sliceHeight * contentWidth) / canvas.width;
         pdf.addImage(
           pageData,
-          'PNG',
+          'JPEG',
           horizontalMargin,
           verticalMargin,
           contentWidth,

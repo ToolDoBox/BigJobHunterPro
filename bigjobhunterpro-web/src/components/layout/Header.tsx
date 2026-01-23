@@ -28,11 +28,11 @@ export default function Header() {
 
   return (
     <header className="header-bar">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="flex justify-between items-center h-16">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6">
+        <div className="flex justify-between items-center h-16 gap-2">
           {/* Logo */}
-          <Link to="/app" className="flex items-center gap-3 logo-badge">
-            <h1 className="font-arcade text-sm md:text-base text-blaze">
+          <Link to="/app" className="flex items-center logo-badge flex-shrink-0">
+            <h1 className="font-arcade text-[10px] xs:text-xs sm:text-sm md:text-base text-blaze whitespace-nowrap">
               JOB HUNTER PRO
             </h1>
           </Link>
@@ -52,7 +52,7 @@ export default function Header() {
           </nav>
 
           {/* User menu */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1 sm:gap-2 md:gap-4">
             {/* Points display - stat display style */}
             <div className="hidden sm:flex stat-display">
               <span className="stat-display-value">
@@ -68,12 +68,12 @@ export default function Header() {
                   setIsUserMenuOpen((open) => !open);
                   setIsMobileMenuOpen(false);
                 }}
-                className="btn-metal flex items-center gap-2"
+                className="btn-metal flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3"
               >
-                <span className="text-amber font-semibold">
+                <span className="text-amber font-semibold truncate max-w-[80px] sm:max-w-none">
                   {user?.displayName ?? 'Hunter'}
                 </span>
-                <span className="text-terminal">{isUserMenuOpen ? '▲' : '▼'}</span>
+                <span className="text-terminal flex-shrink-0">{isUserMenuOpen ? '▲' : '▼'}</span>
               </button>
 
               {/* Dropdown menu */}

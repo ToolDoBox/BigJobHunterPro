@@ -166,8 +166,40 @@
     animation: slide-out-right 0.3s ease-in;
 }
 
+/* Scroll-triggered fade-in animations for landing page */
+@keyframes scroll-fade-in-up {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.scroll-fade-in {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+.scroll-fade-in.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
 /* Base layer customizations */
 @layer base {
+    * {
+        box-sizing: border-box;
+    }
+
+    html {
+        overflow-x: hidden;
+        max-width: 100%;
+    }
+
     body {
         font-family: var(--font-body);
         background-color: var(--color-dark);
@@ -185,6 +217,8 @@
         color: #d9d9d9;
         line-height: 1.6;
         margin: 0;
+        overflow-x: hidden;
+        width: 100%;
     }
 
     h1, h2, h3, h4, h5, h6 {
@@ -309,7 +343,13 @@
         background-blend-mode: screen, overlay, normal, normal;
         border: 2px solid var(--color-metal-border);
         box-shadow: var(--shadow-metal-raised), inset 0 0 0 1px rgba(255, 255, 255, 0.04);
-        padding: 1.5rem;
+        padding: 1rem;
+    }
+
+    @media (min-width: 768px) {
+        .metal-panel {
+            padding: 1.5rem;
+        }
     }
 
     /* Screw decorations - all four corners */
@@ -356,8 +396,8 @@
        ============================================ */
     .btn-metal {
         font-family: var(--font-arcade);
-        font-size: 0.7rem;
-        padding: 0.7rem 1.4rem;
+        font-size: 0.65rem;
+        padding: 0.75rem 1.2rem;
         border-radius: 6px;
         text-transform: uppercase;
         letter-spacing: 0.12em;
@@ -370,6 +410,14 @@
         box-shadow: var(--shadow-metal-raised);
         text-shadow: 0 1px 0 rgba(0, 0, 0, 0.7);
         transition: all 0.15s ease;
+        min-height: 44px;
+    }
+
+    @media (min-width: 768px) {
+        .btn-metal {
+            font-size: 0.7rem;
+            padding: 0.7rem 1.4rem;
+        }
     }
 
     .btn-metal:hover {
@@ -391,8 +439,8 @@
 
     .btn-metal-primary {
         font-family: var(--font-arcade);
-        font-size: 0.7rem;
-        padding: 0.7rem 1.6rem;
+        font-size: 0.65rem;
+        padding: 0.75rem 1.2rem;
         border-radius: 6px;
         text-transform: uppercase;
         letter-spacing: 0.12em;
@@ -406,6 +454,14 @@
         box-shadow: var(--shadow-metal-raised), inset 0 1px 0 rgba(255, 255, 255, 0.35), inset 0 -2px 0 rgba(0, 0, 0, 0.5);
         text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
         transition: all 0.15s ease;
+        min-height: 44px;
+    }
+
+    @media (min-width: 768px) {
+        .btn-metal-primary {
+            font-size: 0.7rem;
+            padding: 0.7rem 1.6rem;
+        }
     }
 
     .btn-metal-primary:hover {
@@ -447,6 +503,15 @@
         font-family: var(--font-body);
         box-shadow: var(--shadow-metal-inset);
         transition: all 0.2s;
+        min-height: 44px;
+        font-size: 16px;
+    }
+
+    @media (min-width: 768px) {
+        .input-metal,
+        .input-arcade {
+            font-size: 1rem;
+        }
     }
 
     .input-metal::placeholder,
@@ -801,6 +866,13 @@
 
     .login-warmup-fill::after {
         animation: none !important;
+    }
+
+    /* Disable scroll animations for reduced motion */
+    .scroll-fade-in {
+        opacity: 1;
+        transform: none;
+        transition: none !important;
     }
 }
 

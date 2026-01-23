@@ -1,0 +1,53 @@
+{
+  "id": "92776613-830a-4649-ac8f-84a061671f6d",
+  "companyName": "PY DATA, INC.",
+  "roleTitle": ".NET Developer",
+  "sourceName": "dice.com",
+  "sourceUrl": "https://www.dice.com/job-detail/a1405126-c968-45e1-9f96-67d54ca17f21",
+  "status": "Applied",
+  "workMode": "Remote",
+  "location": "Remote",
+  "salaryMin": 55,
+  "salaryMax": 60,
+  "jobDescription": "A 6-month extendable contract role for a .NET Developer to design, develop, implement, test, and maintain business and computer applications software with a focus on modernizing services, codebases, and infrastructure. The role involves working with C#, cloud services, and Infrastructure as Code to upgrade and migrate legacy systems, including project definitions, NuGet packages, and build pipelines.",
+  "requiredSkills": [
+    "C#",
+    ".NET",
+    "Cloud Services",
+    "Infrastructure as Code",
+    "ARM templates",
+    "Bicep",
+    "Terraform",
+    "RESTful Web APIs",
+    "Azure DevOps",
+    "CI/CD",
+    "Unit testing",
+    "Software design",
+    "Data structures",
+    "Algorithms"
+  ],
+  "niceToHaveSkills": [
+    "Enterprise systems experience",
+    "Legacy system modernization",
+    "Agile/Scrum",
+    "Test tooling improvement",
+    "Developer experience optimization",
+    "In-depth troubleshooting",
+    "Security best practices",
+    "Identity and access patterns"
+  ],
+  "rawPageContent": "PY DATA, INC.\n\n\nEasy Apply\n.NET Developer\nRemote • Posted 22 hours ago • Updated 22 hours ago\nContract W2\nRemote\n$55 - $60/hr\nFitment\nDice Job Match Score™\nYour Dice Job Match score is 72%. Here's where it meets based on your Ideal Job.\n\nMEETS\n\n.NET\nContinuous delivery\nScrum\nQuality assurance\nWorkflow\nDice Match does not guarantee you will get the job or receive an interview.\nLearn More about how the Dice Match model works.\n\nJob Details\nSkills\nC# and .NET\nInfrastructure as Code\nSummary\n.NET Developer\n\n100% Remote\n\n6 months, extendable\n\n\nMust haves:\n\nC#, .NET development\nCloud\nIAC\n\nTop 3 Must-Have Skills\n\n1) C# / .NET Development (6+ years)\n\nStrong, hands-on experience developing production systems using C# across .NET Framework and modern .NET (.NET Core / .NET 6+).\nProven experience working on large or legacy codebases, including refactoring, modernizing projects, and improving code quality.\nExperience with SDK-style project migrations, NuGet package upgrades, and .NET runtime/framework upgrades.\nAbility to write maintainable, testable code and troubleshoot complex issues in service-oriented systems.\n2) Cloud Services (4+ years)\n\nHands-on experience building, deploying, and operating services in a cloud environment.\nExperience developing and maintaining RESTful Web APIs hosted in the cloud.\nPractical experience with cloud environments, including subscriptions, resource groups, and service configuration.\nFamiliarity with cloud-based CI/CD workflows and platform upgrades impacting live services.\n3) Infrastructure as Code & DevOps Foundations (3+ years)\n\nStrong experience defining and maintaining infrastructure using Infrastructure as Code (IaC) tools (e.g., ARM templates, Bicep, or Terraform).\nExperience upgrading or migrating build and deployment pipelines (Azure DevOps or equivalent).\nUnderstanding of infrastructure modernization efforts such as pipeline migrations, environment isolation, and platform compliance requirements.\nProven ability to improve developer productivity by strengthening build reliability, test pipelines, and automation.\n\nTypical Day in the Role\n\nDesign, develop, implement, test, and maintain business and computer applications software or specialized utility programs.\nWork on modernization of services, code base, and infrastructure, focusing on tasks related to business logic.\nSpecific tasks include migrating project definitions to new standards, cleaning up source code warnings, upgrading NuGet packages, and modernizing old services to use updated authentication and authorization methods.\nAdditional work may involve build pipeline migrations and infrastructure-level improvements, with a strong emphasis on C# and cloud experience, covering both .NET Framework and .NET Core.\nGather and analyze system requirements, document specifications, and develop software solutions to meet client needs.\nAnalyze and review enhancement requests and specifications.\nImplement system software and customize to client requirements.\nPrepare detailed software specifications and test plans.\nCode new programs to client s specifications and create test data for testing.\nModify existing programs to new standards and conduct unit testing of developed programs.\nCreate migration packages for system testing, user testing, and implementation.\nProvide quality assurance reviews.\nPerform post-implementation validation of software and resolve any bugs found during testing.\n\nCandidate Requirements\n\nMust have strong technical skills in C#, .NET, cloud services, and Infrastructure as Code.\nExcessive job hopping (e.g., changing jobs every month over the past two years) is considered a red flag.\nPrior experience with large-scale enterprise systems is preferred.\n\nBest vs. Average Candidate\n\nExperience splitting or migrating workloads to new repositories or isolated environments to reduce operational overhead.\nExposure to large or legacy enterprise systems undergoing modernization.\nExperience improving test tooling or developer experience beyond pure feature delivery.\nExperience working in Agile/Scrum teams with two-week sprints.\nAbility to work independently on scoped technical initiatives while collaborating via code reviews and design discussions.\nStrong communication skills for working with full-time engineers, other vendors, and partner teams.\nSolid foundation in computer science, with strong competencies in data structures, algorithms, and software design.\nLarge systems software design and development experience.\nExperience performing in-depth troubleshooting and unit testing with both new and legacy production systems.\n\nCore Technical Skills\n\nC# and .NET: Strong hands-on experience across .NET Framework and modern .NET (Core / .NET 6+).\nCloud Application Development: Building and maintaining services in cloud environments, including hosted services and backend components.\nInfrastructure as Code: Hands-on experience defining and maintaining cloud infrastructure using IaC tools (ARM templates, Bicep, Terraform).\nBuild, CI/CD, and Code Hygiene: Improving build pipelines, upgrading workflows, and ensuring code quality and maintainability.\nTesting and Reliability: Improving end-to-end test coverage, diagnosing workflow issues, and implementing test automation.\nSecurity Best Practices: Removing legacy authentication mechanisms and implementing secure identity and access patterns.\n\nQualifications\n\nBachelor s degree in Computer Science, Computer Engineering, or related field required.\n8+ years of experience in software engineering.\nEmployers have access to artificial intelligence language tools (“AI”) that help generate and enhance job descriptions and AI may have been used to create this description. The position description has been reviewed for accuracy and Dice believes it to correctly reflect the job opportunity.\nDice Id: 91094428\nPosition Id: 8864852\nPosted 22 hours ago",
+  "points": 1,
+  "createdDate": "2026-01-23T13:43:20.898942Z",
+  "updatedDate": "2026-01-23T13:43:43.360581Z",
+  "aiParsingStatus": "Success",
+  "timelineEvents": [
+    {
+      "id": "74273ed0-d2ba-4da0-be3e-5f51c492b825",
+      "eventType": "Applied",
+      "notes": "Application created",
+      "timestamp": "2026-01-23T13:43:20.898942Z",
+      "createdDate": "2026-01-23T13:43:20.898942Z"
+    }
+  ]
+}

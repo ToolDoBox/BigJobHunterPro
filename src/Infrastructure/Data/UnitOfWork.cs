@@ -21,6 +21,7 @@ public class UnitOfWork : IUnitOfWork
     private IHuntingPartyRepository? _huntingParties;
     private IHuntingPartyMembershipRepository? _huntingPartyMemberships;
     private IUserRepository? _users;
+    private IInterviewQuestionRepository? _interviewQuestions;
 
     public UnitOfWork(ApplicationDbContext context)
     {
@@ -68,6 +69,12 @@ public class UnitOfWork : IUnitOfWork
     /// </summary>
     public IUserRepository Users =>
         _users ??= new UserRepository(_context);
+
+    /// <summary>
+    /// Gets the InterviewQuestion repository (lazy-loaded).
+    /// </summary>
+    public IInterviewQuestionRepository InterviewQuestions =>
+        _interviewQuestions ??= new InterviewQuestionRepository(_context);
 
     /// <summary>
     /// Saves all changes made in this unit of work.

@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 const navItems = [
   { to: '/app/dashboard', label: 'The Lodge', icon: '🏠' },
   { to: '/app/applications', label: 'The Armory', icon: '🎯' },
+  { to: '/app/question-range', label: 'Question Range', icon: '📋' },
   { to: '/app/party', label: 'Hunting Party', icon: '🏆' },
   { to: '/app/profile', label: 'Profile', icon: '👤' },
 ];

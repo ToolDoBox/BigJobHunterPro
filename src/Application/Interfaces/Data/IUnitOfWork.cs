@@ -42,6 +42,11 @@ public interface IUnitOfWork : IDisposable
     IUserRepository Users { get; }
 
     /// <summary>
+    /// Repository for InterviewQuestion entities.
+    /// </summary>
+    IInterviewQuestionRepository InterviewQuestions { get; }
+
+    /// <summary>
     /// Saves all changes made in this unit of work to the database.
     /// This is the single commit point for all repositories.
     /// </summary>

@@ -20,6 +20,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<ActivityEvent> ActivityEvents => Set<ActivityEvent>();
     public DbSet<HuntingParty> HuntingParties => Set<HuntingParty>();
     public DbSet<HuntingPartyMembership> HuntingPartyMemberships => Set<HuntingPartyMembership>();
+    public DbSet<InterviewQuestion> InterviewQuestions => Set<InterviewQuestion>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -128,6 +129,27 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
                   .WithMany(u => u.PartyMemberships)
                   .HasForeignKey(e => e.UserId)
                   .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Configure InterviewQuestion entity
+        builder.Entity<InterviewQuestion>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.QuestionText).IsRequired().HasMaxLength(2000);
+            entity.Property(e => e.AnswerText).HasMaxLength(5000);
+            entity.Property(e => e.Notes).HasMaxLength(2000);
+            entity.Property(e => e.Tags).HasConversion(stringListConverter);
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.Category);
+            entity.HasIndex(e => e.CreatedDate);
+            entity.HasOne(e => e.User)
+                  .WithMany()
+                  .HasForeignKey(e => e.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.Application)
+                  .WithMany()
+                  .HasForeignKey(e => e.ApplicationId)
+                  .OnDelete(DeleteBehavior.SetNull);
         });
     }
 }

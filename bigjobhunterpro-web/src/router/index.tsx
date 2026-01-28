@@ -8,6 +8,7 @@ import Applications from '@/pages/Applications';
 import ApplicationDetail from '@/pages/ApplicationDetail';
 import Party from '@/pages/Party';
 import ProfilePage from '@/pages/ProfilePage';
+import QuestionRange from '@/pages/QuestionRange';
 import Landing from '@/pages/Landing';
 
 export const router = createBrowserRouter([
@@ -50,6 +51,10 @@ export const router = createBrowserRouter([
       {
         path: 'applications/:id',
         element: <ApplicationDetail />,
+      },
+      {
+        path: 'question-range',
+        element: <QuestionRange />,
       },
       {
         path: 'party',
